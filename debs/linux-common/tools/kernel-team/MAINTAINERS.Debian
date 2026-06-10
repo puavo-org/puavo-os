@@ -17,12 +17,7 @@ Security branches:
 
 Backport branches:
 
-  * stretch-security-4.19
-    - Ben Hutchings
-  * buster-backports
-    - Ben Hutchings
-  * bullseye-backports
-    - Ben Hutchings
+  - Ben Hutchings
 
 Porters, sorted by source architecture:
 
@@ -32,7 +27,7 @@ Porters, sorted by source architecture:
     - Vagrant Cascadian, Uwe Kleine-König, Roger Shimizu
   * arm64
     - Vagrant Cascadian, Uwe Kleine-König
-  * ia64
+  * loongarch
     - no maintainer
   * m68k
     - (John Paul Adrian Glaubitz)
@@ -52,7 +47,6 @@ Porters, sorted by source architecture:
     - no maintainer
   * x86
     - [amd64] Ben Hutchings
-    - [i386] no maintainer
     - [x32] no maintainer
 
 Other specialisations:

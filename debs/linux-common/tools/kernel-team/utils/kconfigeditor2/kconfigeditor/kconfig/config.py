@@ -17,9 +17,10 @@ class File(dict):
 
     def _write(self, menufiles):
         processed = set()
+        automatic = set()
 
         for file in menufiles:
-            for i in self._write_file(processed, file):
+            for i in self._write_file(processed, automatic, file):
                 yield i
 
         unprocessed = set(self) - processed
@@ -28,43 +29,50 @@ class File(dict):
             yield '## file: unknown'
             yield '##'
             for name in sorted(unprocessed):
-                print("%s: Unknown setting %s" % (self.name, self[name]),
-                      file=sys.stderr)
+                if name in automatic:
+                    print(f"{self.name}: CONFIG_{name} is automatic and cannot be set explicitly",
+                          file=sys.stderr)
+                else:
+                    print(f"{self.name}: Unknown setting {self[name]}",
+                          file=sys.stderr)
                 for i in self[name].write():
                     yield i
             yield ''
 
-    def _write_file(self, processed, file):
+    def _write_file(self, processed, automatic, file):
         ret = []
 
         for entry in file:
             if isinstance(entry, MenuEntryConfig):
-                ret.extend(self._write_entry_config(processed, entry))
+                ret.extend(self._write_entry_config(processed, automatic,
+                                                    entry))
             elif isinstance(entry, MenuEntryChoice):
-                ret.extend(self._write_entry_choice(processed, entry))
+                ret.extend(self._write_entry_choice(processed, automatic,
+                                                    entry))
 
         if ret:
             yield '##'
-            yield '## file: %s' % file.filename
+            yield f'## file: {file.filename}'
             yield '##'
             for i in ret:
                 yield i
             yield ''
 
-    def _write_entry_choice(self, processed, entry):
+    def _write_entry_choice(self, processed, automatic, entry):
         ret = []
 
         for subentry in entry:
             if isinstance(subentry, MenuEntryConfig):
-                ret.extend(self._write_entry_config(processed, subentry))
+                ret.extend(self._write_entry_config(processed, automatic,
+                                                    subentry))
 
         if ret:
-            yield '## choice: %s' % entry.prompt
+            yield f'## choice: {entry.prompt}'
             for i in ret:
                 yield i
             yield '## end choice'
 
-    def _write_entry_config(self, processed, entry):
+    def _write_entry_config(self, processed, automatic, entry):
         if entry.name in processed:
             return
 
@@ -72,27 +80,41 @@ class File(dict):
         if value is None:
             return
 
-        if entry.prompt:
-            if entry.type == MenuEntryConfig.TYPE_BOOL:
-                valid = isinstance(value, FileEntryTristate) and \
-                        value.value != FileEntryTristate.VALUE_MOD
-            elif entry.type == MenuEntryConfig.TYPE_TRISTATE:
-                valid = isinstance(value, FileEntryTristate)
-            elif entry.type == MenuEntryConfig.TYPE_STRING:
-                valid = re.match(r'"(?:\\.|[^"])*"$', value.value) is not None
-            elif entry.type == MenuEntryConfig.TYPE_INT_DEC:
-                valid = re.match(r'-?(?:0|[1-9]\d*)$', value.value) is not None
-            elif entry.type == MenuEntryConfig.TYPE_INT_HEX:
-                valid = re.match(r'(?:0x)?[0-9a-f]+$', value.value,
-                                 re.IGNORECASE) is not None
-            else:
-                raise NotImplementedError
-            if not valid:
-                print("%s: Invalid setting %s" % (self.name, value),
-                      file=sys.stderr)
-            processed.add(entry.name)
-            for i in value.write():
-                yield i
+        if not entry.prompt:
+            automatic.add(entry.name)
+            return
+
+        if entry.type == MenuEntryConfig.TYPE_BOOL:
+            valid = isinstance(value, FileEntryTristate) and \
+                    value.value != FileEntryTristate.VALUE_MOD
+            type_name = 'bool'
+        elif entry.type == MenuEntryConfig.TYPE_TRISTATE:
+            valid = isinstance(value, FileEntryTristate)
+            type_name = 'tristate'
+        elif entry.type == MenuEntryConfig.TYPE_STRING:
+            valid = isinstance(value.value, str) and \
+                re.match(r'"(?:\\.|[^"])*"$', value.value) is not None
+            type_name = 'string'
+        elif entry.type == MenuEntryConfig.TYPE_INT_DEC:
+            valid = isinstance(value.value, str) and \
+                re.match(r'-?(?:0|[1-9]\d*)$', value.value) is not None
+            type_name = 'int'
+        elif entry.type == MenuEntryConfig.TYPE_INT_HEX:
+            valid = isinstance(value.value, str) and \
+                re.match(r'(?:0x)?[0-9a-f]+$', value.value,
+                         re.IGNORECASE) is not None
+            type_name = 'hex'
+        else:
+            valid = False
+            type_name = 'unknown'
+
+        if not valid:
+            print(f"{self.name}: Invalid setting {value} for {type_name} type",
+                  file=sys.stderr)
+
+        processed.add(entry.name)
+        for i in value.write():
+            yield i
 
     def write(self, fd):
         for name in sorted(self.keys()):
@@ -170,7 +192,7 @@ class FileReader(object):
                     state.comments.append(comment)
 
             else:
-                raise RuntimeError("Can't recognize %s" % line)
+                raise RuntimeError(f"Can't recognize {line}")
 
 
 class FileEntry(object):

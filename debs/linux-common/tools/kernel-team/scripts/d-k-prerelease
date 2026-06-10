@@ -1,5 +1,7 @@
 #!/bin/sh -eu
 
+current_testing=forky
+
 # Check that we are on a branch
 if ! git diff --quiet HEAD; then
    echo >&2 "E: Working tree has uncommitted changes"
@@ -30,18 +32,8 @@ ver="$(dpkg-parsechangelog -S Version)"
 # Default urgency set to medium
 urgency='medium'
 
-case "$package" in
-*-[4-9].[0-9] | *-[4-9].[1-9][0-9])
-    package_suffix=-${package##*-}
-    if [ "${branch%$package_suffix}" = "$branch" ]; then
-	echo >&2 "E: Branch name doesn't include the package name suffix ($package_suffix)"
-	exit 1
-    fi
-    branch=${branch%$package_suffix}
-esac
-
 case "$branch" in
-debian/latest | master)
+debian/latest)
     case "$ver" in
     *~exp*)
         dist=experimental
@@ -51,36 +43,37 @@ debian/latest | master)
         ;;
     esac
     ;;
-sid)
-    dist=unstable
-    ;;
 debian/sid)
     echo >&2 "E: Use debian/unstable not debian/sid"
     exit 1
     ;;
-*-security | *-security-embargoed)
+debian/*/${current_testing} | debian/${current_testing})
+    dist=unstable
+    ;;
+debian/*/*)
+    dist=${branch#debian/*/}
+    ;;
+debian/*)
     dist=${branch#debian/}
+    ;;
+*)
+    echo >&2 "E: Can't release from private or unsupported branch $real_branch"
+    exit 1
+    ;;
+esac
+
+case "$dist" in
+*-security | *-security-embargoed)
     dist=${dist%-embargoed}
     # https://www.debian.org/doc/manuals/developers-reference/ch05.en.html#bug-security-building
     urgency='high'
     ;;
 *-updates)
-    dist=${branch#debian/}
     dist=${dist%-updates}
-    ;;
-debian/*)
-    dist=${branch#debian/}
-    ;;
-*/*)
-    echo >&2 "E: Can't release from private branch $real_branch"
-    exit 1
-    ;;
-*)
-    dist=$branch
     ;;
 esac
 
 dch --release --distribution "$dist" --urgency "$urgency" --no-force-save-on-release ''
-git commit -m "Prepare to release $package ($ver)." debian/changelog
+git commit -m "Prepare to release $package ($ver)" debian/changelog
 
 echo "Remember to tag after building and verifying the package"

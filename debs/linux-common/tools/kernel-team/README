@@ -4,9 +4,9 @@ Upload procedure :
          .../kernel-team/scripts/d-k-prerelease
   2) Regenerate files:
          git clean -d -f -x
-         # For firmware-nonfree, linux, linux-tools:
+         # For firmware-free, firmware-nonfree, linux:
          debian/rules orig
-         # For firmware-free, firmware-nonfree, linux, linux-latest, linux-tools:
+         # For firmware-free, firmware-nonfree:
          debian/rules debian/control
   3) Export the package:
          dpkg-buildpackage -uc -us -S
@@ -14,6 +14,9 @@ Upload procedure :
   4) Run: .../kernel-team/scripts/d-k-tag
   5) Push the branch and tag
   6) Sign and upload the changes
+
+A more detailed checklist for linux is in
+docs/kernel-upload-checklist.md.
 
 Changelog practice :
 

@@ -18,9 +18,18 @@ class Main(object):
             try:
                 menu = fs_menu[featureset or 'none']
             except KeyError:
-                menu = fs_menu[featureset] = All('%s/debian/build/source_%s' %
-                                                 (source, featureset),
-                                                 package.kernelarches)
+                try:
+                    menu = fs_menu[featureset] = All(
+                        f"{source}/debian/build/source_{featureset}",
+                        package.kernelarches,
+                    )
+                except FileNotFoundError as err:
+                    print(
+                        f"E: {err.filename} is missing. Try running `debian/rules source`",
+                        file=sys.stderr,
+                    )
+                    raise
+
             kernelarch = data.kernelarch
             if kernelarch:
                 menufiles = menu.arch(kernelarch)

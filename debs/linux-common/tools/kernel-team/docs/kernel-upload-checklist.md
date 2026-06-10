@@ -33,6 +33,7 @@ multiple suites.
    * At least `debhelper`, `kernel-wedge`, and `python3` must be
      installed.
    * [6.1+] `python3-jinja2` must also be installed.
+   * [6.7+] `python3-dacite` must also be installed.
    * Run:
 
             debian/rules debian/control
@@ -64,5 +65,8 @@ multiple suites.
    * [*-security] Handling of NEW packages in security suites
      is awkward.  You may need to directly request the attention of
      the FTP team.
-   * [4.19] The linux-latest source package also needs to be updated.
-     Wait until after linux and linux-signed-* have been built.
+
+1. Packaging: If the source package is uploaded for a specific
+   Debian release from a selected packaging branch make sure the
+   `RELEASE` variable in `debian/salsa-ci.yml` is set to the correct
+   target release.

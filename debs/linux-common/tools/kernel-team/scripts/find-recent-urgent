@@ -1,0 +1,384 @@
+#!/usr/bin/python3
+
+import apt_pkg
+import argparse
+import datetime
+import debianbts
+import gitlab
+import os
+import pathlib
+import psycopg2
+import re
+import sys
+import urllib.parse
+
+
+from formatters import Markdown, PlainText, Severity
+
+
+merge_status_icon = {
+    'ci_must_pass':             '\N{large red circle}',
+    'ci_still_running':         '\N{large blue circle}',
+    'discussions_not_resolved': '\N{speech balloon}',
+    'mergeable':                '\N{large green circle}',
+    'conflict':                 '\N{no entry}',
+}
+
+
+obsolete_source_packages = set(
+    ['linux-2.6', 'linux-2.6.24', 'linux-grsec', 'linux-kbuild-2.6',
+     'linux-latest', 'linux-latest-2.6', 'linux-tools'])
+
+
+def fix_bug_source(source):
+    # The bug source package can be a list of all source packages that
+    # ever built this binary package, for example:
+    #     hyperv-daemons -> linux, linux-grsec, linux-tools
+    #     linux-base -> linux-2.6, linux-base
+    #     linux-libc-dev -> linux, linux-2.6, linux-2.6.24
+    # Work around this by filtering out known obsolete source
+    # packages.
+    # Some binary packages moved between linux and linux-signed-*, but
+    # none of these are obsolete so we can't filter them out.  Instead
+    # map linux-signed-* to linux which is where any fixes need to be
+    # made.
+    sources = set(('linux' if name.startswith('linux-signed-') else name)
+                  for name in source.split(', ')
+                  if name not in obsolete_source_packages)
+    assert len(sources) == 1
+    return sources.pop()
+
+
+def get_interesting_bugs(maintainer, min_modified):
+    bug_nums = debianbts.get_bugs(maint=maintainer, archive='0')
+    merged_bugs = set()
+    for bug in debianbts.get_status(bug_nums):
+        if bug.bug_num in merged_bugs:
+            continue
+        # Interesting means unfixed and either RC or modified recently
+        last_modified = bug.log_modified.replace(tzinfo=datetime.timezone.utc)
+        if not (bug.done or 'pending' in bug.tags) \
+            and (Severity[bug.severity] >= Severity.serious
+                 or last_modified >= min_modified):
+            bug.source = fix_bug_source(bug.source)
+            yield bug
+            # Exclude bugs merged with this one.  Don't do this for
+            # bugs found to not be interesting, because the
+            # log_modified attribute is *not* synchronised and
+            # therefore one of the other bugs might have been updated
+            # recently enough to be interesting.
+            merged_bugs.update(bug.mergedwith)
+        # TODO: Can we filter out if moreinfo set and no mail received
+        # since then?
+
+
+def get_project_id_name_map(group):
+    id_name = {}
+    for proj in group.projects.list(iterator=True):
+        id_name[proj.id] = proj.name
+    return id_name
+
+
+def get_interesting_issues(group, min_modified, max_due):
+    # Interesting means open and either modified recently or due in
+    # next week (or earlier)
+    for issue in group.issues.list(state='opened', iterator=True):
+        last_modified = datetime.datetime.fromisoformat(issue.updated_at)
+        due_date = (datetime.date.fromisoformat(issue.due_date)
+                    if issue.due_date else None)
+        if last_modified >= min_modified \
+           or (due_date and due_date <= max_due):
+            yield issue
+
+
+def get_interesting_mrs(group, min_modified):
+    # Interesting means open, not draft, and modified recently
+    for mr in group.mergerequests.list(
+            state='opened',
+            updated_after=min_modified.isoformat(timespec='seconds'),
+            iterator=True):
+        if not mr.draft:
+            yield mr
+
+
+def connect_udd():
+    conn = psycopg2.connect(host='udd-mirror.debian.net',
+                            sslmode='require',
+                            user='udd-mirror', password='udd-mirror',
+                            database='udd')
+    conn.set_client_encoding('UTF8')
+    return conn
+
+
+def get_migration_excuses(udd_conn, maintainer):
+    with udd_conn.cursor() as curs:
+        curs.execute(
+            'select distinct e.source, e.reason, e.dependencies'
+            ' from sources s join migration_excuses e on s.source=e.source'
+            ' where s.maintainer_email=%s'
+            ' and not e.is_candidate'
+            " and e.item_name not like '%%_pu'",
+            vars=(maintainer,))
+        yield from curs
+
+
+def get_new_upstreams(udd_conn, maintainer):
+    with udd_conn.cursor() as curs:
+        curs.execute(
+            'select distinct u.source, u.version, u.upstream_version, u.status'
+            ' from sources s join upstream u on s.source=u.source'
+            ' where s.maintainer_email=%s',
+            vars=(maintainer,))
+
+        # Aggregate results by source package, keeping only the newest
+        # Debian version
+        source_vers = {}
+        for source, deb_ver, up_ver, status in curs:
+            up_newer = status == 'newer package available'
+            if source not in source_vers \
+               or apt_pkg.version_compare(deb_ver, source_vers[source][0]) > 0:
+                source_vers[source] = deb_ver, up_ver, up_newer
+
+        for source, (deb_ver, up_ver, up_newer) in source_vers.items():
+            if up_newer:
+                yield source, deb_ver, up_ver
+
+
+def main():
+    stdout_is_tty = sys.stdout.isatty()
+
+    parser = argparse.ArgumentParser(
+        prog='find-recent-urgent',
+        description='Find recently modified and RC bugs, issues, merge requests')
+    parser.add_argument('--show-bugs', default=True,
+                        action=argparse.BooleanOptionalAction)
+    parser.add_argument('--show-issues', default=True,
+                        action=argparse.BooleanOptionalAction)
+    parser.add_argument('--show-excuses', default=True,
+                        action=argparse.BooleanOptionalAction)
+    parser.add_argument('--show-new-upstreams', default=True,
+                        action=argparse.BooleanOptionalAction)
+    parser.add_argument('--show-merge-requests', '--show-mrs', default=True,
+                        action=argparse.BooleanOptionalAction)
+    parser.add_argument('--maintainer', metavar='EMAIL-ADDRESS',
+                        default='debian-kernel@lists.debian.org')
+    parser.add_argument('--max-age', metavar='DAYS', type=int, default=7)
+    parser.add_argument('--max-due', metavar='DAYS', type=int, default=7)
+    parser.add_argument('--gitlab-url', default='https://salsa.debian.org/')
+    parser.add_argument('--gitlab-group', default='kernel-team')
+    parser.add_argument('--gitlab-token', metavar='FILE')
+    parser.add_argument('--output-format', metavar='FORMAT',
+                        choices=['text', 'markdown'], default='markdown')
+    parser.add_argument('--color', '--colour', default=stdout_is_tty,
+                        action=argparse.BooleanOptionalAction)
+    parser.add_argument('--links', default=stdout_is_tty,
+                        action=argparse.BooleanOptionalAction)
+    args = parser.parse_args()
+
+    apt_pkg.init_system()
+
+    if args.output_format == 'text':
+        fmt = PlainText(stdout_is_tty, args.color, args.links)
+    else:
+        assert args.output_format == 'markdown'
+        fmt = Markdown()
+
+    now = datetime.datetime.now(tz=datetime.timezone.utc)
+    min_modified = now - datetime.timedelta(days=args.max_age)
+    max_due = now.date() + datetime.timedelta(days=args.max_due)
+
+    fmt.create_para(
+        fmt.create_text('I: Date filter will select items modified since '
+                        + min_modified.isoformat(timespec='seconds'))).print()
+    if args.show_issues:
+        fmt.create_para(
+            fmt.create_text(
+                f'I: Issue date filter will select issues due up to {max_due}')) \
+                .print()
+
+    # Use the same severity letters as bugs.debian.org
+    severity_abbr = 'wmniSGC'
+
+    # Use *some* of the same tag abbreviations as bugs.debian.org
+    tag_abbr = {
+        'moreinfo':       'M',
+        'unreproducible': 'R',
+        'fixed-upstream': 'U',
+        'patch':          '+',
+        'upstream':       'u',
+        'wontfix':        'W',
+    }
+
+    if args.show_bugs:
+        fmt.create_heading(3, fmt.create_text('Bugs')).print()
+        last_bug_source = None
+        bug_list = None
+        _, gitlab_netloc, gitlab_path, _, _ = urllib.parse.urlsplit(args.gitlab_url)
+
+        for bug in sorted(get_interesting_bugs(args.maintainer, min_modified),
+                          key=(lambda bug: (bug.source,
+                                            -Severity[bug.severity],
+                                            bug.bug_num))):
+            # Sub-heading and list per source package
+            if bug.source != last_bug_source:
+                if bug_list:
+                    bug_list.print()
+                fmt.create_heading(4, fmt.create_text(bug.source)).print()
+                last_bug_source = bug.source
+                bug_list = fmt.create_bulleted_list()
+                mr_path = f'{gitlab_path.rstrip("/")}/{args.gitlab_group}/{bug.source}/-/merge_requests/'
+
+            url = f'https://bugs.debian.org/{bug.bug_num}'
+            tags = ''.join(tag_abbr.get(tag, '') for tag in bug.tags)
+            sev_num = Severity[bug.severity]
+            para = fmt.create_para(
+                fmt.create_link(url,  fmt.create_text(f'#{bug.bug_num}')))
+            para.append(fmt.create_text(': ('))
+            para.append(fmt.create_severity_span(sev_num,
+                                                 fmt.create_text(severity_abbr[sev_num])))
+            para.append(fmt.create_text(f', {tags}) '))
+            para.append(fmt.create_link(url,  fmt.create_text(bug.subject)))
+            if bug.mergedwith:
+                para.append(fmt.create_text(' (merged with '))
+                for i, other_bug_num in enumerate(bug.mergedwith):
+                    if i:
+                        para.append(fmt.create_text(', '))
+                    para.append(fmt.create_link(
+                        f'https://bugs.debian.org/{other_bug_num}',
+                        fmt.create_text(f'#{other_bug_num}')))
+                para.append(fmt.create_text(')'))
+            if bug.forwarded:
+                i = 0
+                for addr in re.split(r',? +', bug.forwarded):
+                    try:
+                        url_parts = urllib.parse.urlsplit(addr)
+                    except ValueError:
+                        continue
+                    if url_parts.scheme not in ['https', 'http']:
+                        continue
+                    if url_parts.netloc == gitlab_netloc \
+                       and url_parts.path.startswith(mr_path):
+                        link_text = f'{bug.source}!{url_parts.path.removeprefix(mr_path)}'
+                    elif url_parts.netloc == 'lore.kernel.org' \
+                         and (m := re.search(r'^/([^/]+)/', url_parts.path)) \
+                         and m.group(1) not in ['all', 'r']:
+                        link_text = m.group(1)
+                    else:
+                        link_text = url_parts.netloc
+                    if i == 0:
+                        para.append(fmt.create_text(' (forwarded: '))
+                    else:
+                        para.append(fmt.create_text(', '))
+                    i += 1
+                    para.append(fmt.create_link(addr, fmt.create_text(link_text)))
+                if i:
+                    para.append(fmt.create_text(')'))
+            bug_list.append(para)
+
+        if bug_list:
+            bug_list.print()
+
+    if args.show_issues or args.show_merge_requests:
+        gl_token = (pathlib.Path(args.gitlab_token).read_text().strip()
+                    if args.gitlab_token else None)
+        gl = gitlab.Gitlab(args.gitlab_url, private_token=gl_token)
+        gl_group = gl.groups.get(args.gitlab_group)
+        proj_id_name = get_project_id_name_map(gl_group)
+
+    if args.show_issues:
+        fmt.create_heading(3, fmt.create_text('Issues')).print()
+        if not gl_token:
+            fmt.create_para(
+                fmt.create_text(
+                    'W: No token provided; projects with member-only issues will not appear')) \
+               .print()
+        table = fmt.create_table([
+            fmt.create_text('Project'),
+            fmt.create_text('ID'),
+            fmt.create_text('Due date'),
+            fmt.create_text('Title'),
+        ])
+        for issue in sorted(get_interesting_issues(gl_group, min_modified, max_due),
+                            key=(lambda issue: proj_id_name[issue.project_id])):
+            if issue.due_date:
+                due_date_str = issue.due_date
+                due_date = datetime.date.fromisoformat(due_date_str)
+                if due_date < now.date():
+                    sev_num = Severity.grave
+                elif due_date <= max_due:
+                    sev_num = Severity.important
+                else:
+                    sev_num = Severity.normal
+            else:
+                due_date_str = ''
+                due_date_attr = ''
+                sev_num = Severity.normal
+            table.add_row([
+                fmt.create_text(proj_id_name[issue.project_id]),
+                fmt.create_link(issue.web_url, fmt.create_text(issue.references['short'])),
+                fmt.create_severity_span(sev_num, fmt.create_text(due_date_str)),
+                fmt.create_link(issue.web_url, fmt.create_text(issue.title))
+            ])
+        table.print()
+
+    if args.show_excuses or args.show_new_upstreams:
+        with connect_udd() as udd_conn:
+            if args.show_excuses:
+                fmt.create_heading(3, fmt.create_text('Migration excuses')).print()
+                table = fmt.create_table([
+                    fmt.create_text('Package'),
+                    fmt.create_text('Reasons'),
+                ])
+                for source, reasons, dependencies \
+                        in sorted(get_migration_excuses(udd_conn, args.maintainer)):
+                    if dependencies:
+                        # Only keys seen are 'blocked-by' and 'migrate-after'
+                        reasons.extend(dependencies.keys())
+                    if not reasons:
+                        # No reason found, but it is not a candidate, so it must be:
+                        reasons.append('too-young')
+                    table.add_row([
+                        fmt.create_text(source),
+                        fmt.create_text(", ".join(reasons))
+                    ])
+                table.print()
+
+            if args.show_new_upstreams:
+                fmt.create_heading(3, fmt.create_text('New upstream versions')) \
+                    .print()
+                table = fmt.create_table([
+                    fmt.create_text('Package'),
+                    fmt.create_text('Debian version'),
+                    fmt.create_text('Upstream version'),
+                ])
+                for source, deb_version, up_version \
+                        in sorted(get_new_upstreams(udd_conn, args.maintainer)):
+                    table.add_row([
+                        fmt.create_text(source),
+                        fmt.create_text(deb_version),
+                        fmt.create_text(up_version),
+                    ])
+                table.print()
+
+    if args.show_merge_requests:
+        fmt.create_heading(3, fmt.create_text('Merge requests')) \
+            .print()
+        table = fmt.create_table([
+            fmt.create_text('Project'),
+            fmt.create_text('ID'),
+            fmt.create_text('St'),
+            fmt.create_text('Title')
+        ])
+        for mr in sorted(get_interesting_mrs(gl_group, min_modified),
+                         key=(lambda mr: proj_id_name[mr.project_id])):
+            table.add_row([
+                fmt.create_text(proj_id_name[mr.project_id]),
+                fmt.create_link(mr.web_url, fmt.create_text(mr.references['short'])),
+                fmt.create_text(merge_status_icon.get(mr.detailed_merge_status, "??")),
+                fmt.create_link(mr.web_url, fmt.create_text(mr.title))
+            ])
+        table.print()
+
+
+if __name__ == '__main__':
+    main()

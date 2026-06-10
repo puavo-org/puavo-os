@@ -1,0 +1,48 @@
+#!/usr/bin/python3
+
+import argparse
+import requests
+import subprocess
+import urllib.parse
+
+
+def main(gitlab: str, project: str | int, version: int) -> None:
+    project_q = urllib.parse.quote(str(project), safe='')
+    url = urllib.parse.urljoin(gitlab, f'api/v4/projects/{project_q}/merge_requests') + '?' + urllib.parse.urlencode({
+        'labels': f'Backport {version}',
+        'not[labels]' : f'Backport {version} done',
+        'order_by': 'merged_at',
+        'sort': 'asc',
+        'state': 'merged',
+        'target_branch': 'debian/latest',
+    })
+    data = []
+    while url:
+        with requests.get(url) as r:
+            r.raise_for_status()
+            data.extend(r.json())
+            url = r.links.get('next', {}).get('url')
+
+    for r in data:
+        print(r['iid'], r['title'], f'({r["author"]["username"]})')
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--gitlab',
+        default='https://salsa.debian.org',
+        metavar='GITLAB',
+    )
+    parser.add_argument(
+        '--project',
+        default='kernel-team/linux',
+        metavar='PROJECT',
+    )
+    parser.add_argument(
+        'version',
+        metavar='VERSION',
+    )
+    args = parser.parse_args()
+
+    main(args.gitlab, args.project, args.version)

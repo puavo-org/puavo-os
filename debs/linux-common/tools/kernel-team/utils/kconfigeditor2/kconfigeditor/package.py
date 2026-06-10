@@ -89,10 +89,10 @@ class PackageConfigV1:
 
         kernelarch = config_entry.get('kernel-arch')
 
-        for filename in self._check_config("%s/config" % arch, arch):
+        for filename in self._check_config(f"{arch}/config", arch):
             yield filename, kernelarch, None
 
-        for filename in self._check_config("kernelarch-%s/config" % kernelarch, arch):
+        for filename in self._check_config(f"kernelarch-{kernelarch}/config", arch):
             yield filename, kernelarch, None
 
         for featureset in self.config['base', arch].get('featuresets', ()):
@@ -105,9 +105,9 @@ class PackageConfigV1:
         if not config_entry.get('enabled', True):
             return
 
-        for filename in self._check_config("featureset-%s/config" % featureset, None, featureset):
+        for filename in self._check_config(f"featureset-{featureset}/config", None, featureset):
             yield filename, kernelarch, featureset
-        for filename in self._check_config("%s/%s/config" % (arch, featureset), arch, featureset):
+        for filename in self._check_config(f"{arch}/{featureset}/config", arch, featureset):
             yield filename, kernelarch, featureset
 
         for flavour in self.config['base', arch, featureset]['flavours']:
@@ -120,9 +120,9 @@ class PackageConfigV1:
         if not config_entry.get('enabled', True):
             return
 
-        for filename in self._check_config("%s/config.%s" % (arch, flavour), arch, None, flavour):
+        for filename in self._check_config(f"{arch}/config.{flavour}", arch, None, flavour):
             yield filename, kernelarch, featureset
-        for filename in self._check_config("%s/%s/config.%s" % (arch, featureset, flavour), arch, featureset, flavour):
+        for filename in self._check_config(f"{arch}/{featureset}/config.{flavour}", arch, featureset, flavour):
             yield filename, kernelarch, featureset
 
     def _check_config_default(self, f):

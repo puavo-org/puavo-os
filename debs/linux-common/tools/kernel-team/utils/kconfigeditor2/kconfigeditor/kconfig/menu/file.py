@@ -10,7 +10,7 @@ class ParseError(RuntimeError):
         self.lineno = lineno
 
     def __str__(self):
-        return "%s:%d: %s" % (self.filename, self.lineno, self.text)
+        return f"{self.filename}:{self.lineno}: {self.text}"
 
 class File(list):
     def __init__(self, filename):
@@ -104,7 +104,9 @@ class _Element(object):
 
     def recurse(self, name, *args):
         self.pop()
-        return getattr(self.stack.top(), name)(*args)
+        func = getattr(self.stack.top(), name, None)
+        if func:
+            return func(*args)
 
 class _BlockContainer(object):
     split_rules = r"""
@@ -138,7 +140,9 @@ $"""
                                   match.group('func_params'))
         else:
             rest = match.group('rest1') or match.group('rest2')
-            getattr(self, "process_%s" % match.group('word'))(rest, match.group('ind'))
+            func = getattr(self, f"process_{match.group('word')}", None)
+            if func:
+                func(rest, match.group('ind'))
 
 class _BlockContainerChoice(_BlockContainer):
     def process_choice(self, text, ind):
@@ -191,9 +195,6 @@ class _BlockRoot(
     def __init__(self, stack, entry):
         self.stack, self.entry = stack, entry
         stack.push(self)
-
-    def __getattr__(self, name):
-        raise AttributeError(name)
 
     def process_mainmenu(self, text, ind):
         pass

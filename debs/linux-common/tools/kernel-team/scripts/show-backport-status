@@ -1,0 +1,153 @@
+#!/usr/bin/python3
+
+import apt_pkg
+from dataclasses import dataclass
+import psycopg2
+import sys
+
+
+from formatters import PlainText, Severity
+
+
+def connect_udd():
+    conn = psycopg2.connect(host='udd-mirror.debian.net',
+                            sslmode='require',
+                            user='udd-mirror', password='udd-mirror',
+                            database='udd')
+    conn.set_client_encoding('UTF8')
+    return conn
+
+
+def get_source_versions(conn):
+    versions = {}
+    with conn.cursor() as curs:
+        curs.execute(
+            "select source, max(version), release from sources"
+            " where maintainer_email='debian-kernel@lists.debian.org'"
+            " and source not like 'linux-signed-%'"
+            " group by source, release")
+        for source, version, suite in curs:
+            versions.setdefault(source, {})[suite] = version
+    return versions
+
+
+@dataclass
+class BackportRule:
+    upstream_release: str
+    backport_release: str
+    upstream_source: str|None = None
+    backport_source: str|None = None
+
+
+backport_rules = [
+    # General rules for the -backports suites
+    BackportRule('forky', 'trixie-backports'),
+    BackportRule('trixie', 'bookworm-backports'),
+    # wireless-regdb should be backported from testing to all stable
+    # releases
+    BackportRule('forky', 'trixie', 'wireless-regdb'),
+    BackportRule('forky', 'bookworm', 'wireless-regdb'),
+    BackportRule('forky', 'bullseye', 'wireless-regdb'),
+    # linux should be backported to current LTS release under a
+    # different name
+    BackportRule('bookworm', 'bullseye', 'linux', 'linux-6.1'),
+]
+
+
+def main():
+    apt_pkg.init_system()
+
+    fmt = PlainText(sys.stdout.isatty(), True, True)
+    table = fmt.create_table([
+        fmt.create_text('Upstream src'),
+        fmt.create_text('Release'),
+        fmt.create_text('Version'),
+        fmt.create_text('Backport src'),
+        fmt.create_text('Release'),
+        fmt.create_text('Version'),
+    ])
+
+    with connect_udd() as conn:
+        versions = get_source_versions(conn)
+
+    def get_suite_ver(source, suite):
+        try:
+            return versions[source][suite]
+        except KeyError:
+            return None
+
+    for rule in backport_rules:
+        # Work out which source package(s) need to be compared for
+        # this rule
+        if rule.upstream_source:
+            backport_source = rule.backport_source or rule.upstream_source
+            source_pairs = [(rule.upstream_source, backport_source)]
+        else:
+            assert not rule.backport_source
+            source_pairs = [(source, source) for source in versions]
+
+        # Iterate over them
+        for upstream_source, backport_source in source_pairs:
+            # Find latest version for upstream release
+            upstream_latest = None
+            for suite in [rule.upstream_release,
+                          f'{rule.upstream_release}-security',
+                          f'{rule.upstream_release}-updates']:
+                if (suite_ver := get_suite_ver(upstream_source, suite)) \
+                   and (upstream_latest is None
+                        or apt_pkg.version_compare(suite_ver, upstream_latest) > 0):
+                    upstream_latest = suite_ver
+            if not upstream_latest and not rule.upstream_source:
+                continue
+
+            # Find latest version in backport release
+            backport_latest = None
+            if rule.backport_release.endswith('-backports'):
+                backport_suites = [rule.backport_release]
+            else:
+                # Check -p-u here to avoid warning about backports
+                # that have already been done but not yet released
+                backport_suites = [rule.backport_release,
+                                   f'{rule.backport_release}-proposed-updates',
+                                   f'{rule.backport_release}-security',
+                                   f'{rule.backport_release}-updates']
+            for suite in backport_suites:
+                if (suite_ver := get_suite_ver(backport_source, suite)) \
+                   and (backport_latest is None
+                        or apt_pkg.version_compare(suite_ver, backport_latest) > 0):
+                    backport_latest = suite_ver
+            if not backport_latest and not rule.upstream_source:
+                continue
+
+            # Compare versions.  An up-to-date backport version will
+            # be the upstream version with a suffix starting with '~',
+            # so although it is lower than the upstream version it
+            # will not be lower than the upstream version with a '~'
+            # suffix.
+            is_up_to_date = \
+                backport_latest and upstream_latest \
+                and apt_pkg.version_compare(backport_latest, f'{upstream_latest}~') >= 0
+
+            table.add_row([
+                fmt.create_text(upstream_source),
+                fmt.create_text(rule.upstream_release),
+                fmt.create_severity_span(Severity.critical,
+                                         fmt.create_text('missing'))
+                if not upstream_latest
+                else fmt.create_text(upstream_latest),
+                fmt.create_text(backport_source),
+                fmt.create_text(rule.backport_release),
+                fmt.create_severity_span(Severity.critical,
+                                         fmt.create_text('missing'))
+                if not backport_latest
+                else fmt.create_severity_span(Severity.important,
+                                              fmt.create_text(backport_latest))
+                if not is_up_to_date
+                else fmt.create_text(backport_latest),
+            ])
+
+    table.print()
+
+
+if __name__ == '__main__':
+    main()

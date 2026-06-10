@@ -38,7 +38,7 @@ while [ $# -ge 1 ]; do
 		    http*/cgit/* | http*/cgit.cgi/* | http://kernel.ubuntu.com/git/* | http*//cgit.* | https://git.kernel.org/* | https://git.linuxtv.org/*)
 			GIT_URL_FORMAT=cgit
 			;;
-		    https://github.com/*)
+		    https://github.com/* | https://git.sr.ht/*)
 			GIT_URL_FORMAT=github
 			;;
 		    http://sourceforge.net/p/*)
@@ -48,8 +48,11 @@ while [ $# -ge 1 ]; do
 			# This is gitweb but the URL structure is like Github
 			GIT_URL_FORMAT=github
 			;;
+		    https://gitlab.* | https://salsa.debian.org/*)
+			GIT_URL_FORMAT=gitlab
+			;;
 		    *)
-			echo >&2 "E: URL '$2' not recognised as gitweb, cgit, github or sourceforge"
+			echo >&2 "E: URL '$2' not recognised as gitweb, cgit, github, sourceforge, or gitlab"
 			exit 2
 			;;
 		esac
@@ -59,6 +62,11 @@ while [ $# -ge 1 ]; do
 		cgit)        export GIT_URL_BASE="${2%/}/commit?id=" ;;
 		github)      export GIT_URL_BASE="${2%/}/commit/" ;;
 		sourceforge) export GIT_URL_BASE="${2%/}/ci/" ;;
+		gitlab)
+		    url="${2%/}"
+		    url="${2%.git}"
+		    export GIT_URL_BASE="$url/-/commit/"
+		    ;;
 		*)
 		    echo >&2 "E: Unsupported URL format"
 		    exit 2

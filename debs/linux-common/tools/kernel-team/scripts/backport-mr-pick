@@ -1,0 +1,74 @@
+#!/usr/bin/python3
+
+import argparse
+import pathlib
+import requests
+import subprocess
+import urllib.parse
+
+
+def main(gitlab: str, project: str | int, mr: int) -> None:
+    project_q = urllib.parse.quote(str(project), safe='')
+    url = urllib.parse.urljoin(gitlab, f'api/v4/projects/{project_q}/merge_requests/{mr}')
+    with requests.get(url) as r:
+        r.raise_for_status()
+        data = r.json()
+    url = urllib.parse.urljoin(gitlab, f'api/v4/projects/{project_q}/merge_requests/{mr}/commits')
+    with requests.get(url) as r:
+        r.raise_for_status()
+        commits = r.json()
+
+    if not data['state'] == 'merged':
+        raise RuntimeError('Not merged')
+    if not data['target_branch'] == 'debian/latest':
+        raise RuntimeError('Not accepted target branch')
+
+    mr_title = data['title']
+    mr_ref = data['references']['full']
+    mr_commit = data['merge_commit_sha']
+
+    message = [
+        f'Backport "{mr_title}"',
+        '',
+        f'This backports merge request {mr_ref}',
+        '',
+        '# Commits:',
+    ] + [
+        f'# {i["title"]}'
+        for i in commits
+    ]
+
+    gitdir = pathlib.Path(subprocess.check_output(['git', 'rev-parse', '--git-dir'], encoding='utf-8').strip())
+    mergemsg = gitdir / 'MERGE_MSG'
+
+    subprocess.run(['git', 'cherry-pick', '-n', '-m1', mr_commit], check=False)
+    subprocess.run(['git', 'restore', '--staged', 'debian/changelog'], check=False)
+    subprocess.run(['git', 'checkout', 'debian/changelog'], check=False)
+    subprocess.run(['git', 'diff', f'{mr_commit}^1..{mr_commit}', '--', 'debian/changelog'], check=False)
+
+    with mergemsg.open('w') as f:
+        f.write('\n'.join(message) + '\n')
+
+    print('Please update debian/changelog and commit')
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--gitlab',
+        default='https://salsa.debian.org',
+        metavar='GITLAB',
+    )
+    parser.add_argument(
+        '--project',
+        default='kernel-team/linux',
+        metavar='PROJECT',
+    )
+    parser.add_argument(
+        'mr',
+        metavar='MR',
+        type=int,
+    )
+    args = parser.parse_args()
+
+    main(args.gitlab, args.project, args.mr)

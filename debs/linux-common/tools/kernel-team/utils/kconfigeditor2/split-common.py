@@ -18,7 +18,7 @@ class Main(object):
         self.write('output-common', output_common)
 
         for output, id in zip(output_files, range(1, len(output_files) + 1)):
-            self.write('output-part-%d' % id, output)
+            self.write(f'output-part-{id}', output)
 
     def write(self, filename, content):
         f = open(filename, 'w')
