@@ -1,0 +1,112 @@
+diff -ruN linux-modern.0/drivers/iommu/intel/iommu.c linux-modern.1/drivers/iommu/intel/iommu.c
+--- linux-modern.0/drivers/iommu/intel/iommu.c	2026-06-10 12:41:07.628552355 +0200
++++ linux-modern.1/drivers/iommu/intel/iommu.c	2026-06-10 12:41:58.184553799 +0200
+@@ -218,6 +218,8 @@
+ EXPORT_SYMBOL_GPL(intel_iommu_enabled);
+ 
+ static int dmar_map_intgpu = IS_ENABLED(CONFIG_INTEL_IOMMU_DEFAULT_ON);
++static int dmar_map_ipts = 1;
++static int dmar_map_ipu = 1;
+ static int intel_iommu_superpage = 1;
+ static int iommu_identity_mapping;
+ static int iommu_skip_te_disable;
+@@ -225,6 +227,8 @@
+ 
+ #define IDENTMAP_AZALIA		4
+ #define IDENTMAP_INTGPU		8
++#define IDENTMAP_IPU		16	/* puavo:  8 -> 16 */
++#define IDENTMAP_IPTS		32	/* puavo: 16 -> 32 */
+ 
+ const struct iommu_ops intel_iommu_ops;
+ 
+@@ -1422,6 +1426,12 @@
+ 
+ 		if ((iommu_identity_mapping & IDENTMAP_INTGPU) && IS_INTGPU_DEVICE(pdev))
+ 			return IOMMU_DOMAIN_IDENTITY;
++
++		if ((iommu_identity_mapping & IDENTMAP_IPU) && IS_INTEL_IPU(pdev))
++			return IOMMU_DOMAIN_IDENTITY;
++
++		if ((iommu_identity_mapping & IDENTMAP_IPTS) && IS_IPTS(pdev))
++			return IOMMU_DOMAIN_IDENTITY;
+ 	}
+ 
+ 	return 0;
+@@ -1715,6 +1725,12 @@
+ 	if (!dmar_map_intgpu)
+ 		iommu_identity_mapping |= IDENTMAP_INTGPU;
+ 
++	if (!dmar_map_ipu)
++		iommu_identity_mapping |= IDENTMAP_IPU;
++
++	if (!dmar_map_ipts)
++		iommu_identity_mapping |= IDENTMAP_IPTS;
++
+ 	check_tylersburg_isoch();
+ 
+ 	/*
+@@ -3964,6 +3980,30 @@
+ /* Q35 integrated gfx dmar support is totally busted. */
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x29b2, quirk_iommu_igfx);
+ 
++static void quirk_iommu_ipu(struct pci_dev *dev)
++{
++	if (!IS_INTEL_IPU(dev))
++		return;
++
++	if (risky_device(dev))
++		return;
++
++	pci_info(dev, "Passthrough IOMMU for integrated Intel IPU\n");
++	dmar_map_ipu = 0;
++}
++
++static void quirk_iommu_ipts(struct pci_dev *dev)
++{
++	if (!IS_IPTS(dev))
++		return;
++
++	if (risky_device(dev))
++		return;
++
++	pci_info(dev, "Disabling IOMMU for IPTS\n");
++	dmar_map_ipts = 0;
++}
++
+ /* G4x/GM45 integrated gfx dmar support is totally busted. */
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2a40, quirk_iommu_igfx);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2e00, quirk_iommu_igfx);
+diff -ruN linux-modern.0/drivers/misc/mei/hw-me-regs.h linux-modern.1/drivers/misc/mei/hw-me-regs.h
+--- linux-modern.0/drivers/misc/mei/hw-me-regs.h	2026-05-23 13:09:44.000000000 +0200
++++ linux-modern.1/drivers/misc/mei/hw-me-regs.h	2026-06-10 12:41:51.320553603 +0200
+@@ -92,6 +92,7 @@
+ #define PCI_DEVICE_ID_INTEL_MEI_CDF        0x18D3  /* Cedar Fork */
+ 
+ #define PCI_DEVICE_ID_INTEL_MEI_ICP_LP     0x34E0  /* Ice Lake Point LP */
++#define PCI_DEVICE_ID_INTEL_MEI_ICP_LP_3   0x34E4  /* Ice Lake Point LP 3 (iTouch) */
+ #define PCI_DEVICE_ID_INTEL_MEI_ICP_N      0x38E0  /* Ice Lake Point N */
+ 
+ #define PCI_DEVICE_ID_INTEL_MEI_JSP_N      0x4DE0  /* Jasper Lake Point N */
+diff -ruN linux-modern.0/drivers/misc/mei/pci-me.c linux-modern.1/drivers/misc/mei/pci-me.c
+--- linux-modern.0/drivers/misc/mei/pci-me.c	2026-05-23 13:09:44.000000000 +0200
++++ linux-modern.1/drivers/misc/mei/pci-me.c	2026-06-10 12:41:51.320553603 +0200
+@@ -97,6 +97,7 @@
+ 	{PCI_DEVICE_DATA(INTEL, MEI_CMP_H_3, MEI_ME_PCH8_ITOUCH_CFG)},
+ 
+ 	{PCI_DEVICE_DATA(INTEL, MEI_ICP_LP, MEI_ME_PCH12_CFG)},
++	{PCI_DEVICE_DATA(INTEL, MEI_ICP_LP_3, MEI_ME_PCH12_CFG)},
+ 	{PCI_DEVICE_DATA(INTEL, MEI_ICP_N, MEI_ME_PCH12_CFG)},
+ 
+ 	{PCI_DEVICE_DATA(INTEL, MEI_TGP_LP, MEI_ME_PCH15_CFG)},
+diff -ruN linux-modern.0/drivers/platform/x86/intel/int3472/discrete.c linux-modern.1/drivers/platform/x86/intel/int3472/discrete.c
+--- linux-modern.0/drivers/platform/x86/intel/int3472/discrete.c	2026-06-10 12:41:07.632552355 +0200
++++ linux-modern.1/drivers/platform/x86/intel/int3472/discrete.c	2026-06-10 12:41:58.184553799 +0200
+@@ -347,6 +347,8 @@
+ 	case INT3472_GPIO_TYPE_POWER_ENABLE:
+ 	case INT3472_GPIO_TYPE_DOVDD:
+ 	case INT3472_GPIO_TYPE_HANDSHAKE:
++	case 0x08:  /* Surface Pro 9 power rails */
++	case 0x10:
+ 		gpio = skl_int3472_gpiod_get_from_temp_lookup(int3472, agpio, con_id, gpio_flags);
+ 		if (IS_ERR(gpio)) {
+ 			ret = PTR_ERR(gpio);
