@@ -869,9 +869,10 @@ class packages {
       version      => '6.12.90+deb13-amd64';
 
     'modern':
-      dkms_modules => [ $puavo_command_line_signer_module ],  # XXX what could work with this?
-      package_name => 'linux-image-7.0.10+deb13-amd64',
-      version      => '7.0.10+deb13-amd64';
+      dkms_modules   => [ $puavo_command_line_signer_module ],
+      extra_packages => [ 'linux-modules-7.0.10+deb13-amd64' ],
+      package_name   => 'linux-binary-unsigned-7.0.10+deb13-amd64',
+      version        => '7.0.10+deb13-amd64';
   }
 
   # various contrib/non-free stuff, firmwares and such
