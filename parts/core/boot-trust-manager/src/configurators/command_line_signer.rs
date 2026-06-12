@@ -87,7 +87,7 @@ impl Configurator for CommandLineSignerConfigurator {
         &mut self,
         boot_vault: &mut BootVault,
         _primary_partition: &mut LuksTpmTokenManager,
-        _display: &Box<dyn UserDisplay>,
+        _display: &dyn UserDisplay,
     ) -> Result<(), PuavoError> {
         // Only log errors, so the other configurators can continue.
         self.initialize(boot_vault).inspect_err(|error| {
