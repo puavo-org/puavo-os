@@ -21,15 +21,16 @@ pkgworkdir="${workdir}/${srcpkgname}"
 
 rm -rf "${pkgworkdir}"
 mkdir -p "${pkgworkdir}/${srcpkgname}"
-
 cp -aH "$srcpkgname"/* "${pkgworkdir}/${srcpkgname}/"
-checksum_dirs="$pkgworkdir"
+
 if [ -e "${srcpkgname}/.puavo_build_dependencies" ]; then
-  checksum_dirs="${checksum_dirs} $(cat "${srcpkgname}/.puavo_build_dependencies")"
+  for dir in $(cat "${srcpkgname}/.puavo_build_dependencies"); do
+    cp -a "$dir" "${pkgworkdir}/"
+  done
 fi
 
-current_srctree_checksum="$(find $checksum_dirs -type f -exec md5sum \{} \; \
-                             | sort | md5sum | awk '{ print $1 }')"
+current_srctree_checksum="$(find "$pkgworkdir" -type f -exec md5sum \{} \; \
+                              | sort | md5sum | awk '{ print $1 }')"
 
 if [ -z "$current_srctree_checksum" ]; then
   echo 'Could not calculate checksum from source tree' >&2
