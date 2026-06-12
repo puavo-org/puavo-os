@@ -69,7 +69,7 @@ fi
   fi
   mk-build-deps "${mk_build_deps_options[@]}" "${srcpkgname}/debian/control"
   ${PUAVOOS_SUDO:-} apt-get install --no-install-recommends --yes \
-    "./${debpkgname}-build-deps_"*.deb
+    --allow-downgrades "./${debpkgname}-build-deps_"*.deb
   rm -f "./${debpkgname}-build-deps_"*.deb
 )
 
