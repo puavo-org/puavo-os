@@ -1,7 +1,7 @@
-diff -ruN mutter/src/backends/meta-monitor-manager.c mutter/src/backends/meta-monitor-manager.c
---- mutter/src/backends/meta-monitor-manager.c	2023-11-15 12:49:22.479248912 +0200
-+++ mutter/src/backends/meta-monitor-manager.c	2023-11-15 12:50:39.426078360 +0200
-@@ -685,6 +685,8 @@
+diff -ruN mutter/src/backends/meta-monitor-manager.c mutter.3/src/backends/meta-monitor-manager.c
+--- mutter/src/backends/meta-monitor-manager.c	2026-06-15 11:49:16.896337850 +0200
++++ mutter/src/backends/meta-monitor-manager.c	2026-06-15 11:58:05.194045648 +0200
+@@ -781,6 +781,8 @@
    MetaMonitorsConfigMethod method;
    MetaMonitorsConfigMethod fallback_method =
      META_MONITORS_CONFIG_METHOD_TEMPORARY;
@@ -10,8 +10,8 @@ diff -ruN mutter/src/backends/meta-monitor-manager.c mutter/src/backends/meta-mo
  
    use_stored_config = should_use_stored_config (manager);
    if (use_stored_config)
-@@ -815,7 +817,17 @@
-       g_clear_object (&config);
+@@ -929,7 +931,17 @@
+         }
      }
  
 -  config = meta_monitor_config_manager_create_linear (manager->config_manager);

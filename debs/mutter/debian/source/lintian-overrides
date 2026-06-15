@@ -1,2 +1,0 @@
-# We export this in debian/rules
-dh-exec-subst-unknown-variable MUTTER_API_VERSION [debian/mutter-11-tests.install:*]

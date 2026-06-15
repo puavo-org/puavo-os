@@ -1,9 +1,9 @@
-diff -ruN mutter/src/backends/meta-monitor-config-store.c mutter/src/backends/meta-monitor-config-store.c
---- mutter/src/backends/meta-monitor-config-store.c	2023-11-15 13:18:05.000000000 +0200
-+++ mutter/src/backends/meta-monitor-config-store.c	2023-11-15 13:19:04.553631770 +0200
-@@ -2005,6 +2005,16 @@
-   char *user_file_path;
+diff -ruN mutter/src/backends/meta-monitor-config-store.c mutter.1/src/backends/meta-monitor-config-store.c
+--- mutter/src/backends/meta-monitor-config-store.c	2026-06-15 12:29:33.616161077 +0200
++++ mutter/src/backends/meta-monitor-config-store.c	2026-06-15 12:30:12.004760551 +0200
+@@ -2815,6 +2815,16 @@
    GError *error = NULL;
+   gboolean should_save_configs = FALSE;
    char *monitors_file_path;
 +  char *mutter_allow_configuration;
 +  gboolean load_user_config = TRUE;
@@ -18,7 +18,7 @@ diff -ruN mutter/src/backends/meta-monitor-config-store.c mutter/src/backends/me
  
    monitors_file_path = getenv("MUTTER_MONITOR_FILENAME");
    if (monitors_file_path == NULL)
-@@ -2053,7 +2063,7 @@
+@@ -2865,7 +2875,7 @@
                                       NULL);
    config_store->user_file = g_file_new_for_path (user_file_path);
  
@@ -27,10 +27,10 @@ diff -ruN mutter/src/backends/meta-monitor-config-store.c mutter/src/backends/me
      {
        if (!read_config_file (config_store,
                               config_store->user_file,
-diff -ruN mutter/src/backends/meta-monitor-manager.c mutter/src/backends/meta-monitor-manager.c
---- mutter/src/backends/meta-monitor-manager.c	2023-11-15 13:18:05.000000000 +0200
-+++ mutter/src/backends/meta-monitor-manager.c	2023-11-15 13:19:04.553631770 +0200
-@@ -687,6 +687,7 @@
+diff -ruN mutter/src/backends/meta-monitor-manager.c mutter.1/src/backends/meta-monitor-manager.c
+--- mutter/src/backends/meta-monitor-manager.c	2026-06-15 12:29:33.640832908 +0200
++++ mutter/src/backends/meta-monitor-manager.c	2026-06-15 12:30:12.005415927 +0200
+@@ -783,6 +783,7 @@
      META_MONITORS_CONFIG_METHOD_TEMPORARY;
    MetaMonitorSwitchConfigType config_type;
    char *display_setup;
@@ -38,7 +38,7 @@ diff -ruN mutter/src/backends/meta-monitor-manager.c mutter/src/backends/meta-mo
  
    use_stored_config = should_use_stored_config (manager);
    if (use_stored_config)
-@@ -761,6 +762,16 @@
+@@ -865,6 +866,16 @@
          }
      }
  
@@ -55,9 +55,9 @@ diff -ruN mutter/src/backends/meta-monitor-manager.c mutter/src/backends/meta-mo
    config = meta_monitor_config_manager_create_suggested (manager->config_manager);
    if (config)
      {
-@@ -2649,6 +2660,19 @@
-   MetaMonitorsConfig *config;
-   GList *logical_monitor_configs = NULL;
+@@ -3035,6 +3046,19 @@
+   GList *disabled_monitor_specs = NULL;
+   GList *for_lease_monitor_specs = NULL;
    GError *error = NULL;
 +  char *mutter_allow_configuration;
 +
