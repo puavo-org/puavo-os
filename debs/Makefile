@@ -15,7 +15,6 @@ else
   # XXX do not build these custom packages in Trixie, these all need some work
   # _pkgs_parts := puavo-ds puavo-os
   # _pkgs_ports := anki                   \
-  #                cups                   \
   #                cups-filters           \
   #                gnome-control-center   \
   #                gtk+3.0                \
@@ -27,8 +26,8 @@ else
   _pkgs_cloud      := puavo-ds puavo-os krb5 openldap
   _pkgs_extraports := collabora
   _pkgs_parts      := puavo-ds puavo-os
-  _pkgs_ports      := facter gnome-shell hooktftp libpam-ccreds linux-default \
-                      linux-modern wsmancli
+  _pkgs_ports      := cups facter gnome-shell hooktftp libpam-ccreds \
+                      linux-default linux-modern wsmancli
 
   # sblim-sfcc openwsman are dependencies for wsmancli
   _pkgs_ports_builddeps := sblim-sfcc openwsman

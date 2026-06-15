@@ -10,7 +10,7 @@ cat <<'EOF' | patch -p1
  Build-Conflicts:
   libgmp-dev (<< 2:6),
 + libssl-dev
- Standards-Version: 4.6.0
+ Standards-Version: 4.6.2
  Vcs-Browser: https://salsa.debian.org/printing-team/cups
  Vcs-Git: https://salsa.debian.org/printing-team/cups.git
 EOF
