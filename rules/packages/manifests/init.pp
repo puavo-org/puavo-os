@@ -193,7 +193,8 @@ class packages {
     , 'zsh' ]:
       tag => [ 'tag_admin', 'tag_debian_desktop', ];
 
-    [ 'espeak-ng'
+    [ 'alsa-ucm-conf'
+    , 'espeak-ng'
     , 'gnome-sound-recorder'
     , 'lame'
     , 'libasound2-plugins'
