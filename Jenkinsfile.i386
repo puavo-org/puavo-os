@@ -28,6 +28,7 @@ EOF
         // so package builds can proceed:
         sh 'ln -fns "$(pwd)" /puavo-os'
         sh 'make prepare'
+        sh 'apt-get install -y puavo-devscripts'
       }
     }
 
