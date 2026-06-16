@@ -14,8 +14,7 @@ ifeq "$(image_class)" "exam"
 else
   # XXX do not build these custom packages in Trixie, these all need some work
   # _pkgs_parts := puavo-ds puavo-os
-  # _pkgs_ports := anki                   \
-  #                kde-spectacle          \
+  # _pkgs_ports := anki
   # XXX Trixie
   _pkgs_cloud      := puavo-ds puavo-os krb5 openldap
   _pkgs_extraports := collabora
