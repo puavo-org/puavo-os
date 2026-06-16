@@ -3,48 +3,47 @@ Description: Disable location panel, automatically enable all computers.
  veyon, and are thus disabled / hidden.
 Author: Tuomas Nurmi <dev@opinsys.fi>
 
---- veyon-4.7.4+repack1.orig/master/src/ComputerManager.cpp
-+++ veyon-4.7.4+repack1/master/src/ComputerManager.cpp
-@@ -435,10 +435,10 @@ ComputerList ComputerManager::selectedCo
+diff -ruN veyon/master/src/ComputerManager.cpp veyon/master/src/ComputerManager.cpp
+--- veyon/master/src/ComputerManager.cpp	2025-04-08 13:36:26.000000000 +0200
++++ veyon/master/src/ComputerManager.cpp	2026-06-16 10:17:05.678286878 +0200
+@@ -497,11 +497,6 @@
  	{
  		QModelIndex entryIndex = model->index( i, 0, parent );
  
--		if( QVariantHelper<Qt::CheckState>::value( model->data( entryIndex, NetworkObjectModel::CheckStateRole ) ) == Qt::Unchecked )
-+		/*if( QVariantHelper<Qt::CheckState>::value( model->data( entryIndex, NetworkObjectModel::CheckStateRole ) ) == Qt::Unchecked )
- 		{
- 			continue;
+-		if( model->data( entryIndex, NetworkObjectModel::CheckStateRole ).value<Qt::CheckState>() == Qt::Unchecked )
+-		{
+-			continue;
 -		}
-+		}*/
- 
+-
  		const auto objectType = NetworkObject::Type( model->data(entryIndex, NetworkObjectModel::TypeRole).toInt() );
  
---- veyon-4.7.4+repack1.orig/master/src/MainWindow.cpp
-+++ veyon-4.7.4+repack1/master/src/MainWindow.cpp
-@@ -108,12 +108,13 @@ MainWindow::MainWindow( VeyonMaster &mas
+ 		if( NetworkObject::isContainer(objectType) )
+diff -ruN veyon/master/src/MainWindow.cpp veyon/master/src/MainWindow.cpp
+--- veyon/master/src/MainWindow.cpp	2025-04-08 14:57:21.000000000 +0200
++++ veyon/master/src/MainWindow.cpp	2026-06-16 10:18:34.607269391 +0200
+@@ -111,12 +111,12 @@
  	monitoringSplitter->setStretchFactor( monitoringSplitter->indexOf(slideshowSpotlightSplitter), 1 );
  	monitoringSplitter->setStretchFactor( monitoringSplitter->indexOf(ui->computerMonitoringWidget), 1 );
  
 -	mainSplitter->addWidget( computerSelectPanel );
-+	//mainSplitter->addWidget( computerSelectPanel );
  	mainSplitter->addWidget( screenshotManagementPanel );
  	mainSplitter->addWidget( monitoringSplitter );
  
  	mainSplitter->setStretchFactor( mainSplitter->indexOf(monitoringSplitter), 1 );
  
-+       ui->computerSelectPanelButton->setVisible(false);
++	ui->computerSelectPanelButton->setVisible(false);
  
  	static const QHash<QWidget *, QAbstractButton *> panelButtons{
  		{ computerSelectPanel, ui->computerSelectPanelButton },
-@@ -190,10 +191,10 @@ MainWindow::MainWindow( VeyonMaster &mas
+@@ -193,11 +193,6 @@
  
  	ui->centralLayout->addWidget( mainSplitter );
  
 -	if( VeyonCore::config().autoOpenComputerSelectPanel() )
-+	/*if( VeyonCore::config().autoOpenComputerSelectPanel() )
- 	{
- 		ui->computerSelectPanelButton->setChecked( true );
+-	{
+-		ui->computerSelectPanelButton->setChecked( true );
 -	}
-+	}*/
- 
- 	// initialize search filter
- 	ui->filterPoweredOnComputersButton->setChecked( m_master.userConfig().filterPoweredOnComputers() );
+-
+ 	// initialize filter controls
+ 	connect( ui->filterLineEdit, &QLineEdit::textChanged,
+ 			 this, [this]( const QString& filter ) { ui->computerMonitoringWidget->setSearchFilter( filter ); } );
