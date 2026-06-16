@@ -107,16 +107,10 @@ scroll-method='two-finger-scrolling'
 orientation-lock=true
 
 [org/gnome/settings-daemon/plugins/media-keys]
-custom-keybindings=['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/']
+custom-keybindings=['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/']
 screenreader=['']
-screenshot=['']
-area-screenshot=['']
-area-schreenshot-clip=['']
 magnifier-zoom-in=['']
 magnifier-zoom-out=['']
-screenshot-clip=['']
-window-screenshot=['<Alt>Print']
-window-screenshot-clip=['']
 
 [org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0]
 binding='<Super>space'
@@ -142,41 +136,6 @@ name='XZoom'
 binding='<Primary><Alt>l'
 command='dbus-send --type=method_call --dest=org.gnome.ScreenSaver /org/gnome/ScreenSaver org.gnome.ScreenSaver.Lock'
 name='Lock screen'
-
-[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5]
-binding='Print'
-command='spectacle'
-name='Screenshot'
-
-[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom6]
-binding='<Ctrl>Print'
-command='spectacle -c -b'
-name='Screenshot Clip'
-
-[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7]
-binding='<Alt>Print'
-command='spectacle -a'
-name='Window Screenshot'
-
-[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom8]
-binding='<Ctrl><Alt>Print'
-command='spectacle -a -c -b'
-name='Window Screenshot Clip'
-
-[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom9]
-binding='<Shift>Print'
-command='spectacle -r'
-name='Area Screenshot'
-
-[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom10]
-binding='<Ctrl><Shift>Print'
-command='spectacle -r -c -b'
-name='Area Screenshot Clip'
-
-[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom11]
-binding='<Meta>Print'
-command='spectacle -b'
-name='Screenshot and Save'
 
 [org/gnome/settings-daemon/plugins/power]
 ambient-enabled=false
@@ -209,7 +168,10 @@ notifications-enabled=false
 user-removed-buttons=['DarkModeToggle']
 
 [org/gnome/shell/keybindings]
-show-screenshot-ui=['<Super>Print']
+screenshot=['<Shift>Print']
+screenshot-window=['<Alt>Print']
+show-screenshot-ui=['Print']
+show-screen-recording-ui=['<Ctrl><Shift><Alt>R']
 
 [org/gnome/shell/overrides]
 attach-modal-dialogs=false
