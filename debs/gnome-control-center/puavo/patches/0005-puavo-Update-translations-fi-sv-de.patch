@@ -1,74 +1,59 @@
-From fd2d1c5dddd2994d4e3071a24aecf1e60d098b0e Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
-Date: Mon, 29 Apr 2024 18:42:03 +0300
+From 5851b84fa46b3834716b11e87c8f641e7fe73d46 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Juha=20Erkkil=C3=A4?= <Juha.Erkkila@opinsys.fi>
+Date: Tue, 16 Jun 2026 07:45:50 +0200
 Subject: [PATCH 05/14] [puavo] Update translations fi, sv, de
 
 ---
- po/de.po | 6 +++++-
- po/fi.po | 6 +++++-
- po/sv.po | 6 +++++-
- 3 files changed, 15 insertions(+), 3 deletions(-)
+ po/de.po | 4 ++++
+ po/fi.po | 4 ++++
+ po/sv.po | 4 ++++
+ 3 files changed, 12 insertions(+)
 
 diff --git a/po/de.po b/po/de.po
-index f6fea8c92..6d7a7fd8e 100644
+index 7121e84e8..e00f1f49b 100644
 --- a/po/de.po
 +++ b/po/de.po
-@@ -441,10 +441,14 @@ msgid "Dark"
- msgstr "Dunkel"
+@@ -1047,6 +1047,10 @@ msgstr "Du_nkel"
+ msgid "Accent Color"
+ msgstr "Akzentfarbe"
  
- #: panels/background/cc-background-panel.ui:98
++#: panels/background/cc-background-panel.ui:98
 +msgid "Icon theme"
 +msgstr "Icon Thema"
 +
-+#: panels/background/cc-background-panel.ui:118
+ #: panels/background/cc-background-panel.ui:142
  msgid "Background"
  msgstr "Hintergrund"
- 
--#: panels/background/cc-background-panel.ui:104
-+#: panels/background/cc-background-panel.ui:124
- msgid "Add Picture…"
- msgstr "Bild hinzufügen …"
- 
 diff --git a/po/fi.po b/po/fi.po
-index 01a88c777..0b00148bb 100644
+index 7e8167cb5..2b700a50a 100644
 --- a/po/fi.po
 +++ b/po/fi.po
-@@ -438,10 +438,14 @@ msgid "Dark"
- msgstr "Tumma"
+@@ -1035,6 +1035,10 @@ msgstr "_Tumma"
+ msgid "Accent Color"
+ msgstr "Korostusväri"
  
- #: panels/background/cc-background-panel.ui:98
++#: panels/background/cc-background-panel.ui:98
 +msgid "Icon theme"
 +msgstr "Kuvaketeema"
 +
-+#: panels/background/cc-background-panel.ui:118
+ #: panels/background/cc-background-panel.ui:142
  msgid "Background"
  msgstr "Taustakuva"
- 
--#: panels/background/cc-background-panel.ui:104
-+#: panels/background/cc-background-panel.ui:124
- msgid "Add Picture…"
- msgstr "Lisää kuva…"
- 
 diff --git a/po/sv.po b/po/sv.po
-index def284af1..1fe298086 100644
+index 6eb8a4cc6..928b5e803 100644
 --- a/po/sv.po
 +++ b/po/sv.po
-@@ -424,10 +424,14 @@ msgid "Dark"
- msgstr "Mörk"
+@@ -1018,6 +1018,10 @@ msgstr "Mö_rk"
+ msgid "Accent Color"
+ msgstr "Accentfärg"
  
- #: panels/background/cc-background-panel.ui:98
++#: panels/background/cc-background-panel.ui:98
 +msgid "Icon theme"
 +msgstr "Ikon tema"
 +
-+#: panels/background/cc-background-panel.ui:118
+ #: panels/background/cc-background-panel.ui:142
  msgid "Background"
  msgstr "Bakgrund"
- 
--#: panels/background/cc-background-panel.ui:104
-+#: panels/background/cc-background-panel.ui:124
- msgid "Add Picture…"
- msgstr "Lägg till bild…"
- 
 -- 
-2.39.2
+2.47.3
 

@@ -1,4 +1,4 @@
-From 5bd218aeb3a7c16c9a0488fead8942f42779f2cc Mon Sep 17 00:00:00 2001
+From f9ccc9465e286058c31bfead96c03cddabd2f488 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
 Date: Fri, 17 May 2024 18:05:08 +0300
 Subject: [PATCH 10/14] [puavo] appearance: accept "Dark" and "dark" as valid
@@ -10,7 +10,7 @@ KvArc => KvArcDark
  1 file changed, 7 insertions(+), 5 deletions(-)
 
 diff --git a/panels/background/cc-background-panel.c b/panels/background/cc-background-panel.c
-index 844536b34..aa3c043ad 100644
+index e1bf1c61e..d2a636022 100644
 --- a/panels/background/cc-background-panel.c
 +++ b/panels/background/cc-background-panel.c
 @@ -80,7 +80,7 @@ struct _CcBackgroundPanel
@@ -22,7 +22,7 @@ index 844536b34..aa3c043ad 100644
  static const int DARK_SUFFIX_COUNT = sizeof(DARK_SUFFIXES) / sizeof(DARK_SUFFIXES[0]);
  
  CC_PANEL_REGISTER (CcBackgroundPanel, cc_background_panel)
-@@ -145,10 +145,12 @@ get_default_theme(const gchar *theme)
+@@ -125,10 +125,12 @@ get_default_theme(const gchar *theme)
    if (!theme)
      return NULL;
  
@@ -40,5 +40,5 @@ index 844536b34..aa3c043ad 100644
      {
        if (g_strcmp0 (theme, DARK_SUFFIXES[i]) == 0)
 -- 
-2.39.2
+2.47.3
 

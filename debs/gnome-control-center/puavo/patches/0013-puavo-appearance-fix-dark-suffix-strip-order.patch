@@ -1,4 +1,4 @@
-From 294f26f451ac258cb808c01807ec53e20c879f50 Mon Sep 17 00:00:00 2001
+From 4d74a72d46ba836b6107e8e1058f87fd5c26e7db Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
 Date: Tue, 20 Aug 2024 19:28:32 +0300
 Subject: [PATCH 13/14] [puavo] appearance: fix dark suffix strip order
@@ -15,7 +15,7 @@ After: Yaru-dark -> Yaru
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/panels/background/cc-background-panel.c b/panels/background/cc-background-panel.c
-index 9aa6fb710..e1ca58481 100644
+index 7fc3f6a2b..ffa8439f8 100644
 --- a/panels/background/cc-background-panel.c
 +++ b/panels/background/cc-background-panel.c
 @@ -80,7 +80,7 @@ struct _CcBackgroundPanel
@@ -28,5 +28,5 @@ index 9aa6fb710..e1ca58481 100644
  
  CC_PANEL_REGISTER (CcBackgroundPanel, cc_background_panel)
 -- 
-2.39.2
+2.47.3
 

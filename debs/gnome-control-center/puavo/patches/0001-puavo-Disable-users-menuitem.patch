@@ -1,0 +1,48 @@
+From c170c194c468f817c146f8a1f732d69dd239a7e7 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Juha=20Erkkil=C3=A4?= <Juha.Erkkila@opinsys.fi>
+Date: Tue, 16 Jun 2026 07:22:12 +0200
+Subject: [PATCH 01/14] [puavo] Disable "users" menuitem.
+
+---
+ panels/system/cc-system-panel.ui | 12 ------------
+ shell/cc-panel-loader.c          |  1 -
+ 2 files changed, 13 deletions(-)
+
+diff --git a/panels/system/cc-system-panel.ui b/panels/system/cc-system-panel.ui
+index 6de8b22e8..1dae5c9ee 100644
+--- a/panels/system/cc-system-panel.ui
++++ b/panels/system/cc-system-panel.ui
+@@ -37,18 +37,6 @@
+                       </object>
+                     </child>
+ 
+-                    <child>
+-                      <object class="CcListRow" id="users_row">
+-                        <property name="title" translatable="yes">_Users</property>
+-                        <property name="subtitle" translatable="yes">Add and remove accounts, change password</property>
+-                        <property name="icon-name">org.gnome.Settings-users-symbolic</property>
+-                        <property name="use-underline">True</property>
+-                        <property name="show-arrow">True</property>
+-                        <property name="action-name">navigation.push</property>
+-                        <property name="action-target">'users'</property>
+-                      </object>
+-                    </child>
+-
+                     <child>
+                       <object class="CcListRow" id="remote_desktop_row">
+                         <property name="title" translatable="yes">R_emote Desktop</property>
+diff --git a/shell/cc-panel-loader.c b/shell/cc-panel-loader.c
+index 28a1671d9..69eb402ca 100644
+--- a/shell/cc-panel-loader.c
++++ b/shell/cc-panel-loader.c
+@@ -136,7 +136,6 @@ static CcSubpageLoaderVtable default_subpages[] =
+   {CC_CATEGORY_SYSTEM, "about"},
+   {CC_CATEGORY_SYSTEM, "datetime"},
+   {CC_CATEGORY_SYSTEM, "region"},
+-  {CC_CATEGORY_SYSTEM, "users"},
+ };
+ static CcSubpageLoaderVtable *subpages_vtable = default_subpages;
+ static gsize supages_vtable_len = G_N_ELEMENTS (default_subpages);
+-- 
+2.47.3
+

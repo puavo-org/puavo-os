@@ -1,4 +1,4 @@
-From 660bd4117b227d9f6a6e95410fff3ea5824e94b2 Mon Sep 17 00:00:00 2001
+From 66c76c456fee0fd61f83266dbda34f72d3c4d922 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
 Date: Sun, 21 Apr 2024 21:09:46 +0300
 Subject: [PATCH 02/14] [puavo] appearance: make style switch change themes too
@@ -8,12 +8,12 @@ Subject: [PATCH 02/14] [puavo] appearance: make style switch change themes too
  1 file changed, 100 insertions(+), 1 deletion(-)
 
 diff --git a/panels/background/cc-background-panel.c b/panels/background/cc-background-panel.c
-index f748e9a13..98238b209 100644
+index 201d2ab3b..15b6bd957 100644
 --- a/panels/background/cc-background-panel.c
 +++ b/panels/background/cc-background-panel.c
 @@ -47,6 +47,13 @@
- #define INTERFACE_PATH_ID "org.gnome.desktop.interface"
  #define INTERFACE_COLOR_SCHEME_KEY "color-scheme"
+ #define INTERFACE_ACCENT_COLOR_KEY "accent-color"
  
 +#define INTERFACE_PATH_ID "org.gnome.desktop.interface"
 +#define INTERFACE_COLOR_SCHEME_KEY "color-scheme"
@@ -31,9 +31,9 @@ index f748e9a13..98238b209 100644
    GSettings *interface_settings;
 +  GSettings *maybe_user_theme_settings;
  
-   GnomeDesktopThumbnailFactory *thumb_factory;
    GDBusProxy *proxy;
-@@ -125,18 +133,65 @@ transition_screen (CcBackgroundPanel *self)
+ 
+@@ -105,6 +113,40 @@ transition_screen (CcBackgroundPanel *self)
      g_warning ("Couldn't transition screen: %s", error->message);
  }
  
@@ -72,6 +72,9 @@ index f748e9a13..98238b209 100644
 +}
 +
  static void
+ on_accent_color_toggled_cb (CcBackgroundPanel *self,
+                             GtkToggleButton   *toggle)
+@@ -258,14 +300,27 @@ static void
  set_color_scheme (CcBackgroundPanel   *self,
                    GDesktopColorScheme  color_scheme)
  {
@@ -100,7 +103,7 @@ index f748e9a13..98238b209 100644
      return;
  
    transition_screen (self);
-@@ -144,6 +199,22 @@ set_color_scheme (CcBackgroundPanel   *self,
+@@ -273,6 +328,22 @@ set_color_scheme (CcBackgroundPanel   *self,
    g_settings_set_enum (self->interface_settings,
                         INTERFACE_COLOR_SCHEME_KEY,
                         color_scheme);
@@ -123,16 +126,16 @@ index f748e9a13..98238b209 100644
  }
  
  /* Color schemes */
-@@ -355,6 +426,7 @@ cc_background_panel_dispose (GObject *object)
-   g_clear_object (&panel->settings);
-   g_clear_object (&panel->lock_settings);
-   g_clear_object (&panel->interface_settings);
-+  g_clear_object (&panel->maybe_user_theme_settings);
-   g_clear_object (&panel->thumb_factory);
-   g_clear_object (&panel->proxy);
+@@ -491,6 +562,7 @@ cc_background_panel_dispose (GObject *object)
+   g_clear_object (&self->settings);
+   g_clear_object (&self->lock_settings);
+   g_clear_object (&self->interface_settings);
++  g_clear_object (&self->maybe_user_theme_settings);
+   g_clear_object (&self->proxy);
  
-@@ -406,6 +478,27 @@ on_settings_changed (CcBackgroundPanel *panel)
-   update_preview (panel);
+   G_OBJECT_CLASS (cc_background_panel_parent_class)->dispose (object);
+@@ -542,6 +614,27 @@ on_settings_changed (CcBackgroundPanel *self)
+   update_preview (self);
  }
  
 +static GSettings*
@@ -157,21 +160,21 @@ index f748e9a13..98238b209 100644
 +}
 +
  static void
- cc_background_panel_init (CcBackgroundPanel *panel)
+ cc_background_panel_init (CcBackgroundPanel *self)
  {
-@@ -425,6 +518,12 @@ cc_background_panel_init (CcBackgroundPanel *panel)
+@@ -559,6 +652,12 @@ cc_background_panel_init (CcBackgroundPanel *self)
  
-   panel->interface_settings = g_settings_new (INTERFACE_PATH_ID);
+   self->interface_settings = g_settings_new (INTERFACE_PATH_ID);
  
-+  panel->maybe_user_theme_settings = get_maybe_user_theme_settings();
-+  if (panel->maybe_user_theme_settings == NULL)
++  self->maybe_user_theme_settings = get_maybe_user_theme_settings();
++  if (self->maybe_user_theme_settings == NULL)
 +  {
 +    g_warning ("failed to initialized settings for %s, shell theme switch is disabled", USER_THEME_PATH_ID);
 +  }
 +
    /* Load the background */
-   reload_current_bg (panel);
-   update_preview (panel);
+   reload_current_bg (self);
+   update_preview (self);
 -- 
-2.39.2
+2.47.3
 

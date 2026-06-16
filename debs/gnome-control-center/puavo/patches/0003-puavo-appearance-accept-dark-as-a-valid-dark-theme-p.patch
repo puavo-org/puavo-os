@@ -1,4 +1,4 @@
-From 647cd9487b42d9dc5d7e7e353ae2c0a1d0cc9bc0 Mon Sep 17 00:00:00 2001
+From 85d81be9e15272187097e629da83404b30858896 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
 Date: Fri, 26 Apr 2024 14:18:07 +0300
 Subject: [PATCH 03/14] [puavo] appearance: accept -dark as a valid dark theme
@@ -9,7 +9,7 @@ Subject: [PATCH 03/14] [puavo] appearance: accept -dark as a valid dark theme
  1 file changed, 40 insertions(+), 6 deletions(-)
 
 diff --git a/panels/background/cc-background-panel.c b/panels/background/cc-background-panel.c
-index 98238b209..b11ce6c2f 100644
+index 15b6bd957..10b4bb850 100644
 --- a/panels/background/cc-background-panel.c
 +++ b/panels/background/cc-background-panel.c
 @@ -21,6 +21,7 @@
@@ -29,8 +29,8 @@ index 98238b209..b11ce6c2f 100644
 +
  CC_PANEL_REGISTER (CcBackgroundPanel, cc_background_panel)
  
- static void
-@@ -137,21 +141,42 @@ static gchar*
+ static void on_settings_changed (CcBackgroundPanel *self);
+@@ -117,21 +121,42 @@ static gchar*
  get_default_theme(const gchar *theme)
  {
    if (!theme)
@@ -78,7 +78,7 @@ index 98238b209..b11ce6c2f 100644
  static gchar*
  get_next_theme (const gchar         *theme,
                  GDesktopColorScheme color_scheme)
-@@ -162,7 +187,16 @@ get_next_theme (const gchar         *theme,
+@@ -142,7 +167,16 @@ get_next_theme (const gchar         *theme,
        return NULL;
  
    if (color_scheme == G_DESKTOP_COLOR_SCHEME_PREFER_DARK)
@@ -97,5 +97,5 @@ index 98238b209..b11ce6c2f 100644
    return g_strdup (default_theme);
  }
 -- 
-2.39.2
+2.47.3
 

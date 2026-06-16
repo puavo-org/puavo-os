@@ -1,4 +1,4 @@
-From b40586ac0a2f51afdd18be1428fe7d03d81e9bee Mon Sep 17 00:00:00 2001
+From cb0e34df2f4fabc6cddbd06a00f45546f6f06374 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
 Date: Tue, 20 Aug 2024 19:33:01 +0300
 Subject: [PATCH 14/14] [puavo] appearance: strip trailing dash from existing
@@ -11,10 +11,10 @@ loaded/activated.
  1 file changed, 10 insertions(+), 2 deletions(-)
 
 diff --git a/panels/background/cc-background-panel.c b/panels/background/cc-background-panel.c
-index e1ca58481..86ba48f51 100644
+index ffa8439f8..e9a8cd9f0 100644
 --- a/panels/background/cc-background-panel.c
 +++ b/panels/background/cc-background-panel.c
-@@ -185,7 +185,15 @@ static gchar*
+@@ -165,7 +165,15 @@ static gchar*
  get_next_theme (const gchar         *theme,
                  GDesktopColorScheme color_scheme)
  {
@@ -31,7 +31,7 @@ index e1ca58481..86ba48f51 100644
  
    if (!default_theme)
        return NULL;
-@@ -197,7 +205,7 @@ get_next_theme (const gchar         *theme,
+@@ -177,7 +185,7 @@ get_next_theme (const gchar         *theme,
            if (does_theme_exist(default_theme, DARK_SUFFIXES[i]))
              return g_strconcat (default_theme, DARK_SUFFIXES[i], NULL);
          }
@@ -41,5 +41,5 @@ index e1ca58481..86ba48f51 100644
  
    return g_strdup (default_theme);
 -- 
-2.39.2
+2.47.3
 

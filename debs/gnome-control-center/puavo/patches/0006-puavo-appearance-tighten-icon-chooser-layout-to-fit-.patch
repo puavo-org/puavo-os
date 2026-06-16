@@ -1,4 +1,4 @@
-From 1d6951c9a938cbf18ef525b52bf030f8be8c924a Mon Sep 17 00:00:00 2001
+From 33140286b198cba1f0e74b10bb6d234d25560f83 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
 Date: Mon, 29 Apr 2024 19:15:57 +0300
 Subject: [PATCH 06/14] [puavo] appearance: tighten icon chooser layout to fit
@@ -32,5 +32,5 @@ index 7b201b1fb..c6c9e38fd 100644
          <property name="halign">center</property>
          <property name="min-children-per-line">1</property>
 -- 
-2.39.2
+2.47.3
 

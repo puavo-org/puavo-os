@@ -1,4 +1,4 @@
-From 89f920ff8041d09050dcdb65262f2b3c6f994d1c Mon Sep 17 00:00:00 2001
+From 49fc63c221018ac207941b850200f442d344d1dc Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
 Date: Wed, 15 May 2024 23:07:40 +0300
 Subject: [PATCH 08/14] [puavo] appearance: set Shell theme and GTK theme
@@ -9,10 +9,10 @@ Subject: [PATCH 08/14] [puavo] appearance: set Shell theme and GTK theme
  1 file changed, 18 insertions(+), 17 deletions(-)
 
 diff --git a/panels/background/cc-background-panel.c b/panels/background/cc-background-panel.c
-index cae56ae30..9814f88a0 100644
+index 9a33d54fd..d051f21cd 100644
 --- a/panels/background/cc-background-panel.c
 +++ b/panels/background/cc-background-panel.c
-@@ -209,25 +209,28 @@ set_color_scheme (CcBackgroundPanel   *self,
+@@ -338,25 +338,28 @@ set_color_scheme (CcBackgroundPanel   *self,
  {
    g_autofree gchar *current_gtk_theme = NULL;
    g_autofree gchar *current_shell_theme = NULL;
@@ -45,7 +45,7 @@ index cae56ae30..9814f88a0 100644
      return;
  
    transition_screen (self);
-@@ -236,21 +239,19 @@ set_color_scheme (CcBackgroundPanel   *self,
+@@ -365,21 +368,19 @@ set_color_scheme (CcBackgroundPanel   *self,
                         INTERFACE_COLOR_SCHEME_KEY,
                         color_scheme);
  
@@ -79,5 +79,5 @@ index cae56ae30..9814f88a0 100644
  
  /* Color schemes */
 -- 
-2.39.2
+2.47.3
 

@@ -1,4 +1,4 @@
-From ca4a082e52b5e5ae053d937486fdb0f42801e6f6 Mon Sep 17 00:00:00 2001
+From 33ca9f34289a897c86dd5c8ed86ed2c9d88f8e48 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
 Date: Sun, 28 Apr 2024 21:43:21 +0300
 Subject: [PATCH 04/14] [puavo] appearance: add icon theme chooser
@@ -10,17 +10,17 @@ Subject: [PATCH 04/14] [puavo] appearance: add icon theme chooser
  panels/background/cc-icon-theme-chooser.c     | 237 ++++++++++++++++++
  panels/background/cc-icon-theme-chooser.h     |  30 +++
  panels/background/cc-icon-theme-chooser.ui    |  27 ++
- .../icon-theme-selected-symbolic.svg          |   1 +
- panels/background/meson.build                 |   2 +
+ .../actions/icon-theme-selected-symbolic.svg  |   1 +
+ panels/background/meson.build                 |   1 +
  panels/background/preview.css                 |   9 +
- 9 files changed, 332 insertions(+)
+ 9 files changed, 331 insertions(+)
  create mode 100644 panels/background/cc-icon-theme-chooser.c
  create mode 100644 panels/background/cc-icon-theme-chooser.h
  create mode 100644 panels/background/cc-icon-theme-chooser.ui
- create mode 100644 panels/background/icon-theme-selected-symbolic.svg
+ create mode 100644 panels/background/icons/scalable/actions/icon-theme-selected-symbolic.svg
 
 diff --git a/panels/background/background.gresource.xml b/panels/background/background.gresource.xml
-index 1699244f0..ce26fb788 100644
+index cc07d6078..f4bb6189b 100644
 --- a/panels/background/background.gresource.xml
 +++ b/panels/background/background.gresource.xml
 @@ -4,11 +4,13 @@
@@ -31,20 +31,20 @@ index 1699244f0..ce26fb788 100644
      <file>preview.css</file>
    </gresource>
  
-   <gresource prefix="/org/gnome/Settings/icons/scalable/actions">
-     <file preprocess="xml-stripblanks">background-selected-symbolic.svg</file>
-+    <file preprocess="xml-stripblanks">icon-theme-selected-symbolic.svg</file>
-     <file preprocess="xml-stripblanks">slideshow-symbolic.svg</file>
+   <gresource prefix="/org/gnome/Settings">
+     <file preprocess="xml-stripblanks">icons/scalable/actions/background-selected-symbolic.svg</file>
++    <file preprocess="xml-stripblanks">icons/scalable/actions/icon-theme-selected-symbolic.svg</file>
+     <file preprocess="xml-stripblanks">icons/scalable/actions/slideshow-symbolic.svg</file>
    </gresource>
  </gresources>
 diff --git a/panels/background/cc-background-panel.c b/panels/background/cc-background-panel.c
-index b11ce6c2f..cae56ae30 100644
+index 10b4bb850..9a33d54fd 100644
 --- a/panels/background/cc-background-panel.c
 +++ b/panels/background/cc-background-panel.c
-@@ -35,6 +35,7 @@
+@@ -34,6 +34,7 @@
+ #include "cc-background-item.h"
  #include "cc-background-preview.h"
  #include "cc-background-resources.h"
- #include "cc-background-xml.h"
 +#include "cc-icon-theme-chooser.h"
  
  #define WP_PATH_ID "org.gnome.desktop.background"
@@ -57,7 +57,7 @@ index b11ce6c2f..cae56ae30 100644
  };
  
  static const gchar *const DARK_SUFFIXES[] = {"-Dark", "-dark"};
-@@ -486,6 +488,7 @@ cc_background_panel_class_init (CcBackgroundPanelClass *klass)
+@@ -621,6 +623,7 @@ cc_background_panel_class_init (CcBackgroundPanelClass *klass)
  
    g_type_ensure (CC_TYPE_BACKGROUND_CHOOSER);
    g_type_ensure (CC_TYPE_BACKGROUND_PREVIEW);
@@ -65,7 +65,7 @@ index b11ce6c2f..cae56ae30 100644
  
    panel_class->get_help_uri = cc_background_panel_get_help_uri;
  
-@@ -499,6 +502,7 @@ cc_background_panel_class_init (CcBackgroundPanelClass *klass)
+@@ -635,6 +638,7 @@ cc_background_panel_class_init (CcBackgroundPanelClass *klass)
    gtk_widget_class_bind_template_child (widget_class, CcBackgroundPanel, dark_preview);
    gtk_widget_class_bind_template_child (widget_class, CcBackgroundPanel, default_toggle);
    gtk_widget_class_bind_template_child (widget_class, CcBackgroundPanel, dark_toggle);
@@ -74,36 +74,36 @@ index b11ce6c2f..cae56ae30 100644
    gtk_widget_class_bind_template_callback (widget_class, on_color_scheme_toggle_active_cb);
    gtk_widget_class_bind_template_callback (widget_class, on_chooser_background_chosen_cb);
 diff --git a/panels/background/cc-background-panel.ui b/panels/background/cc-background-panel.ui
-index 33a86385e..ce303a6f4 100644
+index 61d9120f3..0222cfc5e 100644
 --- a/panels/background/cc-background-panel.ui
 +++ b/panels/background/cc-background-panel.ui
-@@ -93,6 +93,26 @@
-           </object>
-         </child>
+@@ -139,6 +139,26 @@
+                       </object>
+                     </child>
  
-+        <child>
-+          <object class="AdwPreferencesGroup">
-+            <property name="title" translatable="yes">Icon theme</property>
++                    <child>
++                      <object class="AdwPreferencesGroup">
++                        <property name="title" translatable="yes">Icon theme</property>
 +
-+            <child>
-+              <object class="AdwBin">
-+                <style>
-+                  <class name="card"/>
-+                </style>
-+                <child>
-+                  <object class="CcIconThemeChooser" id="icon_theme_chooser">
-+                    <property name="hexpand">True</property>
-+                  </object>
-+                </child>
-+              </object>
-+            </child>
++                        <child>
++                          <object class="AdwBin">
++                            <style>
++                              <class name="card"/>
++                            </style>
++                            <child>
++                              <object class="CcIconThemeChooser" id="icon_theme_chooser">
++                                <property name="hexpand">True</property>
++                              </object>
++                            </child>
++                          </object>
++                        </child>
 +
-+          </object>
-+        </child>
++                      </object>
++                    </child>
 +
-         <child>
-           <object class="AdwPreferencesGroup">
-             <property name="title" translatable="yes">Background</property>
+                     <child>
+                       <object class="AdwPreferencesGroup">
+                         <property name="title" translatable="yes">Background</property>
 diff --git a/panels/background/cc-icon-theme-chooser.c b/panels/background/cc-icon-theme-chooser.c
 new file mode 100644
 index 000000000..667f859d4
@@ -416,27 +416,19 @@ index 000000000..7b201b1fb
 +
 +  </template>
 +</interface>
-diff --git a/panels/background/icon-theme-selected-symbolic.svg b/panels/background/icon-theme-selected-symbolic.svg
+diff --git a/panels/background/icons/scalable/actions/icon-theme-selected-symbolic.svg b/panels/background/icons/scalable/actions/icon-theme-selected-symbolic.svg
 new file mode 100644
 index 000000000..9e820d1dc
 --- /dev/null
-+++ b/panels/background/icon-theme-selected-symbolic.svg
++++ b/panels/background/icons/scalable/actions/icon-theme-selected-symbolic.svg
 @@ -0,0 +1 @@
 +<svg width="16" height="16" viewBox="0 0 4.233 4.233" xmlns="http://www.w3.org/2000/svg"><path d="M3.843.627a.397.397 0 0 0-.56.034L1.45 2.73l-.775-.763a.397.397 0 0 0-.56.004.397.397 0 0 0 .003.562L1.191 3.59a.397.397 0 0 0 .576-.02l2.11-2.382a.397.397 0 0 0-.034-.56Z" style="fill:#3d3846"/></svg>
 \ No newline at end of file
 diff --git a/panels/background/meson.build b/panels/background/meson.build
-index 3634c4727..2756cc328 100644
+index 8f9cbecdf..8d508bac3 100644
 --- a/panels/background/meson.build
 +++ b/panels/background/meson.build
-@@ -52,6 +52,7 @@ resource_data = files(
-   'cc-background-chooser.ui',
-   'cc-background-panel.ui',
-   'cc-background-preview.ui',
-+  'cc-icon-theme-chooser.ui',
-   'preview.css',
- )
- 
-@@ -74,6 +75,7 @@ sources = common_sources + files(
+@@ -50,6 +50,7 @@ sources = common_sources + files(
    'cc-background-panel.c',
    'cc-background-preview.c',
    'cc-background-xml.c',
@@ -445,10 +437,10 @@ index 3634c4727..2756cc328 100644
  
  deps = common_deps + [
 diff --git a/panels/background/preview.css b/panels/background/preview.css
-index e9497348b..7d95f8294 100644
+index b93c829e3..0f6e44d39 100644
 --- a/panels/background/preview.css
 +++ b/panels/background/preview.css
-@@ -69,6 +69,15 @@ background-preview .window.front.dark .header-bar {
+@@ -84,6 +84,15 @@ background-preview .window .sidebar:dir(rtl) {
    border-radius: 6px;
  }
  
@@ -465,5 +457,5 @@ index e9497348b..7d95f8294 100644
    color: white;
    -gtk-icon-shadow: 0 1px 2px rgba(0, 0, 0, 0.33);
 -- 
-2.39.2
+2.47.3
 

@@ -1,4 +1,4 @@
-From d21430fea0c97364b9f3d8d251ae987b78079598 Mon Sep 17 00:00:00 2001
+From 5fc2bda0ada34b03d6219fe47f3b04f0c09bfd12 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Tuomas=20R=C3=A4s=C3=A4nen?= <tuomas.rasanen@opinsys.fi>
 Date: Fri, 17 May 2024 18:07:17 +0300
 Subject: [PATCH 11/14] [puavo] appearance: make color scheme switch change
@@ -13,10 +13,10 @@ I wonder if there's a DBus signal which we could emit?
  1 file changed, 112 insertions(+), 1 deletion(-)
 
 diff --git a/panels/background/cc-background-panel.c b/panels/background/cc-background-panel.c
-index aa3c043ad..9aa6fb710 100644
+index d2a636022..7fc3f6a2b 100644
 --- a/panels/background/cc-background-panel.c
 +++ b/panels/background/cc-background-panel.c
-@@ -200,9 +200,110 @@ get_next_theme (const gchar         *theme,
+@@ -180,9 +180,110 @@ get_next_theme (const gchar         *theme,
        g_warning("Dark theme does not exist for theme %s\n", theme);
      }
  
@@ -128,7 +128,7 @@ index aa3c043ad..9aa6fb710 100644
  }
  
  static void
-@@ -210,8 +311,10 @@ set_color_scheme (CcBackgroundPanel   *self,
+@@ -339,8 +440,10 @@ set_color_scheme (CcBackgroundPanel   *self,
                    GDesktopColorScheme  color_scheme)
  {
    g_autofree gchar *current_gtk_theme = NULL;
@@ -139,7 +139,7 @@ index aa3c043ad..9aa6fb710 100644
    g_autofree gchar *next_shell_theme = NULL;
    GDesktopColorScheme scheme;
  
-@@ -221,6 +324,9 @@ set_color_scheme (CcBackgroundPanel   *self,
+@@ -350,6 +453,9 @@ set_color_scheme (CcBackgroundPanel   *self,
                                               INTERFACE_GTK_THEME_KEY);
    next_gtk_theme = get_next_theme(current_gtk_theme, color_scheme);
  
@@ -149,7 +149,7 @@ index aa3c043ad..9aa6fb710 100644
    if (self->maybe_user_theme_settings)
    {
      current_shell_theme = g_settings_get_string (self->maybe_user_theme_settings,
-@@ -232,6 +338,7 @@ set_color_scheme (CcBackgroundPanel   *self,
+@@ -361,6 +467,7 @@ set_color_scheme (CcBackgroundPanel   *self,
     * screen transition */
    if (color_scheme == scheme
        && g_strcmp0(current_gtk_theme, next_gtk_theme) == 0
@@ -157,7 +157,7 @@ index aa3c043ad..9aa6fb710 100644
        && (self->maybe_user_theme_settings == NULL || g_strcmp0(current_shell_theme, next_shell_theme) == 0))
      return;
  
-@@ -246,6 +353,10 @@ set_color_scheme (CcBackgroundPanel   *self,
+@@ -375,6 +482,10 @@ set_color_scheme (CcBackgroundPanel   *self,
    else
      g_warning ("Next GTK theme is not defined, not changing GTK theme");
  
@@ -169,5 +169,5 @@ index aa3c043ad..9aa6fb710 100644
    if (self->maybe_user_theme_settings)
      {
 -- 
-2.39.2
+2.47.3
 
