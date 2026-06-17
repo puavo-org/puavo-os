@@ -174,7 +174,11 @@ case "$puavo_hosttype" in
     ;;
   *)
     if [ -b /dev/mapper/puavo-tmp ]; then
-      { puavo_mount_partition puavo tmp && chmod 1777 /tmp; } || status=1
+      {
+	puavo_mount_partition puavo tmp \
+	  && chmod 1777 /tmp \
+	  && find /tmp -mindepth 1 -maxdepth 1 -xdev -exec rm -rf -- '{}' +
+      } || status=1
     fi
     ;;
 esac
