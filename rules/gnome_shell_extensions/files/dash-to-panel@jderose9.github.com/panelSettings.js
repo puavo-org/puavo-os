@@ -233,17 +233,17 @@ export function setMonitorsInfo(settings) {
           let ids = {}
 
           //https://gitlab.gnome.org/GNOME/mutter/-/blob/main/data/dbus-interfaces/org.gnome.Mutter.DisplayConfig.xml#L347
+	  let secondary_index = 0
           displayInfo[2].forEach((logicalMonitor, i) => {
             let [connector, vendor, product, serial] = logicalMonitor[5][0]
-            let id = i
             let primary = logicalMonitor[4]
 
-            // if by any chance 2 monitors have the same id, use the connector string
-            // instead, which should be unique but varies between x11 and wayland :(
-            // worst case scenario, resort to using the dumbass index
-            if (vendor && serial) id = `${vendor}-${serial}`
-
-            if (ids[id]) id = connector && !ids[connector] ? connector : i
+            let id;
+	    if (primary) {
+              id = 'primary'
+	    } else {
+              id = `secondary-${secondary_index++}`
+            }
 
             monitorInfos.push({
               id,
