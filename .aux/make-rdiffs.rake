@@ -128,7 +128,7 @@ def make_metadata_file(series_name, series_metadata, series_metadata_file)
 
   tmpfile = "#{ series_metadata_file }.tmp"
   File.open(tmpfile, 'w') do |f|
-    f.write(series_metadata_by_series_name.to_json)
+    f.write( JSON.pretty_generate(series_metadata_by_series_name) )
   end
   mv tmpfile, series_metadata_file
 end
