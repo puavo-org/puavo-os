@@ -531,11 +531,11 @@ get_wim_catalogue()
     fi
 
     wim_server=$(dirname "${url#https://}")
-    gnupg_dir="/root/.puavo/gnupg/${wim_server}/wim"
-    if ! gpg --decrypt --homedir "$gnupg_dir" "$wim_gpg_tmppath" \
-         2>/dev/null > "$wim_tmppath"; then
-      logwarning "GPG verification failed for ${url}"
-      continue
+    gnupg_dir="/etc/puavo-conf/gpg/${wim_server}/wim"
+    if ! gpg --decrypt --homedir "$gnupg_dir" --no-permission-warning \
+      --trust-model always "$wim_gpg_tmppath" 2>/dev/null > "$wim_tmppath"; then
+        logwarning "GPG verification failed for ${url}"
+        continue
     fi
 
     mv "$wim_tmppath" "$G_WIM_CATALOGUE_PATH" || return 1

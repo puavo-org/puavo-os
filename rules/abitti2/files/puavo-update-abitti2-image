@@ -36,9 +36,10 @@ get_abitti2_catalogue() {
     fi
 
     abitti2_server=$(dirname "${url#https://}")
-    gnupg_dir="/root/.puavo/gnupg/${abitti2_server}/digabios"
-    if ! gpg --decrypt --homedir "$gnupg_dir" "$abitti2_json_gpg_tmppath" \
-      2>/dev/null > "$abitti2_json_tmppath"; then
+    gnupg_dir="/etc/puavo-conf/gpg/${abitti2_server}/digabios"
+    if ! gpg --decrypt --homedir "$gnupg_dir" --no-permission-warning \
+      --trust-model always "$abitti2_json_gpg_tmppath" 2>/dev/null \
+      > "$abitti2_json_tmppath"; then
         error "GPG verification failed for ${url}"
         rm -f "$abitti2_json_gpg_tmppath" "$abitti2_json_tmppath"
         continue

@@ -81,14 +81,15 @@ download_installer() {
 
   logmsg user.info "verifying ${pkg_url}"
 
-  gnupg_dir="/root/.puavo/gnupg/${puavo_pkg_server}/pkg"
+  gnupg_dir="/etc/puavo-conf/gpg/${puavo_pkg_server}/pkg"
   exec 4< "$gnupg_dir"
   if ! flock -w 10 -x 4; then
     echo "could not lock $gnupg_dir for gpg verification" >&2
     return 1
   fi
-  if ! gpg --decrypt --homedir "$gnupg_dir" \
-    "$unverified_installer_tmppath" 2>/dev/null > "$installer_tmppath"; then
+  if ! gpg --decrypt --homedir "$gnupg_dir" --no-permission-warning \
+    --trust-model always "$unverified_installer_tmppath" 2>/dev/null \
+    > "$installer_tmppath"; then
       logmsg user.err "verification failed for ${unverified_installer_tmppath}"
       rm -f "$unverified_installer_tmppath" "$installer_tmppath" || true
       flock -u 4
