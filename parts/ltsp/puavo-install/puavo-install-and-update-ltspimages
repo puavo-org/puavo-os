@@ -419,7 +419,11 @@ fetch_with_wget() {
 }
 
 get_meta_files() {
+  local meta_download_ok
+
   rate_limit=$1
+
+  meta_download_ok=false
 
   if ! series_urls=$(puavo-conf puavo.image.series.urls | jq -r '.[]'); then
     log err 'could not determine series urls, is puavo.image.series.urls okay?'
@@ -433,14 +437,27 @@ get_meta_files() {
   mkdir -p "$metas_dir"
   for series_url in $series_urls; do
     meta_file="${metas_dir}/${series_url##*/}"
-    fetch_with_wget as_root "$rate_limit"      \
-                            "${meta_file}.tmp" \
-                            "$series_url"      \
-                            checksums_fetch    \
-      || return 1
+    if ! fetch_with_wget as_root "$rate_limit"      \
+                                 "${meta_file}.tmp" \
+                                 "$series_url"      \
+                                 checksums_fetch; then
+      log warn "failed to fetch series ${series_url}"
+      continue
+    fi
 
-    mv "${meta_file}.tmp" "$meta_file" || return 1
+    if ! mv "${meta_file}.tmp" "$meta_file"; then
+      log warn "failed to move ${series_url} file into its place"
+      continue
+    fi
+    meta_download_ok=true
   done
+
+  # We return success if at least one meta file download was successful.
+  # This means that a single bad URL will not block updates, but a warning
+  # is still shown.
+  if ! $meta_download_ok; then
+    return 1
+  fi
 
   return 0
 }
