@@ -419,23 +419,23 @@ fetch_with_wget() {
 }
 
 get_meta_files() {
-  local meta_download_ok
+  local meta_download_ok meta_file series_url series_url_list
 
   rate_limit=$1
 
   meta_download_ok=false
 
-  if ! series_urls=$(puavo-conf puavo.image.series.urls | jq -r '.[]'); then
+  if ! series_url_list=$(puavo-conf puavo.image.series.urls | jq -r '.[]'); then
     log err 'could not determine series urls, is puavo.image.series.urls okay?'
     return 1
   fi
-  if [ -z "$series_urls" ]; then
+  if [ -z "$series_url_list" ]; then
     log err 'no series urls have been set'
     return 1
   fi
 
   mkdir -p "$metas_dir"
-  for series_url in $series_urls; do
+  for series_url in $series_url_list; do
     meta_file="${metas_dir}/${series_url##*/}"
     if ! fetch_with_wget as_root "$rate_limit"      \
                                  "${meta_file}.tmp" \
