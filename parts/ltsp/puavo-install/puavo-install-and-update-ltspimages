@@ -14,8 +14,8 @@ if ! flock -nx 3; then
   exit 1
 fi
 
-exec 4>&1	# another way to write to stdout for log()
-exec 5>&2	# another way to write to stderr for log()
+exec 4>&1       # another way to write to stdout for log()
+exec 5>&2       # another way to write to stderr for log()
 
 #
 # argument parsing
@@ -58,8 +58,8 @@ EOF
 }
 
 if ! args=$(getopt -n "$0" -o +f:n:r:q \
-		   -l 'hosttype:,install-from-file:,install-from-nbd:,rate-limit:,quiet,images-dir:,no-preinst-hook,use-torrents' \
-		   -- "$@"); then
+                   -l 'hosttype:,install-from-file:,install-from-nbd:,rate-limit:,quiet,images-dir:,no-preinst-hook,use-torrents' \
+                   -- "$@"); then
   usage
 fi
 
@@ -385,30 +385,30 @@ fetch_with_wget() {
   wget_error_code=$(
     {
       {
-	$wget --ca-certificate=/etc/puavo-conf/rootca.pem        \
-	      --certificate=/etc/puavo/certs/hostorgcabundle.pem \
-	      --continue                                         \
-	      --output-document="$output_path"                   \
-	      --private-key=/etc/puavo/certs/host.key            \
-	      --progress=dot:mega                                \
-	      $wgetopts                                          \
-	      "$url" >/dev/null                                  \
-	  || echo $?
+        $wget --ca-certificate=/etc/puavo-conf/rootca.pem        \
+              --certificate=/etc/puavo/certs/hostorgcabundle.pem \
+              --continue                                         \
+              --output-document="$output_path"                   \
+              --private-key=/etc/puavo/certs/host.key            \
+              --progress=dot:mega                                \
+              $wgetopts                                          \
+              "$url" >/dev/null                                  \
+          || echo $?
       } 3>&1 1>&2 2>&3 3>&- \
-	| unbuffer -p awk '
-	    BEGIN { progress = -1 }
+        | unbuffer -p awk '
+            BEGIN { progress = -1 }
 
-	    {
-	      if (match($8, /^([[:digit:]]+)%$/, a)) {
-		new_progress = a[1]
-		if (progress != new_progress) {
-		  progress = new_progress
-		  print progress
-		}
-	      }
-	    }
-	  ' 2>/dev/null \
-	| update_stats_with_progress "$phase"
+            {
+              if (match($8, /^([[:digit:]]+)%$/, a)) {
+                new_progress = a[1]
+                if (progress != new_progress) {
+                  progress = new_progress
+                  print progress
+                }
+              }
+            }
+          ' 2>/dev/null \
+        | update_stats_with_progress "$phase"
     } 2>&1 || true
   )
 
@@ -502,10 +502,10 @@ get_next_image() {
 
   for image_server in $image_server_list; do
     try_rdiff_update_from_imageserver "$image_server"   \
-				      "$rate_limit"     \
-				      "$rdiff_filename" \
-				      "$previous_image" \
-				      "$next_image"     \
+                                      "$rate_limit"     \
+                                      "$rdiff_filename" \
+                                      "$previous_image" \
+                                      "$next_image"     \
       && return 0
   done
 
@@ -514,8 +514,8 @@ get_next_image() {
 
   for image_server in $image_server_list; do
     try_full_image_update_from_imageserver "$image_server" \
-					   "$rate_limit"   \
-				           "$next_image"   \
+                                           "$rate_limit"   \
+                                           "$next_image"   \
       && return 0
   done
 
@@ -585,21 +585,21 @@ get_rdiff_filename() {
   echo "$previous_image_name $next_image_name" \
     | awk '
         NR == 1 {
-	  orig   = $1
-	  target = $2
-	  regex  = "^(.*?)-([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6})-(.*?).img$"
+          orig   = $1
+          target = $2
+          regex  = "^(.*?)-([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6})-(.*?).img$"
 
-	  if (match(orig, regex, orig_match) \
-	    && match(target, regex, target_match)) {
-	      printf("%s-%s--%s-%s.rdiff\n",
-		     orig_match[1],
-		     orig_match[2],
-		     target_match[2],
-		     orig_match[3])
-	      exit(0)
-	  }
-	  else { exit(1) }
-	}
+          if (match(orig, regex, orig_match) \
+            && match(target, regex, target_match)) {
+              printf("%s-%s--%s-%s.rdiff\n",
+                     orig_match[1],
+                     orig_match[2],
+                     target_match[2],
+                     orig_match[3])
+              exit(0)
+          }
+          else { exit(1) }
+        }
       '
 }
 
@@ -622,9 +622,9 @@ install_from_file_or_nbd() {
       image_src_path=$type_arg
       preserve_imagefile=''
       total_size=$(df "$image_src_path" \
-		     | awk -v image_src_path="$image_src_path" '
-			 $1 == image_src_path { print $2 "k" }
-		       ')
+                     | awk -v image_src_path="$image_src_path" '
+                         $1 == image_src_path { print $2 "k" }
+                       ')
       ;;
     *)
       log err "internal error in install_from_file_or_nbd()"
@@ -727,7 +727,7 @@ lookup_ltspimage_name_by_alias() {
 
   current_ltspimage_path="${images_dir}/${imagename}"
   current_ltspimage_inode="$(stat -c %i $current_ltspimage_path 2>/dev/null \
-			       || true)"
+                               || true)"
 
   for file in ${images_dir}/*.img; do
     # check that *.img expands to something
@@ -765,8 +765,8 @@ patch_with_rdiff() {
   # not matter anyway).
   {
     rdiff patch "${images_dir}/${previous_image}" \
-		"${rdiffs_dir}/${rdiff_filename}" \
-		-                                 \
+                "${rdiffs_dir}/${rdiff_filename}" \
+                -                                 \
       | { pv -n -s "$next_image_filesize" 3>&1 1>&2 2>&3 3>&- \
             | update_stats_with_progress image_patch; } \
       > "$next_image_tmppath" 2>&1
@@ -911,13 +911,13 @@ try_rdiff_update_from_imageserver() {
   rdiff_url="https://${image_server}/rdiffs/${rdiff_filename}"
 
   get_rdiff "$rate_limit"     \
-	    "$rdiff_filename" \
-	    "$rdiff_url"      \
+            "$rdiff_filename" \
+            "$rdiff_url"      \
     || return 1
 
   patch_with_rdiff "$previous_image" \
-		   "$next_image"     \
-		   "$rdiff_filename" \
+                   "$next_image"     \
+                   "$rdiff_filename" \
     || return 1
 }
 
@@ -934,7 +934,7 @@ update_image() {
 
   # must call /usr/bin/test because /bin/sh is broken regarding this test
   if /usr/bin/test "${images_dir}/${next_image}" \
-	       -ef "${images_dir}/ltsp.img"; then
+               -ef "${images_dir}/ltsp.img"; then
     log info "the requested ltsp image is already in place"
     update_stats uptodate 100
   else
