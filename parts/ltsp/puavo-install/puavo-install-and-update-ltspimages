@@ -477,8 +477,13 @@ get_meta_files() {
 }
 
 get_next_image() {
+  local errmsg image_server image_server_list next_image rate_limit \
+        previous_image rdiff_filename rdiff_should_exist
+
   next_image=$1
   rate_limit=$2
+
+  rdiff_should_exist=false
 
   image_server_list=$(lookup_image_servers)
 
@@ -501,13 +506,28 @@ get_next_image() {
   get_meta_files "$rate_limit" || return 1
 
   for image_server in $image_server_list; do
-    try_rdiff_update_from_imageserver "$image_server"   \
-                                      "$rate_limit"     \
-                                      "$rdiff_filename" \
-                                      "$previous_image" \
-                                      "$next_image"     \
-      && return 0
+    if try_rdiff_update_from_imageserver "$image_server"   \
+                                         "$rate_limit"     \
+                                         "$rdiff_filename" \
+                                         "$previous_image" \
+                                         "$next_image"; then
+      return 0
+    elif [ $? -ne 2 ]; then
+      # try_rdiff_update_from_imageserver returns 2 if some required file
+      # does not exist in the catalogue, meaning that rdiff updates will fail.
+      # Other error exit codes imply that an rdiff should exist.
+      rdiff_should_exist=true
+    fi
   done
+
+  # Temporary errors (network outage etc.) should not make us fall back to
+  # full image updates, because those take so much more bandwidth.
+  if $rdiff_should_exist; then
+    errmsg="rdiff updates failed but rdiff should exist,"
+    errmsg="${errmsg} not falling back to trying a full image update"
+    log err "$errmsg"
+    return 1
+  fi
 
   # We have failed with updates through rdiff, we try full image update
   # from all servers in $image_server_list.
@@ -903,8 +923,9 @@ try_rdiff_update_from_imageserver() {
   next_image=$5
 
   # it is not sensible to continue if the required checksums do not exist
+  # error 2 is special code for caller: this can not possibly work.
   check_checksums_exist_for "$rdiff_filename" "$next_image" \
-    || return 1
+    || return 2
 
   ensure_enough_available_diskspace "$next_image" "$rdiff_filename" || return 1
 
