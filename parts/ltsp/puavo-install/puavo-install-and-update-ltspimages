@@ -94,8 +94,8 @@ while [ $# -ne 0 ]; do
       image_from_nbd="$2"; shift; shift
       ;;
     -r|--rate-limit)
-      # Acceptable rate limit parameters must be something that both
-      # rsync (--bwlimit) and wget (--limit-rate) understand.
+      # Acceptable rate limit parameter must be something that
+      # wget (--limit-rate) understands.
       rate_limit="$2"; shift; shift
       if ! echo "$rate_limit" | grep -Eqx '[0-9]+[km]'; then
         log err "the rate limit was not understood, got '$rate_limit'"
@@ -509,8 +509,8 @@ get_next_image() {
       && return 0
   done
 
-  # We have failed with updates through rdiff, we try rsync fallback to all
-  # servers in $image_server_list.
+  # We have failed with updates through rdiff, we try full image update
+  # from all servers in $image_server_list.
 
   for image_server in $image_server_list; do
     try_full_image_update_from_imageserver "$image_server" \
@@ -882,58 +882,13 @@ try_full_image_update_from_imageserver() {
 
   next_image_tmppath="${images_dir}/${next_image}.tmp"
 
-  rsyncopts=""
-  if [ -n "$rate_limit" ]; then
-    rsyncopts="--bwlimit=$rate_limit"
-  fi
-
-  # The possible port number in $image_server is for https only
-  rsyncserver="$(echo "$image_server" | cut -d: -f1)"
-  remote_rsyncpath="${rsyncserver}::images/${next_image}"
-
-  # rsync may take a little while before it outputs progress information
-  echo 0 | update_stats_with_progress image_sync
-
-  rsync_error_code=$(
-    {
-      {
-	rsync --fuzzy                           \
-	      --inplace                         \
-	      --progress                        \
-	      $rsyncopts                        \
-	      "$remote_rsyncpath"               \
-	      "${images_dir}/${next_image}.tmp" \
-	    2>/dev/null                         \
-	  || echo $? >&2
-      } | unbuffer -p awk '
-	    BEGIN { progress = -1 }
-
-	    {
-	      if (match($2, /^([[:digit:]]+)%$/, a)) {
-		new_progress = a[1]
-		if (progress != new_progress) {
-		  progress = new_progress
-		  print progress
-		}
-	      }
-	    }
-	  ' \
-	| update_stats_with_progress image_sync
-    } 2>&1 || true
-  )
-
-  if [ -z "$rsync_error_code" ]; then
-    log info "rsync fetched the image $next_image with success"
-  else
-    log err "rsyncing ${remote_rsyncpath}: rsync error code $rsync_error_code"
-    httpurl="https://${image_server}/${next_image}"
-    log info "falling back to fetching $httpurl"
-    fetch_with_wget as_root "$rate_limit"         \
-		            "$next_image_tmppath" \
-		            "$httpurl"            \
-		            image_download        \
-      || return 1
-  fi
+  httpurl="https://${image_server}/${next_image}"
+  log info "fetching ${httpurl} with wget"
+  fetch_with_wget as_root "$rate_limit"         \
+                          "$next_image_tmppath" \
+                          "$httpurl"            \
+                          image_download        \
+    || return 1
 
   check_image_and_put_it_to_use "$next_image"         \
                                 "$next_image_tmppath" \
@@ -1017,7 +972,6 @@ update_stats_with_progress() {
   #   rdiff_checksum
   #   image_patch
   #   image_download
-  #   image_sync
   #   image_checksum
   #   finished
   #   uptodate
