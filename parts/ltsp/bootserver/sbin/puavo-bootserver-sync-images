@@ -887,7 +887,8 @@ module SeriesControl
   def self.fetch_and_parse_series_data(source_url)
     info(5, "Using image series source url #{ source_url }")
 
-    uri = URI.parse(source_url)
+    source_url_with_gpg = "#{ source_url }.gpg"
+    uri = URI.parse(source_url_with_gpg)
 
     http = Net::HTTP.new(uri.host, uri.port)
     http.ca_file = '/etc/puavo-conf/rootca.pem'
@@ -900,11 +901,19 @@ module SeriesControl
         # Do not let a failed fetch slip out as empty series... otherwise
         # temporary download failure might result in removing all images/diffs
         # in this series.
-        raise "Error in fetching #{ source_url }," \
+        raise "Error in fetching #{ source_url_with_gpg }," \
                 + " response code #{ response.code }"
       end
 
-      series_by_name = parse_series_data( JSON.parse( response.body ) )
+      series_data = response.body
+      gpg_cmd = [ 'gpg', '--decrypt', '--homedir',
+                  "/etc/puavo-conf/gpg/#{ uri.host }/os-images",
+                  '--no-permission-warning', '--trust-model', 'always' ]
+      stdout, stderr, status = Open3.capture3(*gpg_cmd, stdin_data: series_data)
+      if !status.success? then
+        raise "Error in verifying GPG signature for #{ source_url_with_gpg }"
+      end
+      series_by_name = parse_series_data( JSON.parse(stdout) )
     end
 
     return series_by_name
