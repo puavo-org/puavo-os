@@ -13,11 +13,6 @@
     "description": "Network filesystem protocol used for network mounted home directories",
     "typehint": "string"
   },
-  "puavo.profile.bigtouch": {
-    "default": "false",
-    "description": "Enable/disable the bigtouch puavo-conf profile",
-    "typehint": "bool"
-  },
   "puavo.profile.bootserver": {
     "default": "false",
     "description": "Enable/disable the bootserver puavo-conf profile",
