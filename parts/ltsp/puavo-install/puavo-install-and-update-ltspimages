@@ -413,7 +413,7 @@ fetch_with_wget() {
   )
 
   if [ -n "$wget_error_code" ]; then
-    log err "fetching $url, wget error code $wget_error_code"
+    log err "fetching ${url}, wget error code ${wget_error_code}"
     return 1
   fi
 
@@ -446,6 +446,7 @@ get_meta_files() {
                                  "$series_url_with_gpg_suffix" \
                                  checksums_fetch; then
       log warn "failed to fetch series ${series_url}"
+      rm -f "${meta_file}.gpg.tmp"
       continue
     fi
 
@@ -456,8 +457,11 @@ get_meta_files() {
       --trust-model always "${meta_file}.gpg.tmp" 2>/dev/null \
       > "${meta_file}.tmp"; then
         log warn "GPG verification failed for ${series_url_with_gpg_suffix}"
+        rm -f "${meta_file}.gpg.tmp" "${meta_file}.tmp"
         continue
     fi
+    log info "GPG verification OK for ${series_url_with_gpg_suffix}"
+    rm -f "${meta_file}.gpg.tmp"
 
     if ! mv "${meta_file}.tmp" "$meta_file"; then
       log warn "failed to move ${series_url} file into its place"
