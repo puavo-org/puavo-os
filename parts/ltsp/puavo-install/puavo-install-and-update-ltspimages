@@ -565,25 +565,30 @@ get_next_image() {
 }
 
 download_url_with_torrent() {
+  local phase rate_limit torrent_type url_to_download_with_torrent
+
   rate_limit=$1
   url_to_download_with_torrent=$2
+  torrent_type=$3
+  phase=$4
 
+  # torrent_type must be either "image" or "rdiff"
   torrent_status=$(
     printf "%s\n%s\n" "$rate_limit" "$url_to_download_with_torrent" \
-      | nc -N -U /run/puavo/puavo-rdiff-torrent-updated.sock \
+      | nc -N -U "/run/puavo/puavo-${torrent_type}-torrent-updated.sock" \
       | while read progress; do
           if [ "$progress" = 'OK' ]; then
             echo OK
           else
-            update_stats rdiff_fetch "$progress"
+            update_stats "$phase" "$progress"
           fi
         done)
   if [ "$torrent_status" != 'OK' ]; then
-    log err "could not download $url_to_download_with_torrent with torrent"
+    log err "could not download ${url_to_download_with_torrent} with torrent"
     return 1
   fi
 
-  log info "got $url_to_download_with_torrent with success"
+  log info "got ${url_to_download_with_torrent} with success"
 
   return 0
 }
@@ -595,12 +600,17 @@ get_image() {
   next_image_tmppath=$2
   httpurl=$3
 
-  log info "fetching ${httpurl} with wget"
-  fetch_with_wget as_puavo_update "$rate_limit"         \
-                                  "$next_image_tmppath" \
-                                  "$httpurl"            \
-                                  image_download        \
-    || return 1
+  if $use_torrents_for_rdiff_updates; then
+    download_url_with_torrent "$rate_limit" "$httpurl" image image_download \
+      || return 1
+  else
+    log info "fetching ${httpurl} with wget"
+    fetch_with_wget as_puavo_update "$rate_limit"         \
+                                    "$next_image_tmppath" \
+                                    "$httpurl"            \
+                                    image_download        \
+      || return 1
+  fi
 }
 
 get_rdiff() {
@@ -620,7 +630,8 @@ get_rdiff() {
   rdiff_tmp="${rdiff_path}.tmp"
 
   if $use_torrents_for_rdiff_updates; then
-    download_url_with_torrent "$rate_limit" "$rdiff_url" || return 1
+    download_url_with_torrent "$rate_limit" "$rdiff_url" rdiff rdiff_fetch \
+      || return 1
   else
     fetch_with_wget as_puavo_update "$rate_limit" "$rdiff_tmp" "$rdiff_url" rdiff_fetch \
       || return 1
