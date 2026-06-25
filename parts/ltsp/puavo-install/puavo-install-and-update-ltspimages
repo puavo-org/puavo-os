@@ -197,15 +197,19 @@ check_checksums_exist_for() {
 }
 
 check_image_and_put_it_to_use() {
+  local next_image next_image_incoming_path next_image_tmppath
   next_image=$1
-  next_image_tmppath=$2
+  next_image_incoming_path=$2
 
-  check_checksum "$next_image" "$next_image_tmppath" image_checksum \
+  check_checksum "$next_image" "$next_image_incoming_path" image_checksum \
     || return 1
 
-  sync                                                   || return 1
-  mv "$next_image_tmppath" "${images_dir}/${next_image}" || return 1
-  sync                                                   || return 1
+  next_image_tmppath="${images_dir}/${next_image}.tmp"
+  sync                                                    || return 1
+  chown root:root "$next_image_incoming_path"             || return 1
+  ln -f "$next_image_incoming_path" "$next_image_tmppath" || return 1
+  mv "$next_image_tmppath" "${images_dir}/${next_image}"  || return 1
+  sync                                                    || return 1
 
   log notice "new ltsp image $next_image has been put into its place"
 }
@@ -257,18 +261,18 @@ cleanup_previous_runs() {
   preserve_imagefile=$1
   preserve_rdifffile=$2
 
-  # XXX this cleanup needs thought because of the change to /images/incoming
-  # XXX for image updates
-  # XXX maybe blanket rm -f ${images_dir}/*.img.tmp should be done?
+  rm -f ${images_dir}/*.img.tmp
 
   # cleanup old images (and their possible temporary *.tmp files)
   # and rdiff-files too.  The ltsp-backup.img is going to go too...
-  old_sync_files=$("${puavoinstall_libdir}/ls-old-images-and-rdiffs" "${images_dir}" "${rdiffs_dir}")
+  old_sync_files=$("${puavoinstall_libdir}/ls-old-images-and-rdiffs" \
+                     "$images_dir" "$rdiffs_dir" "$incoming_images_dir")
   if [ -n "$old_sync_files" ]; then
     printf %s "$old_sync_files" \
-      | fgrep -vx "${images_dir}/${preserve_imagefile}" \
-      | fgrep -vx "${rdiffs_dir}/${preserve_rdifffile}" \
-      | fgrep -vx "${rdiffs_dir}/${preserve_rdifffile}.tmp" \
+      | fgrep -vx "${images_dir}/${preserve_imagefile}"          \
+      | fgrep -vx "${incoming_images_dir}/${preserve_imagefile}" \
+      | fgrep -vx "${rdiffs_dir}/${preserve_rdifffile}"          \
+      | fgrep -vx "${rdiffs_dir}/${preserve_rdifffile}.tmp"      \
       | xargs -r -d'\n' -L1 rm -f
   fi
 
@@ -809,7 +813,8 @@ patch_with_rdiff() {
     return 1
   fi
 
-  next_image_tmppath="${images_dir}/${next_image}.tmp"
+  next_image_tmppath="${incoming_images_dir}/${next_image}.tmp"
+  install -o puavo-update -g puavo-update -m 644 /dev/null "$next_image_tmppath"
 
   # rdiff might fail due to a corrupt rdiff-file or for some other reason.
   # We let rdiff pass through in case of failure, and we check the correctness
