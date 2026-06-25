@@ -58,7 +58,7 @@ EOF
 }
 
 if ! args=$(getopt -n "$0" -o +f:n:r:q \
-                   -l 'hosttype:,install-from-file:,install-from-nbd:,rate-limit:,quiet,images-dir:,no-preinst-hook,use-torrents' \
+                   -l 'hosttype:,install-from-file:,install-from-nbd:,rate-limit:,quiet,images-dir:,no-preinst-hook,use-rdiff-torrents' \
                    -- "$@"); then
   usage
 fi
@@ -105,7 +105,7 @@ while [ $# -ne 0 ]; do
     -q|--quiet)
       quiet=true; shift
       ;;
-    --use-torrents)
+    --use-rdiff-torrents)
       use_torrents_for_rdiff_updates=true; shift
       ;;
     --) shift; break;;

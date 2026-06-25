@@ -20,7 +20,7 @@ update_ltsp_image() {
   fi
 
   if [ "$(puavo-conf puavo.service.puavo-image-torrent-updated.enabled)" = 'true' ]; then
-    update_ltspimage_params="${update_ltspimage_params} --use-torrents"
+    update_ltspimage_params="${update_ltspimage_params} --use-rdiff-torrents"
   fi
 
   if [ -n "$next_imagename" ]; then
