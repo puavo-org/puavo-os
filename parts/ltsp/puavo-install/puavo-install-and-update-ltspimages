@@ -269,9 +269,9 @@ cleanup_previous_runs() {
   fi
 
   if $use_torrents_for_rdiff_updates; then
-    # Ask puavo-image-torrent-updated to stop seeding (if it is doing
+    # Ask puavo-rdiff-torrent-updated to stop seeding (if it is doing
     # anything).  This is relevant here only for disk space calculations.
-    echo stop | nc -N -U /run/puavo/puavo-image-torrent-updated.sock \
+    echo stop | nc -N -U /run/puavo/puavo-rdiff-torrent-updated.sock \
       >/dev/null 2>&1 || true
   fi
 }
@@ -552,7 +552,7 @@ download_url_with_torrent() {
 
   torrent_status=$(
     printf "%s\n%s\n" "$rate_limit" "$url_to_download_with_torrent" \
-      | nc -N -U /run/puavo/puavo-image-torrent-updated.sock \
+      | nc -N -U /run/puavo/puavo-rdiff-torrent-updated.sock \
       | while read progress; do
           if [ "$progress" = 'OK' ]; then
             echo OK
