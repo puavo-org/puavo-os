@@ -19,6 +19,10 @@ update_ltsp_image() {
     update_ltspimage_params="${update_ltspimage_params} --rate-limit $rate_limit"
   fi
 
+  if [ "$(puavo-conf puavo.service.puavo-image-torrent-updated.enabled)" = 'true' ]; then
+    update_ltspimage_params="${update_ltspimage_params} --use-image-torrents"
+  fi
+
   if [ "$(puavo-conf puavo.service.puavo-rdiff-torrent-updated.enabled)" = 'true' ]; then
     update_ltspimage_params="${update_ltspimage_params} --use-rdiff-torrents"
   fi

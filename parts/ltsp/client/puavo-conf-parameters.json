@@ -320,6 +320,11 @@
     "description": "Enable/disable puavo-darkdm service",
     "typehint": "bool"
   },
+  "puavo.service.puavo-image-torrent-updated.enabled": {
+    "default": "false",
+    "description": "Enable/disable puavo-image-torrent-updated service",
+    "typehint": "bool"
+  },
   "puavo.service.puavo-rdiff-torrent-updated.enabled": {
     "default": "false",
     "description": "Enable/disable puavo-rdiff-torrent-updated service",

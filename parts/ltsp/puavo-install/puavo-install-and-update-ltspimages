@@ -58,7 +58,7 @@ EOF
 }
 
 if ! args=$(getopt -n "$0" -o +f:n:r:q \
-                   -l 'hosttype:,install-from-file:,install-from-nbd:,rate-limit:,quiet,images-dir:,no-preinst-hook,use-rdiff-torrents' \
+                   -l 'hosttype:,install-from-file:,install-from-nbd:,rate-limit:,quiet,images-dir:,no-preinst-hook,use-image-torrents,use-rdiff-torrents' \
                    -- "$@"); then
   usage
 fi
@@ -73,6 +73,7 @@ image_from_nbd=""
 rate_limit=""
 quiet=false
 run_preinst_hook=true
+use_torrents_for_image_updates=false
 use_torrents_for_rdiff_updates=false
 
 eval "set -- $args"
@@ -104,6 +105,9 @@ while [ $# -ne 0 ]; do
       ;;
     -q|--quiet)
       quiet=true; shift
+      ;;
+    --use-image-torrents)
+      use_torrents_for_image_updates=true; shift
       ;;
     --use-rdiff-torrents)
       use_torrents_for_rdiff_updates=true; shift
@@ -268,9 +272,14 @@ cleanup_previous_runs() {
       --images-dir "$images_dir" || true
   fi
 
+  # Ask puavo-image-torrent-updated and puavo-rdiff-torrent-updated
+  # to stop seeding (if they are doing anything).  This is relevant here
+  # only for disk space calculations.
+  if $use_torrents_for_image_updates; then
+    echo stop | nc -N -U /run/puavo/puavo-image-torrent-updated.sock \
+      >/dev/null 2>&1 || true
+  fi
   if $use_torrents_for_rdiff_updates; then
-    # Ask puavo-rdiff-torrent-updated to stop seeding (if it is doing
-    # anything).  This is relevant here only for disk space calculations.
     echo stop | nc -N -U /run/puavo/puavo-rdiff-torrent-updated.sock \
       >/dev/null 2>&1 || true
   fi
