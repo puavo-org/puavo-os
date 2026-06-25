@@ -63,6 +63,7 @@ if ! args=$(getopt -n "$0" -o +f:n:r:q \
   usage
 fi
 
+incoming_images_dir="${images_dir}/incoming"
 metas_dir="${images_dir}/meta"
 rdiffs_dir="${images_dir}/rdiffs"
 puavoinstall_libdir=/usr/lib/puavo-ltsp-install
@@ -255,6 +256,10 @@ sha512sum_with_progress() {
 cleanup_previous_runs() {
   preserve_imagefile=$1
   preserve_rdifffile=$2
+
+  # XXX this cleanup needs thought because of the change to /images/incoming
+  # XXX for image updates
+  # XXX maybe blanket rm -f ${images_dir}/*.img.tmp should be done?
 
   # cleanup old images (and their possible temporary *.tmp files)
   # and rdiff-files too.  The ltsp-backup.img is going to go too...
@@ -577,6 +582,21 @@ download_url_with_torrent() {
   log info "got $url_to_download_with_torrent with success"
 
   return 0
+}
+
+get_image() {
+  local httpurl next_image_tmppath rate_limit
+
+  rate_limit=$1
+  next_image_tmppath=$2
+  httpurl=$3
+
+  log info "fetching ${httpurl} with wget"
+  fetch_with_wget as_puavo_update "$rate_limit"         \
+                                  "$next_image_tmppath" \
+                                  "$httpurl"            \
+                                  image_download        \
+    || return 1
 }
 
 get_rdiff() {
@@ -913,14 +933,11 @@ try_full_image_update_from_imageserver() {
 
   ensure_enough_available_diskspace "$next_image" '' || return 1
 
-  next_image_tmppath="${images_dir}/${next_image}.tmp"
+  install -d -D -o root -g puavo-update -m 775 "$incoming_images_dir"
 
+  next_image_tmppath="${incoming_images_dir}/${next_image}.tmp"
   httpurl="https://${image_server}/${next_image}"
-  log info "fetching ${httpurl} with wget"
-  fetch_with_wget as_root "$rate_limit"         \
-                          "$next_image_tmppath" \
-                          "$httpurl"            \
-                          image_download        \
+  get_image "$rate_limit" "$next_image_tmppath" "$httpurl" \
     || return 1
 
   check_image_and_put_it_to_use "$next_image"         \
