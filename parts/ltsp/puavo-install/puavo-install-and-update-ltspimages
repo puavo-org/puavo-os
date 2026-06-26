@@ -842,9 +842,13 @@ patch_with_rdiff() {
       > "$next_image_tmppath" 2>&1
   } || true
 
-  check_image_and_put_it_to_use "$next_image"         \
-                                "$next_image_tmppath" \
-    || return 1
+  if ! check_image_and_put_it_to_use "$next_image"         \
+                                     "$next_image_tmppath"; then
+    log err "error putting patched image ${next_image} into use"
+    return 1
+  fi
+
+  return 0
 }
 
 query_update_confirmation() {
@@ -957,9 +961,13 @@ try_full_image_update_from_imageserver() {
   get_image "$rate_limit" "$next_image_tmppath" "$httpurl" \
     || return 1
 
-  check_image_and_put_it_to_use "$next_image"         \
-                                "$next_image_tmppath" \
-    || return 1
+  if ! check_image_and_put_it_to_use "$next_image"         \
+                                     "$next_image_tmppath"; then
+    log err "error putting downloaded image ${next_image} into use"
+    return 1
+  fi
+
+  return 0
 }
 
 try_rdiff_update_from_imageserver() {
