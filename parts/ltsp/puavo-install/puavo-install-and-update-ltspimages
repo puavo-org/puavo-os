@@ -302,8 +302,9 @@ ensure_enough_available_diskspace() {
     log err "could not look up target image size for $next_image"
     return 1
   fi
-  target_tmpimage_size_on_fs=$(stat -c %s "${images_dir}/${next_image}.tmp" \
-                                 2>/dev/null || echo 0)
+  target_tmpimage_size_on_fs=$(
+    stat -c %s "${incoming_images_dir}/${next_image}.tmp" 2>/dev/null \
+      || echo 0)
 
   if [ -z "$rdiff_filename" ] \
     || ! target_rdiff_size=$(lookup_from_metas size "$rdiff_filename"); then
