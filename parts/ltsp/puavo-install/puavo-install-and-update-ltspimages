@@ -261,7 +261,7 @@ cleanup_previous_runs() {
   preserve_imagefile=$1
   preserve_rdifffile=$2
 
-  rm -f ${images_dir}/*.img.tmp
+  rm -f ${images_dir}/*.img.tmp ${images_dir}/*.backup
 
   # cleanup old images (and their possible temporary *.tmp files)
   # and rdiff-files too.  The ltsp-backup.img is going to go too...
