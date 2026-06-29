@@ -23,7 +23,8 @@ files_managed_by_puavo_bootserver_sync_images() {
 
 lookup_incoming_images() {
   test -d "$incoming_images_dir" || return 0
-  find "$incoming_images_dir" -maxdepth 1 -type f -a -name '*.img.tmp'
+  find "$incoming_images_dir" -maxdepth 1 -type f -a \
+       '(' -name '*.img' -o -name '*.img.tmp' ')'
 }
 
 lookup_old_images() {
@@ -47,7 +48,8 @@ lookup_temporary_files() {
     find "$rdiffs_dir" -maxdepth 1 -type f -a -name '*.rdiff.tmp'
   fi
   if [ -d "$incoming_images_dir" ]; then
-    find "$incoming_images_dir" -maxdepth 1 -type f -a -name '*.img.tmp'
+    find "$incoming_images_dir" -maxdepth 1 -type f -a \
+         '(' -name '*.img' -o -name '*.img.tmp' ')'
   fi
 }
 
