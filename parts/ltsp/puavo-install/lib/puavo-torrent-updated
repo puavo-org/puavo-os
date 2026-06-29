@@ -245,7 +245,7 @@ class Server
             Syslog.log(Syslog::LOG_NOTICE,
                        'stopping aria because of client request')
           else
-            Syslog.log(Syslog::LOG_NOTICE,
+            Syslog.log(Syslog::LOG_DEBUG,
               'aria is not run (at least not by us),' \
                 + ' even though client requests it to stop')
           end
