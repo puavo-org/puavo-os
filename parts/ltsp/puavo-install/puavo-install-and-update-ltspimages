@@ -546,6 +546,7 @@ get_next_image() {
     return 1
   fi
 
+  install -d -D -o root -g puavo-update -m 775 "$incoming_images_dir"
   install -d -D -o root -g puavo-update -m 775 "$rdiffs_dir"
 
   cleanup_previous_runs "${next_image}.tmp" "$rdiff_filename"
@@ -985,8 +986,6 @@ try_full_image_update_from_imageserver() {
   check_checksums_exist_for "$next_image" || return 1
 
   ensure_enough_available_diskspace "$next_image" '' || return 1
-
-  install -d -D -o root -g puavo-update -m 775 "$incoming_images_dir"
 
   next_image_tmppath="${incoming_images_dir}/${next_image}.tmp"
   get_image "$rate_limit" "$next_image_tmppath" "$httpurl" \
