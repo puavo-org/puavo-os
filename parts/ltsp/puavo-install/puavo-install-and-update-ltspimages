@@ -460,7 +460,7 @@ fetch_with_wget() {
     return 1
   fi
 
-  log info "fetched $url with success"
+  log info "fetched ${url} with success"
 }
 
 get_meta_files() {
@@ -524,7 +524,7 @@ get_meta_files() {
 }
 
 get_next_image() {
-  local errmsg image_server image_server_list next_image rate_limit \
+  local errmsg httpurl image_server image_server_list next_image rate_limit \
         previous_image rdiff_filename rdiff_should_exist
 
   next_image=$1
@@ -558,6 +558,11 @@ get_next_image() {
                                          "$rdiff_filename" \
                                          "$previous_image" \
                                          "$next_image"; then
+      # start seeding torrent (optional, it is okay if it fails)
+      httpurl="https://${image_server}/${next_image}"
+      timeout -k 2 5 printf "seed\n%s\n" "$httpurl" \
+        | nc -N -U "/run/puavo/puavo-image-torrent-updated.sock" \
+          || true
       return 0
     elif [ $? -ne 2 ]; then
       # try_rdiff_update_from_imageserver returns 2 if some required file
@@ -580,9 +585,10 @@ get_next_image() {
   # from all servers in $image_server_list.
 
   for image_server in $image_server_list; do
-    try_full_image_update_from_imageserver "$image_server" \
-                                           "$rate_limit"   \
-                                           "$next_image"   \
+    httpurl="https://${image_server}/${next_image}"
+    try_full_image_update_from_imageserver "$httpurl"    \
+                                           "$rate_limit" \
+                                           "$next_image" \
       && return 0
   done
 
@@ -969,7 +975,9 @@ set_image_as_default_image() {
 }
 
 try_full_image_update_from_imageserver() {
-  image_server=$1
+  local httpurl next_image rate_limit
+
+  httpurl=$1
   rate_limit=$2
   next_image=$3
 
@@ -981,7 +989,6 @@ try_full_image_update_from_imageserver() {
   install -d -D -o root -g puavo-update -m 775 "$incoming_images_dir"
 
   next_image_tmppath="${incoming_images_dir}/${next_image}.tmp"
-  httpurl="https://${image_server}/${next_image}"
   get_image "$rate_limit" "$next_image_tmppath" "$httpurl" \
     || return 1
 
