@@ -22,6 +22,8 @@ exec 5>&2       # another way to write to stderr for log()
 #
 
 log() {
+  local logmessage logpriority log_to_stderr log_to_stdout
+
   log_to_stdout=false
   log_to_stderr=false
 
@@ -137,6 +139,8 @@ fi
 #
 
 update_stats() {
+  local phase progress stats_filepath
+
   phase=$1
   progress=$2
 
@@ -186,6 +190,8 @@ trap interrupted INT TERM
 #
 
 check_checksums_exist_for() {
+  local file_to_check_checksum_for
+
   for file_to_check_checksum_for in "$@"; do
     if ! lookup_from_metas sha512 "$file_to_check_checksum_for" >/dev/null; then
       log err "could not find sha512 for '$file_to_check_checksum_for'"
@@ -238,38 +244,42 @@ check_image_and_put_it_to_use() {
 }
 
 check_checksum() {
+  local actual_file_path calculated_checksum expected_checksum filename phase
+
   filename=$1
   actual_file_path=$2
   phase=$3
 
   if ! [ -r "$actual_file_path" ]; then
-    log err "could not find a file $filename to check"
+    log err "could not find a file ${filename} to check"
     return 1
   fi
 
   expected_checksum=$(lookup_from_metas sha512 "$filename")
   if [ -z "$expected_checksum" ]; then
-    log err "could not determine expected checksum for $filename"
+    log err "could not determine expected checksum for ${filename}"
     return 1
   fi
 
   calculated_checksum=$(sha512sum_with_progress "$phase" "$actual_file_path")
   if [ -z "$calculated_checksum" ]; then
-    log err "could not calculate checksum for $filename"
+    log err "could not calculate checksum for ${filename}"
     return 1
   fi
 
   if [ "$expected_checksum" != "$calculated_checksum" ]; then
-    log err "file $filename failed checksum check, removing $actual_file_path"
+    log err "file ${filename} failed checksum check, removing ${actual_file_path}"
     rm -f "$actual_file_path"
     return 1
   fi
 
-  log info "checksum for file $filename is okay"
+  log info "checksum for file ${filename} is okay"
   return 0
 }
 
 sha512sum_with_progress() {
+  local phase sha512_filepath
+
   phase=$1
   sha512_filepath=$2
 
@@ -281,6 +291,8 @@ sha512sum_with_progress() {
 }
 
 cleanup_previous_runs() {
+  local old_sync_files preserve_imagefile preserve_rdifffile
+
   preserve_imagefile=$1
   preserve_rdifffile=$2
 
@@ -319,6 +331,11 @@ cleanup_previous_runs() {
 }
 
 ensure_enough_available_diskspace() {
+  local diskspace msg next_image rdiff_filename required_diskspace \
+        target_image_size target_rdiff_size target_rdiff_size_on_fs \
+        target_sizes_summed target_sizes_on_fs target_tmprdiff_size_on_fs \
+        target_tmpimage_size_on_fs
+
   next_image=$1
   rdiff_filename=$2
 
@@ -381,6 +398,8 @@ ensure_enough_available_diskspace() {
 }
 
 ensure_that_default_image_is_the_current_one() {
+  local booted_image default_image
+
   booted_image=$(cat /etc/puavo-image/name || true)
   default_image=$(lookup_ltspimage_name_by_alias ltsp.img || true)
 
@@ -402,6 +421,9 @@ ensure_that_default_image_is_the_current_one() {
 }
 
 fetch_with_wget() {
+  local as_someone output_path phase rate_limit url wget wget_error_code \
+        wgetopts
+
   as_someone=$1
   rate_limit=$2
   output_path=$3
@@ -646,6 +668,8 @@ get_image() {
 }
 
 get_rdiff() {
+  local rate_limit rdiff_filename rdiff_path rdiff_tmp rdiff_url
+
   rate_limit=$1
   rdiff_filename=$2
   rdiff_url=$3
@@ -653,11 +677,11 @@ get_rdiff() {
   rdiff_path="${rdiffs_dir}/${rdiff_filename}"
 
   if [ -e "$rdiff_path" ]; then
-    log info "the rdiff file $rdiff_filename is already in place"
+    log info "the rdiff file ${rdiff_filename} is already in place"
     return 0
   fi
 
-  log info "we are missing the full rdiff $rdiff_filename, going to get it"
+  log info "we are missing the full rdiff ${rdiff_filename}, going to get it"
 
   rdiff_tmp="${rdiff_path}.tmp"
 
@@ -665,8 +689,8 @@ get_rdiff() {
     download_url_with_torrent "$rate_limit" "$rdiff_url" rdiff rdiff_fetch \
       || return 1
   else
-    fetch_with_wget as_puavo_update "$rate_limit" "$rdiff_tmp" "$rdiff_url" rdiff_fetch \
-      || return 1
+    fetch_with_wget as_puavo_update "$rate_limit" "$rdiff_tmp" "$rdiff_url" \
+      rdiff_fetch || return 1
   fi
 
   check_checksum "$rdiff_filename" "$rdiff_tmp" rdiff_checksum \
@@ -675,10 +699,12 @@ get_rdiff() {
   sync || return 1
   mv "$rdiff_tmp" "$rdiff_path" || return 1
 
-  log notice "new rdiff file $rdiff_filename has been put into its place"
+  log notice "new rdiff file ${rdiff_filename} has been put into its place"
 }
 
 get_rdiff_filename() {
+  local previous_image_name next_image_name
+
   previous_image_name=$1
   next_image_name=$2
 
@@ -704,6 +730,9 @@ get_rdiff_filename() {
 }
 
 install_from_file_or_nbd() {
+  local imagename imagepath image_src_path preserve_imagefile total_size \
+        type_arg type_opt
+
   imagename=$1
   type_opt=$2
   type_arg=$3
@@ -734,7 +763,7 @@ install_from_file_or_nbd() {
 
   cleanup_previous_runs "$preserve_imagefile" ''
 
-  dd "if=$image_src_path" 2>/dev/null | pv -s "$total_size" \
+  dd "if=${image_src_path}" 2>/dev/null | pv -s "$total_size" \
     > "${imagepath}.tmp"
   sync
   mv "${imagepath}.tmp" "$imagepath"
@@ -742,14 +771,15 @@ install_from_file_or_nbd() {
 }
 
 install_image() {
+  local current_ltspimage_name imagename type_arg type_opt
+
   imagename=$1
   type_opt=$2
   type_arg=$3
 
   current_ltspimage_name=$(lookup_ltspimage_name_by_alias ltsp.img || true)
   if [ "$current_ltspimage_name" = "$imagename" ]; then
-    echo "The wanted PuavoLTSP image $imagename"
-    echo "is already in place."
+    echo "The image ${imagename} is already in place."
     update_stats uptodate 100
     return 0
   fi
@@ -763,11 +793,12 @@ install_image() {
   run_image_preinst_hook     "$imagename"
   set_image_as_default_image "$imagename"
 
-  echo "The PuavoLTSP image $imagename"
-  echo "is now installed and set as default."
+  echo "The image ${imagename} is now installed and set as default."
 }
 
 lookup_from_metas() {
+  local meta_field meta_filename meta_value
+
   meta_field=$1
   meta_filename=$2
 
@@ -798,7 +829,10 @@ lookup_from_metas() {
 
 # this is mostly reimplemented in Ruby in puavo-pkg-updater
 lookup_image_servers() {
-  all_image_servers=
+  local all_image_servers image_server_by_dns image_servers_by_puavoconf \
+        toplevel_image_server
+
+  all_image_servers=''
 
   if image_server_by_dns=$(/usr/lib/puavo-ltsp-client/lookup-image-server-by-dns); then
     all_image_servers="$image_server_by_dns"
@@ -810,23 +844,24 @@ lookup_image_servers() {
   # (can be empty, one address, or many separated by whitespace).
   image_servers_by_puavoconf=$(puavo-conf puavo.image.servers)
   if [ -n "$image_servers_by_puavoconf" ]; then
-    all_image_servers="$all_image_servers $image_servers_by_puavoconf"
+    all_image_servers="${all_image_servers} ${image_servers_by_puavoconf}"
   fi
 
   toplevel_image_server="cdn.$(cat /etc/puavo/topdomain)"
-
-  all_image_servers="$all_image_servers $toplevel_image_server"
+  all_image_servers="${all_image_servers} ${toplevel_image_server}"
 
   log info "using image servers: $(echo "$all_image_servers" | xargs)"
 
-  echo "$all_image_servers"
+  printf %s "$all_image_servers"
 }
 
 lookup_ltspimage_name_by_alias() {
+  local current_ltspimage_inode current_ltspimage_path file imagename
+
   imagename=$1
 
   current_ltspimage_path="${images_dir}/${imagename}"
-  current_ltspimage_inode="$(stat -c %i $current_ltspimage_path 2>/dev/null \
+  current_ltspimage_inode="$(stat -c %i "$current_ltspimage_path" 2>/dev/null \
                                || true)"
 
   for file in ${images_dir}/*.img; do
@@ -847,6 +882,9 @@ lookup_ltspimage_name_by_alias() {
 }
 
 patch_with_rdiff() {
+  local next_image next_image_filesize next_image_tmppath previous_image \
+        rdiff_filename
+
   previous_image=$1
   next_image=$2
   rdiff_filename=$3
@@ -883,12 +921,14 @@ patch_with_rdiff() {
 }
 
 query_update_confirmation() {
+  local current_ltspimage_name new_ltspimage_name
+
   current_ltspimage_name=$1
   new_ltspimage_name=$2
 
   cat <<EOF
-The current PuavoLTSP image is $current_ltspimage_name,
-but version $new_ltspimage_name is available.
+The current PuavoLTSP image is ${current_ltspimage_name},
+but version ${new_ltspimage_name} is available.
 
 Press ENTER to proceed to update it.
 EOF
@@ -904,6 +944,8 @@ with_systemd_inhibit() {
 }
 
 install_uki_files() {
+  local imagename imagepath install_hosttype
+
   imagename="$1"
   imagepath="${images_dir}/${imagename}"
 
@@ -924,12 +966,14 @@ install_uki_files() {
   with_systemd_inhibit puavo-cleanup-uki-installations \
     --images-dir "$images_dir" || true
 
-  log info "installing UKI files from $imagepath"
+  log info "installing UKI files from ${imagepath}"
   with_systemd_inhibit puavo-install-and-update-uki-image \
     "$imagepath" "$install_hosttype" "$images_dir"
 }
 
 run_image_preinst_hook() {
+  local imagename imagepath
+
   if ! $run_preinst_hook; then
     return 0
   fi
@@ -953,8 +997,9 @@ run_image_preinst_hook() {
   umount "${images_dir}/mnt" || true
 }
 
-# XXX duplicate code with puavo-install-ltspimages
 set_image_as_default_image() {
+  local backup_ltspimage_path default_ltspimage_path imagename imagepath
+
   imagename=$1
   imagepath="${images_dir}/${imagename}"
 
@@ -1001,6 +1046,9 @@ try_full_image_update_from_imageserver() {
 }
 
 try_rdiff_update_from_imageserver() {
+  local image_server next_image previous_image rate_limit rdiff_filename \
+        rdiff_url
+
   image_server=$1
   rate_limit=$2
   rdiff_filename=$3
@@ -1028,6 +1076,8 @@ try_rdiff_update_from_imageserver() {
 }
 
 update_image() {
+  local next_image rate_limit
+
   next_image=$1
   rate_limit=$2
 
@@ -1051,6 +1101,8 @@ update_image() {
 }
 
 update_image_labels_for_grub() {
+  local backup_image default_image
+
   default_image=$(lookup_ltspimage_name_by_alias ltsp.img || true)
   backup_image=$(lookup_ltspimage_name_by_alias ltsp-backup.img || true)
 
@@ -1064,11 +1116,12 @@ update_image_labels_for_grub() {
   # This setup_grub_environment script updates the
   # "puavo_grub_puavo_os_default_image" and "puavo_grub_puavo_os_backup_image"
   # Grub environment variables to match the above default/backup images.
-  PUAVO_CONF_SCRIPTS='/etc/puavo-conf/scripts'
-  "${PUAVO_CONF_SCRIPTS}"/setup_grub_environment --images-dir "$images_dir"
+  /etc/puavo-conf/scripts/setup_grub_environment --images-dir "$images_dir"
 }
 
 update_stats_with_progress() {
+  local phase
+
   phase=$1
 
   # possible phases are:
