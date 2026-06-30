@@ -560,7 +560,7 @@ get_next_image() {
                                          "$next_image"; then
       # start seeding torrent (optional, it is okay if it fails)
       httpurl="https://${image_server}/${next_image}"
-      timeout -k 2 5 printf "seed\n%s\n" "$httpurl" \
+      timeout -k 2 5 printf "seed\n%s\n%s\n" "$httpurl" "$rdiffs_dir" \
         | nc -N -U "/run/puavo/puavo-image-torrent-updated.sock" \
           || true
       return 0

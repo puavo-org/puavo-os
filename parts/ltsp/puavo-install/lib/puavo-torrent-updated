@@ -260,14 +260,15 @@ class Server
           return
         end
 
-        rate_limit_or_seed, @url_to_download = * @client_message.split("\n")
+        rate_limit_or_seed, requested_url, seedpatch_dir \
+          = * @client_message.split("\n")
         if rate_limit_or_seed == 'seed' then
           Syslog.log(Syslog::LOG_NOTICE, 'client requested seeding')
-          write_torrent_url
-          @aria = start_aria_seeding(false)
+          @aria = handle_aria_seeding_request(requested_url, seedpatch_dir)
         else
           rate_limit = rate_limit_or_seed
           use_rate_limit = (rate_limit != '')
+          @url_to_download = requested_url
 
           Syslog.log(Syslog::LOG_NOTICE,
                      "client asks to download '%s'",
@@ -338,6 +339,26 @@ class Server
     @selfpipe_w.write_nonblock('o')
   end
 
+  def handle_aria_seeding_request(requested_url, seedpatch_dir)
+    # We should use the same server for seeding where we have obtained
+    # the patch for the seed file, as the seed torrent will more likely
+    # not exist in the server where we have obtained the patch from.
+    # (This is for the image updates, for cases where we have obtained
+    # the image from an rdiff).
+    seedpatch_uri = IO.read("#{ seedpatch_dir }/.aria2_torrent_url").chomp \
+                      rescue nil
+    if seedpatch_uri then
+      uri = URI(requested_url)
+      uri.host = URI(seedpatch_uri).host
+      @url_to_download = uri.to_s
+    else
+      @url_to_download = requested_url
+    end
+
+    write_torrent_url
+    @aria = start_aria_seeding(false)
+  end
+
   def write_torrent_url
     # This is a sign for subsequent startups of this tool that it should
     # start seeding the url in this file.
@@ -399,7 +420,7 @@ def start_aria_seeding(wait_until_dns_is_available)
     end
   end
 
-  # we have torrent url, we have rdiff on the right path,
+  # we have torrent url, we have file on the right path,
   # we have a working DNS, we can seed:
 
   Syslog.log(Syslog::LOG_NOTICE,
