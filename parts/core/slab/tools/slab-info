@@ -1,0 +1,37 @@
+#!/bin/sh
+set -eu
+
+# Shows the slab revocation counter and base from the TPM, and the version
+# derived from them, which is counter minus base.
+
+COUNTER_INDEX=0x01514B00
+BASE_INDEX=0x01514B01
+
+read_nv_u64() {
+  hex=$(tpm2_nvread "$1" 2>/dev/null | od -An -tx1 | tr -d ' \n')
+  if [ -z "$hex" ]; then
+    echo unavailable
+  else
+    printf '%u' "0x${hex}"
+  fi
+}
+
+counter=$(read_nv_u64 "$COUNTER_INDEX")
+base=$(read_nv_u64 "$BASE_INDEX")
+if [ "$counter" != unavailable ] && [ "$base" != unavailable ]; then
+  version=$((counter - base))
+else
+  version=unavailable
+fi
+
+printf '%-12s%s\n' 'counter:' "$counter"
+printf '%-12s%s\n' 'base:' "$base"
+printf '%-12s%s\n' '=> version:' "$version"
+
+echo
+echo 'counter public area:'
+tpm2_nvreadpublic "$COUNTER_INDEX" || echo '  unavailable'
+
+echo
+echo 'base public area:'
+tpm2_nvreadpublic "$BASE_INDEX" || echo '  unavailable'
