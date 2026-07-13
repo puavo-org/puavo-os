@@ -26,7 +26,8 @@ install: build
 	mkdir -p $(INSTALL_DIR)
 	cp $(BIN) $(INSTALL_DIR)/slabx64.efi
 	mkdir -p $(SBIN_DIR)
-	install -m 755 tools/slab-info tools/slab-debug $(SBIN_DIR)/
+	install -m 755 tools/slab-info tools/slab-debug tools/slab-reset \
+	  $(SBIN_DIR)/
 
 # Debug slab binary for the QEMU test harnesses.
 .PHONY: test-binary
