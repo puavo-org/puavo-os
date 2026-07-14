@@ -551,12 +551,9 @@ uki_grub_m4_template() {
 
   cat <<'EOF'
 set default="0"
-
-# Make sure the prefix is set correctly
-if test -e "${prefix}/grub/grubenv"; then
-  set prefix="${prefix}/grub"
-fi
-
+# Switch the root immediately to the boot device from the memory disk
+search --no-floppy --fs-uuid --set=root __PUAVO_EFI_PARTITION_UUID__
+set prefix=($root)/EFI/puavo/grub
 load_env
 
 # Load the Puavo configuration
