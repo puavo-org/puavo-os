@@ -9,7 +9,7 @@ panic() {
 usage() {
   echo "Usage: $0 <rootfs-directory> <key-directory>"
   echo ""
-  echo "Signs GRUB and SHIM bootloaders with Secure Boot keys."
+  echo "Signs GRUB and slab bootloaders with Secure Boot keys."
   exit 1
 }
 
@@ -62,12 +62,8 @@ for architecture in i386-efi x86_64-efi; do
   create_grub_architecture_bootloader "$architecture"
 done
 
-shim_source_directory="${rootfs_directory}/usr/lib/shim"
-shim_output_directory="${rootfs_directory}/usr/lib/shim"
-mkdir -p "$shim_output_directory"
+slab_directory="${rootfs_directory}/usr/lib/slab"
+[ -d "$slab_directory" ] || panic "directory '$slab_directory' does not exist"
 
-[ -d "$shim_source_directory" ] || panic "directory '$shim_source_directory' does not exist"
-[ -d "$shim_output_directory" ] || panic "directory '$shim_output_directory' does not exist"
-
-echo "signing SHIM binaries..."
-.aux/sign-efi-directory "$shim_source_directory" "$key_directory" "$shim_output_directory"
+echo "signing slab bootloader..."
+.aux/sign-efi-directory "$slab_directory" "$key_directory" "$slab_directory"
