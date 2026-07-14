@@ -917,8 +917,125 @@ write_grub_version() {
   fi
 }
 
+# Copies a file to one or more destinations safely, so a crash never
+# leaves a half written destination.
+install_multiple_safely() {
+  local source destination
+  source=$1
+  shift
+
+  for destination in "$@"; do
+    cp "$source" "${destination}.tmp" || return 1
+  done
+  sync
+  for destination in "$@"; do
+    mv "${destination}.tmp" "$destination" || return 1
+  done
+  sync
+}
+
+# Places the signed slab and GRUB binaries on the EFI partition.
+place_uki_bootloaders() {
+  local efi_mountpoint architecture
+  efi_mountpoint=$1
+  architecture=$(uname --machine)
+
+  case "$architecture" in
+    x86_64) place_uki_bootloaders_x86_64 "$efi_mountpoint" ;;
+    *)
+      log err "no UKI bootloaders known for architecture ${architecture}"
+      return 1
+      ;;
+  esac
+}
+
+# Places the signed slab and GRUB binaries on the EFI partition for x86-64.
+place_uki_bootloaders_x86_64() {
+  local efi_mountpoint grub_signed slab_signed puavo_directory
+  local grub_directory removable_directory
+  efi_mountpoint=$1
+  grub_signed='/usr/lib/grub/x86_64-efi-signed/grubx64.efi.signed'
+  slab_signed='/usr/lib/slab/slabx64.efi.signed'
+
+  [ -f "$grub_signed" ] || {
+    log err "signed GRUB binary not found at ${grub_signed}"
+    return 1
+  }
+  [ -f "$slab_signed" ] || {
+    log err "signed slab binary not found at ${slab_signed}"
+    return 1
+  }
+
+  puavo_directory="${efi_mountpoint}/EFI/puavo"
+  grub_directory="${puavo_directory}/grub"
+  removable_directory="${efi_mountpoint}/EFI/BOOT"
+  mkdir -p "$grub_directory" "$removable_directory"
+
+  # GRUB goes inside its own directory so the directory it is loaded from,
+  # which becomes its prefix, is the one holding its config and resources.
+  install_multiple_safely "$grub_signed" \
+    "${grub_directory}/grubx64.efi"
+  install_multiple_safely "$slab_signed" \
+    "${puavo_directory}/slab.efi" "${removable_directory}/BOOTX64.EFI"
+
+  return 0
+}
+
+# Creates the NVRAM boot entry that loads slab and removes duplicate entries.
+create_slab_boot_entry() {
+  local disk efi_devpath label partition
+  disk=$1
+  efi_devpath=$2
+  label=$3
+
+  partition=$(cat "/sys/class/block/$(basename "$efi_devpath")/partition" \
+	      2>/dev/null)
+  if [ -z "$partition" ]; then
+    log err "failed to determine EFI partition number for ${efi_devpath}"
+    return 1
+  fi
+
+  efibootmgr --quiet --create \
+    --disk "$disk" \
+    --part "$partition" \
+    --label "$label" \
+    --loader '\EFI\puavo\slab.efi'
+  efibootmgr --quiet --remove-dups || true
+}
+
+# Installs the UKI-mode bootloaders, such as slab and GRUB, with NVRAM boot entry.
+install_uki_bootloader() {
+  local boot_dir efi_devpath grubdev vgname
+
+  boot_dir=$1
+  efi_devpath=$2
+  grubdev=$3
+  vgname=$4
+
+  if ! place_uki_bootloaders /boot/efi; then
+    log err "failed to place UKI EFI bootloaders for ${grubdev}"
+    return 1
+  fi
+
+  if [ "$vgname" != 'puavoinstaller' ]; then
+    if ! create_slab_boot_entry "$grubdev" "$efi_devpath" 'puavo'; then
+      log err "failed to create slab boot entry for ${grubdev}"
+      return 1
+    fi
+  fi
+
+  install_puavo_grub_files_to_efi_partition "$boot_dir" && \
+  copy_grub_environment && \
+  write_grub_version "${boot_dir}/grub/version" || {
+    log err "failed to install UKI files to EFI partition"
+    return 1
+  }
+
+  return 0
+}
+
 install_efi_grub() {
-  local boot_dir efi_devpath grubdev grub_efi_arguments vgname
+  local boot_dir efi_devpath grubdev grub_efi_arguments vgname status
 
   boot_dir=$1
   efi_devpath=$2
@@ -934,30 +1051,27 @@ install_efi_grub() {
   # that prevent a successful bootloader installation. Clean them up first.
   rm -f /sys/firmware/efi/efivars/dump-*
 
-  grub_efi_arguments=$(get_grub_efi_arguments "$vgname")
-  if ! grub_msg=$(grub-install --boot-directory="$boot_dir" \
-                    $grub_efi_arguments "$grubdev" \
-                    3>&- 4>&- 5>&- 2>&1); then
-    log err "Grub (UEFI) installation to ${grubdev} failed: ${grub_msg}"
-    umount /boot/efi || true
-    return 1
-  fi
-
+  status=0
   if [ "${UKI_MODE:-}" = "1" ]; then
-    install_puavo_grub_files_to_efi_partition "$boot_dir" && \
-    copy_grub_environment && \
-    write_grub_version "${boot_dir}/grub/version" || {
-      log err "failed to install UKI files to EFI partition"
-      umount /boot/efi || true
-      return 1
-    }
+    install_uki_bootloader \
+       "$boot_dir" \
+       "$efi_devpath" \
+       "$grubdev" \
+       "$vgname" || status=1
+  else
+    grub_efi_arguments=$(get_grub_efi_arguments "$vgname")
+    if ! grub_msg=$(grub-install --boot-directory="$boot_dir" \
+                      $grub_efi_arguments "$grubdev" \
+                      3>&- 4>&- 5>&- 2>&1); then
+      log err "Grub (UEFI) installation to ${grubdev} failed: ${grub_msg}"
+      status=1
+    fi
   fi
 
   umount /boot/efi || true
 
-  log info "Grub (UEFI) installation to ${grubdev} was OK."
-
-  return 0
+  [ "$status" -eq 0 ] && log info "Grub (UEFI) installation to ${grubdev} was OK."
+  return $status
 }
 
 usage() {
