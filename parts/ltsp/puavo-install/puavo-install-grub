@@ -584,6 +584,7 @@ function load_video {
 
 set gfxmode=auto
 load_video
+loadfont (memdisk)/boot/grub/fonts/unicode.pf2
 insmod gfxterm
 set locale_dir=$prefix/locale
 insmod gettext
