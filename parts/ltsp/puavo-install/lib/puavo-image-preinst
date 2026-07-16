@@ -27,8 +27,18 @@ new_mnt=/images/mnt
 
 bind_paths='/dev /images /proc /run /sys'
 
+# Bind mount EFI variables as well, if present.
+if [ -d /sys/firmware/efi/efivars ]; then
+  bind_paths="${bind_paths} /sys/firmware/efi/efivars"
+fi
+
 cleanup() {
+  # Unmount in reverse order to support nested mounts.
+  reversed_bind_paths=''
   for path in $bind_paths; do
+    reversed_bind_paths="${path} ${reversed_bind_paths}"
+  done
+  for path in $reversed_bind_paths; do
     { mountpoint -q "${new_mnt}${path}" && umount "${new_mnt}${path}"; } \
       || true
   done
