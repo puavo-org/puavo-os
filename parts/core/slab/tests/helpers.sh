@@ -77,29 +77,46 @@ boot_qemu() {
 # Builds a GPT boot disk and echoes its path. The ESP holds slab as the
 # removable loader, the next stage at the next stage path, and a configuration
 # that finds its filesystem by UUID, loads the embedded font, prints the
-# marker, and halts.
+# marker, and halts. A harness can override the configuration and place
+# extra images next to the next stage.
 #   $1  slab binary
 #   $2  next stage binary
 #   $3  work directory to build in
+#   $4  optional configuration file, empty or absent for the default
+#   $5… optional extra files copied to ::/EFI/puavo/
 make_boot_disk() {
-  esp="$3/esp.img"
+  slab_binary="$1"
+  next_stage_binary="$2"
+  work_directory="$3"
+  configuration="${4:-}"
+
+  esp="$work_directory/esp.img"
   dd if=/dev/zero of="$esp" bs=1M count=96 status=none
   mkfs.vfat -F32 -i "$VOLUME_ID" "$esp" >/dev/null
   mmd -i "$esp" ::/EFI ::/EFI/BOOT ::/EFI/puavo ::/EFI/puavo/grub
-  mcopy -i "$esp" "$1" ::/EFI/BOOT/BOOTX64.EFI
-  mcopy -i "$esp" "$2" ::/EFI/puavo/grub/grubx64.efi
+  mcopy -i "$esp" "$slab_binary" ::/EFI/BOOT/BOOTX64.EFI
+  mcopy -i "$esp" "$next_stage_binary" ::/EFI/puavo/grub/grubx64.efi
 
-  configuration="$3/grub.cfg"
-  cat > "$configuration" <<EOF
+  if [ -z "$configuration" ]; then
+    configuration="$work_directory/grub.cfg"
+    cat > "$configuration" <<EOF
 search --no-floppy --fs-uuid --set=root $FILESYSTEM_UUID
 loadfont (memdisk)/boot/grub/fonts/unicode.pf2
 lsfonts
 echo "$NEXT_STAGE_MARKER"
 halt
 EOF
+  fi
   mcopy -i "$esp" "$configuration" ::/EFI/puavo/grub/grub.cfg
 
-  disk="$3/disk.img"
+  if [ "$#" -ge 5 ]; then
+    shift 4
+    for extra_file in "$@"; do
+      mcopy -i "$esp" "$extra_file" ::/EFI/puavo/
+    done
+  fi
+
+  disk="$work_directory/disk.img"
   truncate -s 100M "$disk"
   sgdisk -o -n 1:2048:+96M -t 1:ef00 -c 1:ESP "$disk" >/dev/null
   dd if="$esp" of="$disk" bs=512 seek=2048 conv=notrunc status=none
