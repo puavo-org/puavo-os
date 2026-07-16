@@ -113,7 +113,12 @@ setup_kernel_arguments() {
     grubedit unset puavo_kernel_arguments
   fi
 
-  if [ "$UKI_MODE" = 1 ]; then
+  # The command-line addon is signed with device specific Secure Boot
+  # keys, and every live system must always have one because the Secure
+  # Boot chain depends on its presence. The installer is the exception:
+  # it operates on /installimages, has no device specific keys, and must
+  # not build one.
+  if [ "$UKI_MODE" = 1 ] && [ "$images_dir" != '/installimages' ]; then
     /usr/lib/puavo-core/puavo-install-uki-commandline-addon "$kernel_arguments" \
       || return 1
   fi
