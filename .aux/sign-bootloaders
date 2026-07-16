@@ -51,7 +51,7 @@ create_grub_architecture_bootloader() {
   .aux/create-grub-bootloader "$architecture" "$grub_output"
 
   # Create a directory for the signed bootloader
-  grub_signed_directory="${rootfs_directory}/usr/lib/grub/${architecture}-signed"
+  grub_signed_directory="${rootfs_directory}/usr/lib/grub/puavo/${architecture}"
   mkdir -p "$grub_signed_directory"
 
   echo "signing GRUB bootloader for ${architecture}..."
