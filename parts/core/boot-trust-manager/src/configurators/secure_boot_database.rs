@@ -11,7 +11,7 @@ use crate::{
     devices::boot_vault::{BootVault, BootVaultResources},
     display::UserDisplay,
     error::PuavoError,
-    utils::{locale, luks_tpm_token_manager::LuksTpmTokenManager},
+    utils::{locale, luks_tpm_token_manager::LuksTpmTokenManager, reboot},
 };
 
 /// Directory where Secure Boot database update subdirectories are placed.
@@ -233,15 +233,19 @@ impl<S: SecureBootShell> SecureBootDatabaseConfigurator<S> {
         Ok(activate)
     }
 
-    /// Apply all pending updates whose version exceeds the installed version
-    /// recorded in the boot vault.
+    /// Apply all pending updates whose version exceeds the installed
+    /// version recorded in the boot vault.
+    ///
+    /// Returns true when at least one update was applied.
     fn apply_updates(
         &self,
         resources: &BootVaultResources,
-    ) -> Result<(), PuavoError> {
+    ) -> Result<bool, PuavoError> {
         let mountpoint = resources.mountpoint();
         let db_version = resources.db_version()?;
         let dbx_version = resources.dbx_version()?;
+
+        let mut applied = false;
 
         for update in &self.pending {
             let current = match update.variable {
@@ -270,6 +274,8 @@ impl<S: SecureBootShell> SecureBootDatabaseConfigurator<S> {
                 }
             }
 
+            applied = true;
+
             info!(
                 "Secure Boot {} updated to version {}",
                 update.variable.variable_name(),
@@ -277,7 +283,7 @@ impl<S: SecureBootShell> SecureBootDatabaseConfigurator<S> {
             );
         }
 
-        Ok(())
+        Ok(applied)
     }
 }
 
@@ -297,7 +303,10 @@ impl<S: SecureBootShell> Configurator for SecureBootDatabaseConfigurator<S> {
         display: &dyn UserDisplay,
     ) -> Result<(), PuavoError> {
         let _ = display.show_message(locale::strings().updating_secure_boot);
-        self.apply_updates(&boot_vault.resources().clone())
+        if self.apply_updates(&boot_vault.resources().clone())? {
+            reboot::request();
+        }
+        Ok(())
     }
 
     fn name(&self) -> &'static str {
@@ -500,7 +509,7 @@ mod tests {
             },
         ]);
 
-        configurator.apply_updates(&resources).unwrap();
+        assert!(configurator.apply_updates(&resources).unwrap());
 
         let mountpoint = resources.mountpoint().display().to_string();
 
@@ -536,12 +545,36 @@ mod tests {
             },
         ]);
 
-        configurator.apply_updates(&resources).unwrap();
+        assert!(configurator.apply_updates(&resources).unwrap());
 
         assert_eq!(configurator.shell.update_db_calls.borrow().len(), 0);
         assert_eq!(configurator.shell.update_dbx_calls.borrow().len(), 1);
 
         assert_eq!(resources.db_version().unwrap(), 5);
         assert_eq!(resources.dbx_version().unwrap(), 1);
+    }
+
+    #[test]
+    fn test_apply_updates_returns_false_when_nothing_applied() {
+        let (_vault_dir, resources) = make_vault();
+        resources.set_db_version(5).unwrap();
+        resources.set_dbx_version(5).unwrap();
+
+        let configurator = make_configurator(vec![
+            DiscoveredUpdate {
+                variable: SecureBootVariable::Db,
+                version: 5,
+                path: PathBuf::from("/updates/db/5.esl"),
+            },
+            DiscoveredUpdate {
+                variable: SecureBootVariable::Dbx,
+                version: 3,
+                path: PathBuf::from("/updates/dbx/3.bin"),
+            },
+        ]);
+
+        assert!(!configurator.apply_updates(&resources).unwrap());
+        assert_eq!(configurator.shell.update_db_calls.borrow().len(), 0);
+        assert_eq!(configurator.shell.update_dbx_calls.borrow().len(), 0);
     }
 }
