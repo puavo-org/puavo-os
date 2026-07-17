@@ -43,6 +43,7 @@ pub struct Strings {
     pub pins_do_not_match: &'static str,
     pub configuring_disk_encryption: &'static str,
     pub updating_secure_boot: &'static str,
+    pub rebooting: &'static str,
     pub configuration_failed_prefix: &'static str,
 }
 
@@ -69,6 +70,7 @@ static ENGLISH_STRINGS: Strings = Strings {
     pins_do_not_match: "PINs do not match",
     configuring_disk_encryption: "Configuring disk encryption...",
     updating_secure_boot: "Updating Secure Boot configuration...",
+    rebooting: "Rebooting...",
     configuration_failed_prefix: "Configuration failed",
 };
 
@@ -84,6 +86,7 @@ static FINNISH_STRINGS: Strings = Strings {
     pins_do_not_match: "PIN-koodit eivät täsmää",
     configuring_disk_encryption: "Määritetään levyn salausta...",
     updating_secure_boot: "Päivitetään Secure Boot -asetuksia...",
+    rebooting: "Käynnistetään uudelleen...",
     configuration_failed_prefix: "Määritys epäonnistui",
 };
 
@@ -99,6 +102,7 @@ static SWEDISH_STRINGS: Strings = Strings {
     pins_do_not_match: "PIN-koderna stämmer inte överens",
     configuring_disk_encryption: "Konfigurerar diskkryptering...",
     updating_secure_boot: "Uppdaterar Secure Boot-konfiguration...",
+    rebooting: "Startar om...",
     configuration_failed_prefix: "Konfigurationen misslyckades",
 };
 
@@ -114,6 +118,7 @@ static GERMAN_STRINGS: Strings = Strings {
     pins_do_not_match: "PINs stimmen nicht überein",
     configuring_disk_encryption: "Festplattenverschlüsselung wird konfiguriert...",
     updating_secure_boot: "Secure Boot-Konfiguration wird aktualisiert...",
+    rebooting: "Neustart...",
     configuration_failed_prefix: "Konfiguration fehlgeschlagen",
 };
 

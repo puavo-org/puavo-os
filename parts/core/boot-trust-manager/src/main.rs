@@ -16,6 +16,7 @@ use clap::{Parser, Subcommand};
 use puavo_boot_trust_manager::{
     boot_trust_manager::{BootTrustManager, BootTrustManagerConfiguration},
     error::PuavoError,
+    utils::reboot,
 };
 
 #[derive(Parser, Debug)]
@@ -69,11 +70,15 @@ fn main() -> Result<(), i32> {
     // Return with success code if the device is not encrypted,
     // the boot vault is not installed, or no EFI boot device
     // is found, which is expected on legacy systems.
-    result.or_else(|error| match error {
+    let exit = result.or_else(|error| match error {
         PuavoError::NoBootVault
         | PuavoError::NoPrimaryLuksPartition
         | PuavoError::NoEFIBootDisk(_)
         | PuavoError::NoEFIPartition => Ok(()),
         _ => Err(1),
-    })
+    });
+
+    reboot::reboot_if_requested();
+
+    exit
 }

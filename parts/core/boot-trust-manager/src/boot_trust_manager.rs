@@ -18,7 +18,7 @@ use crate::{
         locale::{self, Strings},
         luks_tpm_token_manager::LuksTpmTokenManager,
         mount::{MountGuard, unmount},
-        tpm,
+        reboot, tpm,
         udev::filesystem_type,
         unlock_info,
     },
@@ -166,6 +166,13 @@ impl BootTrustManager {
         let lockout_auth_path = boot_vault.resources().tpm_lockout_auth_path();
         if let Err(error) = tpm::clear_dictionary_lockout(&lockout_auth_path) {
             warn!("Failed to clear TPM dictionary lockout: {}", error);
+        }
+
+        // Configurators may request a reboot upon exit. For example,
+        // Secure Boot updates require resealing on the next reboot,
+        // and user interaction during that window is undesirable.
+        if reboot::is_requested() {
+            let _ = display.show_message(locale::strings().rebooting);
         }
 
         Ok(())

@@ -4,6 +4,7 @@ pub mod kernel_commandline;
 pub mod locale;
 pub mod luks_tpm_token_manager;
 pub mod mount;
+pub mod reboot;
 pub mod recovery_qr;
 pub mod tpm;
 pub mod udev;
