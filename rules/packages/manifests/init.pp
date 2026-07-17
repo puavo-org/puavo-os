@@ -866,14 +866,14 @@ class packages {
   @packages::kernels::kernel_package {
     'default':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-6.12.94+deb13.1-amd64-unsigned',
-      version      => '6.12.94+deb13.1-amd64';
+      package_name => 'linux-image-6.12.95+deb13.1-amd64-unsigned',
+      version      => '6.12.95+deb13.1-amd64';
 
     'modern':
       dkms_modules   => [ $puavo_command_line_signer_module ],
-      extra_packages => [ 'linux-modules-7.0.10+deb13-amd64' ],
-      package_name   => 'linux-binary-unsigned-7.0.10+deb13-amd64',
-      version        => '7.0.10+deb13-amd64';
+      extra_packages => [ 'linux-modules-7.0.13+deb13-amd64' ],
+      package_name   => 'linux-binary-unsigned-7.0.13+deb13-amd64',
+      version        => '7.0.13+deb13-amd64';
   }
 
   # various contrib/non-free stuff, firmwares and such
