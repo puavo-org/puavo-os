@@ -28,6 +28,29 @@ enum PinPromptOutcome {
     Cancelled,
 }
 
+/// Minimum number of characters required for a PIN.
+const MIN_PIN_LENGTH: usize = 6;
+
+/// Result of validating a PIN.
+enum PinValidation {
+    Ok,
+    TooShort,
+    InvalidCharacters,
+}
+
+/// Validate a candidate PIN against the fixed boot keyboard layout.
+fn validate_pin(pin: &str) -> PinValidation {
+    if pin.chars().count() < MIN_PIN_LENGTH {
+        return PinValidation::TooShort;
+    }
+
+    if !pin.chars().all(|character| character.is_ascii_alphanumeric()) {
+        return PinValidation::InvalidCharacters;
+    }
+
+    PinValidation::Ok
+}
+
 /// Configurator that handles PIN change and reset operations
 pub struct PinConfigurator {
     activation_reason: Option<PinChangeReason>,
@@ -70,6 +93,19 @@ impl PinConfigurator {
                     info!("User confirmed PIN removal");
                     return Ok(PinPromptOutcome::Remove);
                 }
+                continue;
+            }
+
+            // Validate the PIN
+            let rejection = match validate_pin(new_pin.as_str()) {
+                PinValidation::Ok => None,
+                PinValidation::TooShort => Some(strings.pin_too_short),
+                PinValidation::InvalidCharacters => {
+                    Some(strings.pin_invalid_characters)
+                }
+            };
+            if let Some(message) = rejection {
+                let _ = display.show_message(message);
                 continue;
             }
 
@@ -166,5 +202,48 @@ impl Configurator for PinConfigurator {
 
     fn name(&self) -> &'static str {
         "PIN"
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{MIN_PIN_LENGTH, PinValidation, validate_pin};
+
+    #[test]
+    fn accepts_ascii_alphanumeric_pin() {
+        assert!(matches!(validate_pin("abc123"), PinValidation::Ok));
+        assert!(matches!(validate_pin("Secret1"), PinValidation::Ok));
+    }
+
+    #[test]
+    fn minimum_length_is_accepted() {
+        let pin = "a".repeat(MIN_PIN_LENGTH);
+        assert!(matches!(validate_pin(&pin), PinValidation::Ok));
+    }
+
+    #[test]
+    fn rejects_short_pin() {
+        assert!(matches!(validate_pin("a1b2"), PinValidation::TooShort));
+        assert!(matches!(validate_pin(""), PinValidation::TooShort));
+    }
+
+    #[test]
+    fn rejects_non_alphanumeric_pin() {
+        assert!(matches!(
+            validate_pin("pass word"),
+            PinValidation::InvalidCharacters
+        ));
+        assert!(matches!(
+            validate_pin("pin-code"),
+            PinValidation::InvalidCharacters
+        ));
+    }
+
+    #[test]
+    fn rejects_national_characters() {
+        assert!(matches!(
+            validate_pin("pässwörd"),
+            PinValidation::InvalidCharacters
+        ));
     }
 }
