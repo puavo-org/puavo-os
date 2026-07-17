@@ -1037,6 +1037,36 @@ module QueryDiskInfo
     raise 'Windows setup prompts exceeded.'
   end
 
+  # Layout portable alphabet (modhex) used for recovery key generation.
+  RecoveryKeyAlphabet = 'cbdefghijklnrtuv'
+
+  # Generated recovery key export location.
+  RecoveryKeyExportPath = '/dev/shm/puavo-recovery-key'
+
+  def self.generate_recovery_key()
+    # Generate a 64 character key (256 bits) from 32 bytes
+    SecureRandom.random_bytes(32).each_byte.map { |byte|
+      first_index = byte >> 4
+      second_index = byte & 0x0f
+      RecoveryKeyAlphabet[first_index] + RecoveryKeyAlphabet[second_index]
+    }.join
+  end
+
+  def self.generate_and_export_recovery_key()
+    recovery_key = generate_recovery_key()
+
+    File.open(RecoveryKeyExportPath, 'w', 0600) do |file|
+      file.chmod(0600)
+      file.write(recovery_key)
+    end
+
+    UI::colormsg('Recovery key generated. Record it now.', HighLine::YELLOW)
+    UI::colormsg(recovery_key, HighLine::GREEN)
+    puts "Also written to #{ RecoveryKeyExportPath } for capture."
+
+    recovery_key
+  end
+
   def self.ask_encryption_setup()
     unless tpm2_available?
       warn 'TPM 2.x is not available, disk encryption is disabled'
@@ -1056,14 +1086,13 @@ module QueryDiskInfo
     # Use a clone so we can safely mutate
     encryption = DiskHandler::EncryptionPresets[preset_key].clone
 
-    # If encryption is enabled, ask for optional credentials
+    # If encryption is enabled, offer an optional generated recovery
+    # key, in order to ensure portability between keyboard layouts
     if encryption['policy']
-      # Ask for optional recovery key
-      add_key_answer = UI::ask_with_default("Add recovery key? (y/N)",
-                                            'no', UI::RecoveryKeyPrompt)
+      add_key_answer = UI::ask_with_default(
+        "Generate a recovery key? (y/N)", 'no', UI::RecoveryKeyPrompt)
       if add_key_answer.downcase.start_with?('y')
-        recovery_key = UI::ask_and_confirm_secret('Enter recovery key:')
-        encryption['recovery_key'] = recovery_key
+        encryption['recovery_key'] = generate_and_export_recovery_key()
       end
     end
 
@@ -1377,18 +1406,6 @@ EOF
 
   def self.colormsg(msg, color)
     HighLine.say(HighLine.new.color(msg, color))
-  end
-
-  def self.ask_and_confirm_secret(prompt)
-    loop do
-      first = HighLine.ask("#{prompt} ") { |question| question.echo = false }
-      second = HighLine.ask("Confirm #{prompt.downcase} ") { |question| question.echo = false }
-      if first == second
-        return first
-      else
-        colormsg("Entries did not match. Please try again.", HighLine::RED)
-      end
-    end
   end
 end
 
