@@ -12,12 +12,21 @@ require 'securerandom'
 require 'tempfile'
 require 'tmpdir'
 
-GPT_PARTTYPE_EFI   = 'c12a7328-f81f-11d2-ba4b-00a0c93ec93b'
-GPT_PARTTYPE_LINUX = '4f68bce3-e8cd-4db1-96e7-fbcaf984b709'
-GPT_PARTTYPE_RAID  = 'a19d880f-05fc-4d3b-a006-743f0f84911e'
-GPT_PARTTYPE_SWAP  = '0657fd6d-a4ab-43c4-84e5-0933c84b4f4f'
+GPT_PARTTYPE_EFI      = 'c12a7328-f81f-11d2-ba4b-00a0c93ec93b'
+GPT_PARTTYPE_LINUX    = '4f68bce3-e8cd-4db1-96e7-fbcaf984b709'
+GPT_PARTTYPE_LINUX_FS = '0fc63daf-8483-4772-8e79-3d69d8477de4'
+GPT_PARTTYPE_RAID     = 'a19d880f-05fc-4d3b-a006-743f0f84911e'
+GPT_PARTTYPE_SWAP     = '0657fd6d-a4ab-43c4-84e5-0933c84b4f4f'
 
+GPT_PARTLABEL_EXAM = 'puavoexam'
 GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C = 'Puavo_Installed_Windows_C'
+
+# The exam partition holds exam system images and their boot files. It
+# stays outside the disk encryption, because exam systems boot without
+# the disk encryption keys.
+EXAM_PARTITION_FILESYSTEM_LABEL = 'puavo-exam'
+EXAM_PARTITION_DEFAULT_SIZE_G = 8
+EXAM_PARTITION_MIN_SIZE_G = 4
 
 # Why 20G: https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/configure-uefigpt-based-hard-drive-partitions?view=windows-11#windows-partition
 DUALBOOT_LAPTOP_WINDOWS_MIN_SIZE_G = 20
@@ -634,7 +643,8 @@ module DiskHandler
     DiskCleaner::reset_disk(fs_conf['device'])
   end
 
-  def self.setup_device(device, gpt_spec, create_efi:, create_swap:)
+  def self.setup_device(device, gpt_spec, create_efi:, create_exam:,
+                        create_swap:)
     device_path = "/dev/#{ device }"
     stdout, stderr, status = Open3.capture3('gdisk', device_path,
                                             stdin_data: gpt_spec)
@@ -644,11 +654,13 @@ module DiskHandler
 
     reread_partition_table(device)
 
-    create_efi_filesystem(device) if create_efi
-    clear_swap_partition(device)  if create_swap
+    create_efi_filesystem(device)  if create_efi
+    clear_swap_partition(device)   if create_swap
+    create_exam_filesystem(device) if create_exam
   end
 
-  def self.gpt_format(partitioning_type, filesystems, windows_size=nil)
+  def self.gpt_format(partitioning_type, filesystems, windows_size=nil,
+                      exam_size=nil)
     begin
       efi_size = filesystems['.EFI']['size']
       raise "EFI size not found" \
@@ -679,6 +691,10 @@ module DiskHandler
       end
     end
 
+    if exam_size then
+      slices << "n\n#{ p_index+=1 }\n\n+#{ exam_size }\n8300\nc\n#{ p_index }\n#{ GPT_PARTLABEL_EXAM }\n"
+    end
+
     case partitioning_type
       when :basic_boot
         slices << "n\n#{ p_index+=1 }\n\n\n8304\n"  # puavo partition
@@ -703,7 +719,7 @@ module DiskHandler
     # we only support bootserver hosttype with RAID
     fs_conf = DiskHandler::Filesystems['bootserver']
     setup_device(device, gpt_format(:raid_boot, fs_conf),
-                 create_efi: true, create_swap: true)
+                 create_efi: true, create_swap: true, create_exam: false)
   end
 
   def self.get_partitions(device)
@@ -905,20 +921,27 @@ module DiskHandler
   end
 
   def self.create_partitions(fs_conf, raid_setup_done)
+    exam_size = fs_conf['exam_size']
+
     if fs_conf['windows_size'] then
-      # raid_setup_done == false because we must be on laptop
+      # raid_setup_done == false because we must be on a laptop
       gpt_spec = gpt_format(:with_windows, fs_conf['filesystems'],
-                            fs_conf['windows_size'])
+                            fs_conf['windows_size'], exam_size)
     else
       partitioning_scheme = raid_setup_done ? :on_raid : :basic_boot
-      gpt_spec = gpt_format(partitioning_scheme, fs_conf['filesystems'])
+      gpt_spec = gpt_format(partitioning_scheme, fs_conf['filesystems'],
+                            nil, exam_size)
     end
 
     create_efi  = !raid_setup_done && fs_conf['filesystems'].has_key?('.EFI')
+    create_exam = !raid_setup_done && !exam_size.nil?
     create_swap = !raid_setup_done && fs_conf['filesystems'].has_key?('.SWAP')
+
     setup_device(fs_conf['device'], gpt_spec,
                  create_efi:  create_efi,
+                 create_exam: create_exam,
                  create_swap: create_swap)
+
     fs_conf['puavo_partition'] = get_puavo_partition(fs_conf['device'])
   end
 
@@ -941,6 +964,21 @@ module DiskHandler
     swap_partition = wait_one_gpt_partition_by_parttype(device,
                        GPT_PARTTYPE_SWAP, try_count: 30)
     run('wipefs', '--all', "/dev/#{ swap_partition }")
+  end
+
+  def self.create_exam_filesystem(device)
+    exam_partition = wait_one_gpt_partition_by_parttype(device,
+                       GPT_PARTTYPE_LINUX_FS, try_count: 30)
+
+    # GPT attribute 63 "do not automount" hides the partition from
+    # systemd-gpt-auto-generator.
+    partition_number_path = "/sys/class/block/#{ exam_partition }/partition"
+    exam_partition_number = IO.read(partition_number_path).strip
+    run('sgdisk', "--attributes=#{ exam_partition_number }:set:63",
+        "/dev/#{ device }")
+
+    run('mkfs.ext4', '-q', '-L', EXAM_PARTITION_FILESYSTEM_LABEL,
+        "/dev/#{ exam_partition }")
   end
 
   def self.puavo_filesystems(fs_conf, vgname)
@@ -1094,7 +1132,7 @@ module QueryDiskInfo
     return nil unless hosttype == 'laptop'
 
     30.times do # Invalid preseeds shall not cause infinite loops.
-      prompt = "\nSetup Windows partitions? (yes/no)"
+      prompt = "Setup Windows partitions? (yes/no)"
       setup_windows_answer = UI::ask_with_default(prompt, 'no',
                                                   UI::SetupWindowsPrompt)
       case setup_windows_answer
@@ -1161,7 +1199,7 @@ module QueryDiskInfo
   end
 
   def self.ask_encryption_setup()
-    unless tpm2_available?
+    unless tpm2_available? then
       warn 'TPM 2.x is not available, disk encryption is disabled'
       return DiskHandler::EncryptionPresets['none'].clone
     end
@@ -1192,10 +1230,40 @@ module QueryDiskInfo
     return encryption
   end
 
+  def self.ask_exam_setup(hosttype, device)
+    return nil unless hosttype == 'laptop'
+
+    30.times do # Invalid preseeds shall not cause infinite loops.
+      prompt = "Setup exam system partition? (yes/no)"
+      setup_exam_answer = UI::ask_with_default(prompt, 'no',
+                                               UI::SetupExamPrompt)
+      case setup_exam_answer
+      when 'yes'
+        exam_size_tuple = UI::ask_size_with_default(
+                            'Size of the exam system partition:',
+                            "#{ EXAM_PARTITION_DEFAULT_SIZE_G }G",
+                            UI::ExamSizePrompt)
+
+        exam_size_g = Size::to_bytes(exam_size_tuple) / 1024 ** 3
+        unless exam_size_g >= EXAM_PARTITION_MIN_SIZE_G then
+          UI::colormsg("Minimum exam system partition size is #{ EXAM_PARTITION_MIN_SIZE_G }G.", HighLine::RED)
+          next
+        end
+
+        return exam_size_tuple.join()
+      when 'no'
+        return nil
+      end
+    end
+
+    raise 'Exam setup prompts exceeded.'
+  end
+
   def self.ask_device_with_confirmation(hosttype, raid_setup_done)
     device       = nil
     do_it        = false
     encryption   = nil
+    exam_size    = nil
     windows_size = nil
     wipe         = false
 
@@ -1209,6 +1277,7 @@ module QueryDiskInfo
       end
 
       windows_size = QueryDiskInfo::ask_windows_setup(hosttype, device)
+      exam_size    = QueryDiskInfo::ask_exam_setup(hosttype, device)
 
       msg = "\nIt is possible to wipe disk/partition before installing,\n" \
               + "but this can take a rather long time.\n"                  \
@@ -1233,6 +1302,7 @@ module QueryDiskInfo
     {
       'device'          => device,
       'encryption'      => encryption,
+      'exam_size'       => exam_size,
       'filesystems'     => DiskHandler::Filesystems[hosttype],
       'hosttype'        => hosttype,
       'windows_size'    => windows_size,
@@ -1290,15 +1360,17 @@ end
 module UI
   DiskDevicePrompt,
   EncryptionPresetPrompt,
+  ExamSizePrompt,
   InstallWithoutRaidPrompt,
   PartitionPrompt,
+  SetupExamPrompt,
   SetupWindowsPrompt,
   UnpartitionedSpacePrompt,
   WindowsSizePrompt,
   WipePartitionPrompt,
   WritePartitionsPrompt,
   RecoveryKeyPrompt,
-    = *(1..11)
+    = *(1..13)
 
   @ask_forced      = {}
   @defaults        = {}
@@ -1321,9 +1393,11 @@ puavo-setup-filesystems [OPTIONS]
 
     --ask-disk-device             ask with default for disk device
     --ask-encryption              ask with default for encryption preset
+    --ask-exam-size               ask with default for exam partition size
     --ask-imageoverlay-size       ask with default for imageoverlay size
     --ask-install-without-raid    ask with default for install without raid
     --ask-partition               ask with default for partition
+    --ask-setup-exam              ask with default for setup exam
     --ask-setup-windows           ask with default for setup windows
     --ask-unpartitioned-space     ask with default for unpartitioned space
     --ask-windows-size            ask with default for windows size
@@ -1332,9 +1406,11 @@ puavo-setup-filesystems [OPTIONS]
     --ask-recovery-key            ask with default for recovery key
     --force-disk-device           force value for disk device
     --force-encryption            force value for encryption preset
+    --force-exam-size             force value for exam partition size
     --force-imageoverlay-size     force value for imageoverlay size
     --force-install-without-raid  force value for install without raid
     --force-partition             force value for partition
+    --force-setup-exam            force value for setup exam
     --force-setup-windows         force value for setup windows
     --force-unpartitioned-space   force value for unpartitioned space
     --force-windows-size          force value for windows size
@@ -1353,9 +1429,11 @@ EOF
         [ '--help', '-h'                , GetoptLong::NO_ARGUMENT       ],
         [ '--ask-disk-device'           , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-encryption'            , GetoptLong::REQUIRED_ARGUMENT ],
+        [ '--ask-exam-size'             , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-imageoverlay-size'     , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-install-without-raid'  , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-partition'             , GetoptLong::REQUIRED_ARGUMENT ],
+        [ '--ask-setup-exam'            , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-setup-windows'         , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-unpartitioned-space'   , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-windows-size'          , GetoptLong::REQUIRED_ARGUMENT ],
@@ -1364,9 +1442,11 @@ EOF
         [ '--ask-recovery-key'          , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-disk-device'         , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-encryption'          , GetoptLong::REQUIRED_ARGUMENT ],
+        [ '--force-exam-size'           , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-imageoverlay-size'   , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-install-without-raid', GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-partition'           , GetoptLong::REQUIRED_ARGUMENT ],
+        [ '--force-setup-exam'          , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-setup-windows'       , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-unpartitioned-space' , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-windows-size'        , GetoptLong::REQUIRED_ARGUMENT ],
@@ -1386,10 +1466,14 @@ EOF
           @defaults[DiskDevicePrompt] = arg
         when '--ask-encryption'
           @defaults[EncryptionPresetPrompt] = arg
+        when '--ask-exam-size'
+          @defaults[ExamSizePrompt] = arg
         when '--ask-install-without-raid'
           @defaults[InstallWithoutRaidPrompt] = arg
         when '--ask-partition'
           @defaults[PartitionPrompt] = arg
+        when '--ask-setup-exam'
+          @defaults[SetupExamPrompt] = arg
         when '--ask-setup-windows'
           @defaults[SetupWindowsPrompt] = arg
         when '--ask-unpartitioned-space'
@@ -1408,12 +1492,18 @@ EOF
         when '--force-encryption'
           @defaults[EncryptionPresetPrompt] = arg
           @force_defaults[EncryptionPresetPrompt] = true
+        when '--force-exam-size'
+          @defaults[ExamSizePrompt] = arg
+          @force_defaults[ExamSizePrompt] = true
         when '--force-install-without-raid'
           @defaults[InstallWithoutRaidPrompt] = arg
           @force_defaults[InstallWithoutRaidPrompt] = true
         when '--force-partition'
           @defaults[PartitionPrompt] = arg
           @force_defaults[PartitionPrompt] = true
+        when '--force-setup-exam'
+          @defaults[SetupExamPrompt] = arg
+          @force_defaults[SetupExamPrompt] = true
         when '--force-setup-windows'
           @defaults[SetupWindowsPrompt] = arg
           @force_defaults[SetupWindowsPrompt] = true
