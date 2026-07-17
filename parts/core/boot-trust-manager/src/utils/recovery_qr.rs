@@ -69,29 +69,10 @@ pub fn show_recovery_qr() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utils::efi::{EfiProvider, reset_provider, set_provider};
+    use crate::utils::efi::testing::FakeEfiProvider;
+    use crate::utils::efi::{reset_provider, set_provider};
     use rqrr::PreparedImage;
     use serial_test::serial;
-
-    struct MockEfiProvider {
-        recovery_bundle: Option<String>,
-    }
-
-    impl EfiProvider for MockEfiProvider {
-        fn is_secure_boot_enabled(&self) -> bool {
-            false
-        }
-
-        fn is_pin_change_requested(&self) -> bool {
-            false
-        }
-
-        fn clear_pin_change_request(&self) {}
-
-        fn read_recovery_bundle(&self) -> Option<String> {
-            self.recovery_bundle.clone()
-        }
-    }
 
     /// Decode a QR code from a PNG file on disk.
     fn decode_qr_from_png(path: &Path) -> String {
@@ -113,8 +94,9 @@ mod tests {
     #[serial]
     fn save_recovery_qr_code_with_bundle() {
         let bundle = r#"{"serial_number":"TEST001","organisation_id":"test-org","organisation_key_version":1,"encrypted_key_data":"aabbccdd"}"#;
-        set_provider(Box::new(MockEfiProvider {
+        set_provider(Box::new(FakeEfiProvider {
             recovery_bundle: Some(bundle.to_string()),
+            ..Default::default()
         }));
 
         let path = std::env::temp_dir().join("test_save_recovery_qr.png");
@@ -132,7 +114,7 @@ mod tests {
     #[test]
     #[serial]
     fn save_recovery_qr_code_without_bundle() {
-        set_provider(Box::new(MockEfiProvider { recovery_bundle: None }));
+        set_provider(Box::new(FakeEfiProvider::default()));
 
         let path = std::env::temp_dir().join("test_save_recovery_qr_none.png");
         std::fs::remove_file(&path).ok();

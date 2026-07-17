@@ -166,3 +166,44 @@ pub fn clear_pin_change_request() {
 pub fn read_recovery_bundle() -> Option<String> {
     with_provider(|provider| provider.read_recovery_bundle())
 }
+
+#[cfg(test)]
+pub mod testing {
+    use super::*;
+    use std::sync::atomic::{AtomicBool, Ordering};
+
+    /// Configurable EFI provider shared by the library unit tests.
+    pub struct FakeEfiProvider {
+        pub secure_boot_enabled: bool,
+        pub pin_change_requested: bool,
+        pub sbat_raise_requested: AtomicBool,
+        pub recovery_bundle: Option<String>,
+    }
+
+    impl Default for FakeEfiProvider {
+        fn default() -> Self {
+            Self {
+                secure_boot_enabled: false,
+                pin_change_requested: false,
+                sbat_raise_requested: AtomicBool::new(false),
+                recovery_bundle: None,
+            }
+        }
+    }
+
+    impl EfiProvider for FakeEfiProvider {
+        fn is_secure_boot_enabled(&self) -> bool {
+            self.secure_boot_enabled
+        }
+
+        fn is_pin_change_requested(&self) -> bool {
+            self.pin_change_requested
+        }
+
+        fn clear_pin_change_request(&self) {}
+
+        fn read_recovery_bundle(&self) -> Option<String> {
+            self.recovery_bundle.clone()
+        }
+    }
+}
