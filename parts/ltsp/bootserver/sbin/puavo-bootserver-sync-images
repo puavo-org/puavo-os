@@ -1222,12 +1222,26 @@ module SeriesControl
     diffs_to_sync  = syncfiles_to_sync.select { |sf| sf.class == Diff  }
     images_to_sync = syncfiles_to_sync.select { |sf| sf.class == Image }
 
+    torrents = Torrents.new(@etc)
+
+    make_torrent = lambda do |syncfile|
+      begin
+        torrents.make(syncfile)
+      rescue StandardError => e
+        msg = sprintf('Could not make a torrent for %s: %s', syncfile.filename,
+                      e.message)
+        warning(3, msg)
+        all_syncs_ok = false
+      end
+    end
+
     info(5, 'Syncing diffs')
     diffs_to_sync.each do |diff|
       syncfiles_to_delete = ensure_space(diff.size, syncfiles_to_delete)
       info(4, "Syncing #{ diff.filename }")
       if diff.materialize then
         info(3,  "Diff sync OK: #{ diff.statemsg }", HighLine::GREEN)
+        make_torrent.call(diff)
       else
         all_syncs_ok = false
         warning(3, "Diff sync FAILED: #{ diff.statemsg }")
@@ -1240,24 +1254,13 @@ module SeriesControl
       info(4, "Syncing #{ image.filename }")
       if image.materialize then
         info(3, "Image sync OK: #{ image.statemsg }", HighLine::GREEN)
+        make_torrent.call(image)
       else
         all_syncs_ok = false
         warning(3, "Image sync FAILED: #{ image.statemsg }")
       end
     end
 
-    info(5, 'Creating torrents')
-    torrents = Torrents.new(@etc)
-    (diffs_to_sync + images_to_sync).each do |syncfile|
-      begin
-        torrents.make(syncfile)
-      rescue StandardError => e
-        msg = sprintf('Could not make a torrent for %s: %s', syncfile.filename,
-                      e.message)
-        warning(3, msg)
-        all_syncs_ok = false
-      end
-    end
     torrents.remove_unused()
 
     return all_syncs_ok
