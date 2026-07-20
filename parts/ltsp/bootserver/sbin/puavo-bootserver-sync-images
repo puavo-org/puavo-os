@@ -583,7 +583,6 @@ class Image < SyncFileWithMetadata
     return all_ok
   end
 
-
   def set_priorities(base_priority, priority_requirements)
     next_diff_priority = base_priority
     priority_adjustments = get_priority_adjustments(priority_requirements)
@@ -596,6 +595,8 @@ class Image < SyncFileWithMetadata
   end
 
   def size_penalizer; (1.0 * @size) / 2**33; end
+
+  def subpath; ''; end
 
   def synctype; return 'Image'; end
 end
@@ -670,6 +671,8 @@ class Diff < SyncFileWithMetadata
 
   def size_penalizer; (1.0 * @size) / 2**30; end
 
+  def subpath; '/rdiffs'; end
+
   def synctype; return 'Diff'; end
 end
 
@@ -724,7 +727,7 @@ class Torrents
 
   def initialize(puavo_etc)
     fqdn = "#{ puavo_etc.hostname }.#{ puavo_etc.domain }"
-    @this_server_baseurl = "https://#{ fqdn }:#{ Torrent_https_port }/rdiffs"
+    @server_baseurl = "https://#{ fqdn }:#{ Torrent_https_port }"
     @torrent_paths = {}
   end
 
@@ -741,7 +744,7 @@ class Torrents
 
     tmpfile = "#{ target_path }.tmp"
 
-    url = "#{ @this_server_baseurl }/#{ syncfile.filename }"
+    url = "#{ @server_baseurl }#{ syncfile.subpath }/#{ syncfile.filename }"
     cmd_args = [ 'mktorrent', '-o', tmpfile, '-w', url, src_path ]
     fd_redirects = { :in  => '/dev/null',
                      :out => '/dev/null',
@@ -1219,29 +1222,17 @@ module SeriesControl
     diffs_to_sync  = syncfiles_to_sync.select { |sf| sf.class == Diff  }
     images_to_sync = syncfiles_to_sync.select { |sf| sf.class == Image }
 
-    torrents = Torrents.new(@etc)
-
     info(5, 'Syncing diffs')
     diffs_to_sync.each do |diff|
       syncfiles_to_delete = ensure_space(diff.size, syncfiles_to_delete)
       info(4, "Syncing #{ diff.filename }")
       if diff.materialize then
         info(3,  "Diff sync OK: #{ diff.statemsg }", HighLine::GREEN)
-        begin
-          torrents.make(diff)
-        rescue StandardError => e
-          msg = sprintf('Could not make a torrent for %s: %s', diff.filename,
-                        e.message)
-          warning(3, msg)
-          all_syncs_ok = false
-        end
       else
         all_syncs_ok = false
         warning(3, "Diff sync FAILED: #{ diff.statemsg }")
       end
     end
-
-    torrents.remove_unused()
 
     info(5, 'Syncing images')
     images_to_sync.each do |image|
@@ -1254,6 +1245,20 @@ module SeriesControl
         warning(3, "Image sync FAILED: #{ image.statemsg }")
       end
     end
+
+    info(5, 'Creating torrents')
+    torrents = Torrents.new(@etc)
+    (diffs_to_sync + images_to_sync).each do |syncfile|
+      begin
+        torrents.make(syncfile)
+      rescue StandardError => e
+        msg = sprintf('Could not make a torrent for %s: %s', syncfile.filename,
+                      e.message)
+        warning(3, msg)
+        all_syncs_ok = false
+      end
+    end
+    torrents.remove_unused()
 
     return all_syncs_ok
   end
