@@ -68,7 +68,6 @@ class Aria
                   '--bt-stop-timeout=300',
                   '--ca-certificate=/etc/puavo-conf/rootca.pem',
                   '--certificate=/etc/puavo/certs/hostorgcabundle.pem',
-                  '--check-integrity=true',
                   '--continue',
                   "--dir=#{ $target_dir }",
                   '--enable-color=false',
@@ -90,6 +89,12 @@ class Aria
       aria_args << "--max-overall-upload-limit=#{ upload_rate_limit }" \
         if upload_rate_limit
     end
+
+    # If case we are seeding, do not verify the contents as they should be
+    # okay if we are entering the seeding mode, otherwise check file integrity.
+    aria_args << (seed_filename                   \
+                    ? '--bt-seed-unverified=true' \
+                    : '--check-integrity=true')
 
     aria_args << torrent_url.to_s
 
