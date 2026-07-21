@@ -314,10 +314,11 @@ class Server
           errmsg = 'aria2c has exited with failure or terminated' \
                      + ' by signal with messages (exitcode=%s): %s'
           Syslog.log(Syslog::LOG_ERR, errmsg, exitcode, messages)
-          if messages.match(/Failed to read from the segment file/) then
-            # We do not restart but the next time it should be better
-            # (because a corrupted control file makes aria2c non-functional).
-            @aria.remove_corrupted_control_file
+          if messages.match(/Failed to read from the segment file/) \
+            || messages.match(/info hash mismatch/) then
+              # We do not restart but the next time it should be better
+              # (because a corrupted control file makes aria2c non-functional).
+              @aria.remove_corrupted_control_file
           end
         end
         @aria = nil
