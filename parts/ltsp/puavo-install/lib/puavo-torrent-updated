@@ -245,7 +245,7 @@ class Server
             Syslog.log(Syslog::LOG_NOTICE,
                        'stopping aria because of client request')
           else
-            Syslog.log(Syslog::LOG_NOTICE,
+            Syslog.log(Syslog::LOG_DEBUG,
               'aria is not run (at least not by us),' \
                 + ' even though client requests it to stop')
           end
@@ -260,23 +260,31 @@ class Server
           return
         end
 
-        rate_limit, @url_to_download = * @client_message.split("\n")
-        use_rate_limit = (rate_limit != '')
+        rate_limit_or_seed, requested_url, seedpatch_dir \
+          = * @client_message.split("\n")
+        if rate_limit_or_seed == 'seed' then
+          Syslog.log(Syslog::LOG_NOTICE, 'client requested seeding')
+          @aria = handle_aria_seeding_request(requested_url, seedpatch_dir)
+        else
+          rate_limit = rate_limit_or_seed
+          use_rate_limit = (rate_limit != '')
+          @url_to_download = requested_url
 
-        Syslog.log(Syslog::LOG_NOTICE,
-                   "client asks to download '%s'",
-                   @url_to_download)
+          Syslog.log(Syslog::LOG_NOTICE,
+                     "client asks to download '%s'",
+                     @url_to_download)
 
-        begin
-          # We put the url into this path only after the initial download
-          # has been successful.  How that we are starting to download
-          # something (to .tmp file), we should not seed anything old.
-          File.unlink($torrent_url_path)
-        rescue Errno::ENOENT
+          begin
+            # We put the url into this path only after the initial download
+            # has been successful.  How that we are starting to download
+            # something (to .tmp file), we should not seed anything old.
+            File.unlink($torrent_url_path)
+          rescue Errno::ENOENT
+          end
+
+          # start a new download
+          @aria = Aria.new(@url_to_download, use_rate_limit)
         end
-
-        # start a new download
-        @aria = Aria.new(@url_to_download, use_rate_limit)
       end
     end
 
@@ -331,6 +339,26 @@ class Server
     @selfpipe_w.write_nonblock('o')
   end
 
+  def handle_aria_seeding_request(requested_url, seedpatch_dir)
+    # We should use the same server for seeding where we have obtained
+    # the patch for the seed file, as the seed torrent will more likely
+    # not exist in the server where we have obtained the patch from.
+    # (This is for the image updates, for cases where we have obtained
+    # the image from an rdiff).
+    seedpatch_uri = IO.read("#{ seedpatch_dir }/.aria2_torrent_url").chomp \
+                      rescue nil
+    if seedpatch_uri then
+      uri = URI(requested_url)
+      uri.host = URI(seedpatch_uri).host
+      @url_to_download = uri.to_s
+    else
+      @url_to_download = requested_url
+    end
+
+    write_torrent_url
+    @aria = start_aria_seeding(false)
+  end
+
   def write_torrent_url
     # This is a sign for subsequent startups of this tool that it should
     # start seeding the url in this file.
@@ -362,9 +390,9 @@ def wait_for_dns(host)
   end
 end
 
-def start_aria_seeding(torrent_url_path)
+def start_aria_seeding(wait_until_dns_is_available)
   begin
-    torrent_url = IO.read(torrent_url_path).chomp
+    torrent_url = IO.read($torrent_url_path).chomp
   rescue Errno::ENOENT
     # we have no torrent url, we are not going to seed
     return nil
@@ -378,19 +406,21 @@ def start_aria_seeding(torrent_url_path)
 
   host = URI(torrent_url).host
 
-  begin
-    # We wait for DNS when starting to seed, because seeding should start
-    # right after boot and we may not have a working DNS/VPN at that time.
-    # In other situations it is better to return an error right away.
-    # Note that server is listening for connections at this time, we will
-    # deal with those later.
-    wait_for_dns(host)
-  rescue StandardError => e
-    Syslog.log(Syslog::LOG_ERR, "could not resolve #{ host }, not seeding")
-    return nil
+  if wait_until_dns_is_available then
+    begin
+      # We wait for DNS when starting to seed right after boot, because
+      # seeding should right away and we may not have a working DNS/VPN
+      # at that time.  In other situations it is better to skip this check
+      # or return an error right away.  Note that server is listening for
+      # connections at this time, we will deal with those later.
+      wait_for_dns(host)
+    rescue StandardError => e
+      Syslog.log(Syslog::LOG_ERR, "could not resolve #{ host }, not seeding")
+      return nil
+    end
   end
 
-  # we have torrent url, we have rdiff on the right path,
+  # we have torrent url, we have file on the right path,
   # we have a working DNS, we can seed:
 
   Syslog.log(Syslog::LOG_NOTICE,
@@ -416,7 +446,7 @@ server_socket = Socket.for_fd(3)
 aria = nil
 begin
   # this will return nil if there is nothing to seed
-  aria = start_aria_seeding($torrent_url_path)
+  aria = start_aria_seeding(true)
 rescue StandardError => e
   Syslog.log(Syslog::LOG_ERR,
              'could not start aria2 for seeding: %s', e.message)

@@ -583,7 +583,6 @@ class Image < SyncFileWithMetadata
     return all_ok
   end
 
-
   def set_priorities(base_priority, priority_requirements)
     next_diff_priority = base_priority
     priority_adjustments = get_priority_adjustments(priority_requirements)
@@ -596,6 +595,8 @@ class Image < SyncFileWithMetadata
   end
 
   def size_penalizer; (1.0 * @size) / 2**33; end
+
+  def subpath; ''; end
 
   def synctype; return 'Image'; end
 end
@@ -670,6 +671,8 @@ class Diff < SyncFileWithMetadata
 
   def size_penalizer; (1.0 * @size) / 2**30; end
 
+  def subpath; '/rdiffs'; end
+
   def synctype; return 'Diff'; end
 end
 
@@ -724,7 +727,7 @@ class Torrents
 
   def initialize(puavo_etc)
     fqdn = "#{ puavo_etc.hostname }.#{ puavo_etc.domain }"
-    @this_server_baseurl = "https://#{ fqdn }:#{ Torrent_https_port }/rdiffs"
+    @server_baseurl = "https://#{ fqdn }:#{ Torrent_https_port }"
     @torrent_paths = {}
   end
 
@@ -741,7 +744,7 @@ class Torrents
 
     tmpfile = "#{ target_path }.tmp"
 
-    url = "#{ @this_server_baseurl }/#{ syncfile.filename }"
+    url = "#{ @server_baseurl }#{ syncfile.subpath }/#{ syncfile.filename }"
     cmd_args = [ 'mktorrent', '-o', tmpfile, '-w', url, src_path ]
     fd_redirects = { :in  => '/dev/null',
                      :out => '/dev/null',
@@ -887,7 +890,8 @@ module SeriesControl
   def self.fetch_and_parse_series_data(source_url)
     info(5, "Using image series source url #{ source_url }")
 
-    uri = URI.parse(source_url)
+    source_url_with_gpg = "#{ source_url }.gpg"
+    uri = URI.parse(source_url_with_gpg)
 
     http = Net::HTTP.new(uri.host, uri.port)
     http.ca_file = '/etc/puavo-conf/rootca.pem'
@@ -900,11 +904,19 @@ module SeriesControl
         # Do not let a failed fetch slip out as empty series... otherwise
         # temporary download failure might result in removing all images/diffs
         # in this series.
-        raise "Error in fetching #{ source_url }," \
+        raise "Error in fetching #{ source_url_with_gpg }," \
                 + " response code #{ response.code }"
       end
 
-      series_by_name = parse_series_data( JSON.parse( response.body ) )
+      series_data = response.body
+      gpg_cmd = [ 'gpg', '--decrypt', '--homedir',
+                  "/etc/puavo-conf/gpg/#{ uri.host }/os-images",
+                  '--no-permission-warning', '--trust-model', 'always' ]
+      stdout, stderr, status = Open3.capture3(*gpg_cmd, stdin_data: series_data)
+      if !status.success? then
+        raise "Error in verifying GPG signature for #{ source_url_with_gpg }"
+      end
+      series_by_name = parse_series_data( JSON.parse(stdout) )
     end
 
     return series_by_name
@@ -1212,27 +1224,29 @@ module SeriesControl
 
     torrents = Torrents.new(@etc)
 
+    make_torrent = lambda do |syncfile|
+      begin
+        torrents.make(syncfile)
+      rescue StandardError => e
+        msg = sprintf('Could not make a torrent for %s: %s', syncfile.filename,
+                      e.message)
+        warning(3, msg)
+        all_syncs_ok = false
+      end
+    end
+
     info(5, 'Syncing diffs')
     diffs_to_sync.each do |diff|
       syncfiles_to_delete = ensure_space(diff.size, syncfiles_to_delete)
       info(4, "Syncing #{ diff.filename }")
       if diff.materialize then
         info(3,  "Diff sync OK: #{ diff.statemsg }", HighLine::GREEN)
-        begin
-          torrents.make(diff)
-        rescue StandardError => e
-          msg = sprintf('Could not make a torrent for %s: %s', diff.filename,
-                        e.message)
-          warning(3, msg)
-          all_syncs_ok = false
-        end
+        make_torrent.call(diff)
       else
         all_syncs_ok = false
         warning(3, "Diff sync FAILED: #{ diff.statemsg }")
       end
     end
-
-    torrents.remove_unused()
 
     info(5, 'Syncing images')
     images_to_sync.each do |image|
@@ -1240,11 +1254,14 @@ module SeriesControl
       info(4, "Syncing #{ image.filename }")
       if image.materialize then
         info(3, "Image sync OK: #{ image.statemsg }", HighLine::GREEN)
+        make_torrent.call(image)
       else
         all_syncs_ok = false
         warning(3, "Image sync FAILED: #{ image.statemsg }")
       end
     end
+
+    torrents.remove_unused()
 
     return all_syncs_ok
   end

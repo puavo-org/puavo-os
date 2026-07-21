@@ -94,16 +94,17 @@ try_fetching() {
 
   if $gnupg_verify; then
     verified_ebs_tmppath="${ebs_tmppath}.verified"
-    gnupg_dir="/root/.puavo/gnupg/${ebs_server}/ebs"
+    gnupg_dir="/etc/puavo-conf/gpg/${ebs_server}/ebs"
     exec 3< "$gnupg_dir"
     if ! flock -w 10 -x 3; then
       echo "could not lock $gnupg_dir for gpg verification" >&2
       return 1
     fi
-    if gpg --decrypt --homedir "$gnupg_dir" "$ebs_tmppath" 2>/dev/null \
-         > "$verified_ebs_tmppath"; then
-      mv "$verified_ebs_tmppath" "$ebs_tmppath"
-      verified_msg='(verified)'
+    if gpg --decrypt --homedir "$gnupg_dir" --no-permission-warning \
+      --trust-model always "$ebs_tmppath" 2>/dev/null \
+      > "$verified_ebs_tmppath"; then
+        mv "$verified_ebs_tmppath" "$ebs_tmppath"
+        verified_msg='(verified)'
     else
       echo "verification failed for ${ebs_targetpath}" || true
       rm -f "$verified_ebs_tmppath" "$ebs_tmppath" || true

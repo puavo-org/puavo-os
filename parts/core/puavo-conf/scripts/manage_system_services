@@ -315,6 +315,13 @@ set services {
         -> /usr/lib/systemd/system/puavo-image-torrent-updated.socket
     }}
 
+  { puavo-rdiff-torrent-updated {
+      /etc/systemd/system/multi-user.target.wants/puavo-rdiff-torrent-updated.service
+        -> /usr/lib/systemd/system/puavo-rdiff-torrent-updated.service
+      /etc/systemd/system/sockets.target.wants/puavo-rdiff-torrent-updated.socket
+        -> /usr/lib/systemd/system/puavo-rdiff-torrent-updated.socket
+    }}
+
   { puavo-kpsd {
       /etc/systemd/system/multi-user.target.wants/puavo-kpsd.service
         -> /lib/systemd/system/puavo-kpsd.service

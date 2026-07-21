@@ -1,9 +1,9 @@
 [Unit]
-Description=Puavo Torrent Update Daemon
+Description=Puavo Rdiff Torrent Update Daemon
 Requires=puavo-image-torrent-updated.socket
 
 [Service]
-ExecStart=/usr/lib/puavo-ltsp-install/puavo-torrent-updated /images/rdiffs
+ExecStart=/usr/lib/puavo-ltsp-install/puavo-torrent-updated /images/incoming
 Type=simple
 User=puavo-update
 Group=puavo-update

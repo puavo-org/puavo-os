@@ -683,7 +683,7 @@ class ImageUpdater(PuavoWidget):
 
     progfn = lambda a, b: int(a + (b - a) * float(progress) / 100)
 
-    # There are two possible image update paths: image_download/image_sync
+    # There are two possible image update paths: image_download
     # and rdiff_fetch+rdiff_checksum+image_patch are alternative routes
     # to the same result.
 
@@ -699,8 +699,6 @@ class ImageUpdater(PuavoWidget):
       progresstext = '%d%% (patch image)' % progfn(80, 90)
     elif phase == 'image_download':
       progresstext = '%d%% (download image)' % progfn(1, 90)
-    elif phase == 'image_sync':
-      progresstext = '%d%% (sync image)' % progfn(1, 90)
     elif phase == 'image_checksum':
       progresstext = '%d%% (check image)' % progfn(90, 100)
     elif phase == 'puavopkg':

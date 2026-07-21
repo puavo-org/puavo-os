@@ -275,13 +275,13 @@ if (\$hostname == "${hostname}") then {
     stop
   }
 
-  if \$programname == "hooktftp" then {
-    action(type="omfile" file="/var/log/puavo/hooktftp.log")
+  if \$programname == "puavo-bootserver-make-homedir" then {
+    action(type="omfile" file="/var/log/puavo/puavo-bootserver-make-homedir.log")
     stop
   }
 
-  if \$programname == "puavo-bootserver-make-homedir" then {
-    action(type="omfile" file="/var/log/puavo/puavo-bootserver-make-homedir.log")
+  if \$programname == "puavo-conf-daemon" then {
+    action(type="omfile" file="/var/log/puavo/puavo-conf-daemon.log")
     stop
   }
 
@@ -314,9 +314,24 @@ if (\$hostname == "${hostname}") then {
     stop
   }
 
+  # Keep this distinct from puavo-updates.log because Abitti client updates
+  # also use this.
   if \$programname == "puavo-torrent-updated" then {
     action(type="omfile" file="/var/log/puavo/puavo-torrent-updated.log")
     stop
+  }
+
+  if \$programname == "org.puavo.client.Daemon"
+    or \$programname == "puavo-client-daemon"
+    or \$programname == "puavo-install-and-update-ltspimages"
+    or \$programname == "puavo-install-grub"
+    or \$programname == "puavo-manage-efi"
+    or \$programname == "puavo-update-client"
+    or \$programname == "puavo-updates"
+    or \$programname == "update-configuration"
+    or \$programname == "update-ltspimage-update-stats" then {
+      action(type="omfile" file="/var/log/puavo/puavo-updates.log")
+      stop
   }
 
   if \$programname == "puavo-update-abitti2-image" then {
