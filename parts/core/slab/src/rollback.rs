@@ -140,7 +140,8 @@ fn initialize_indices(tcg: &mut Tcg) -> Result<(), ()> {
 }
 
 /// Raises the counter to the target. The counter only rises, so
-/// this moves the floor forward and never lowers it.
+/// this moves the floor forward and never lowers it. A failed raise
+/// shuts the machine down so revocation cannot silently stall.
 fn raise_counter_to(tcg: &mut Tcg, current: u64, target: u64) {
     if target <= current {
         return;
@@ -150,13 +151,13 @@ fn raise_counter_to(tcg: &mut Tcg, current: u64, target: u64) {
     while value < target {
         if let Err(error) = tpm::increment_counter(tcg, COUNTER_INDEX) {
             error_with_tpm_code("could not raise the counter", error);
-            break;
+            shutdown();
         }
         value = match tpm::read_value(tcg, COUNTER_INDEX) {
             Ok(current_value) => current_value,
             Err(error) => {
                 error_with_tpm_code("could not read the raised counter", error);
-                break;
+                shutdown();
             }
         };
     }
