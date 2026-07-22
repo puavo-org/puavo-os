@@ -49,7 +49,9 @@ pub fn enforce(tcg: &mut Tcg) {
     match tpm::is_counter(tcg, COUNTER_INDEX) {
         Ok(true) => {}
         Ok(false) => {
-            security_violation!("counter index is not a proper counter, refusing");
+            security_violation!(
+                "counter index is not a proper counter, refusing"
+            );
             shutdown();
         }
         Err(_) => {
@@ -72,7 +74,9 @@ pub fn enforce(tcg: &mut Tcg) {
     debug!("floor {floor}, list version {list_version}");
 
     if list_version < floor {
-        security_violation!("this device could not start because its startup software is too old, please contact your administrator");
+        security_violation!(
+            "this device could not start because its startup software is too old, please contact your administrator"
+        );
         shutdown();
     }
 
@@ -158,7 +162,7 @@ fn raise_counter_to(tcg: &mut Tcg, current: u64, target: u64) {
     }
 }
 
-/// Prints the error messgage with the response code when there is one.
+/// Prints the error message with the response code when there is one.
 fn error_with_tpm_code(message: &str, error: CommandError) {
     match error.response_code() {
         Some(code) => error!("{message} (TPM code {code:#06x})"),

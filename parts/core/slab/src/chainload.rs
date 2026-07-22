@@ -41,7 +41,9 @@ pub fn is_allowed(image: &[u8]) -> bool {
     };
     match revocations::minimum_version(name) {
         Some(minimum) if version < minimum => {
-            security_violation!("next stage version {version} below minimum {minimum}, refusing");
+            security_violation!(
+                "next stage version {version} below minimum {minimum}, refusing"
+            );
             false
         }
         _ => {
