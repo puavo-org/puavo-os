@@ -39,7 +39,7 @@ fn main() -> Status {
     };
 
     // The next stage can verify the images it loads through this protocol.
-    if !shim_lock::install() {
+    if !shim_lock::initialize() {
         error!("failed to install the image verification protocol, refusing");
         shutdown();
     }
