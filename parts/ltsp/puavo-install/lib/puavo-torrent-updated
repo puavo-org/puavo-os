@@ -4,7 +4,6 @@ require 'fileutils'
 require 'open3'
 require 'puavo/conf'
 require 'resolv'
-require 'securerandom'
 require 'socket'
 require 'syslog'
 require 'uri'
@@ -18,7 +17,6 @@ class Aria
     @last_msgs = []
     @outmsg = ''
     @progress = nil
-    @rpc_token = SecureRandom.hex(32)
     @status = nil
 
     start_download(use_rate_limit, seed_filename)
@@ -73,7 +71,6 @@ class Aria
                   '--continue',
                   "--dir=#{ $target_dir }",
                   '--enable-color=false',
-                  '--enable-rpc=true',
                   '--file-allocation=none',
                   '--follow-torrent=mem',
                   '--human-readable=false',
@@ -81,8 +78,6 @@ class Aria
                   '--no-conf=true',
                   "--on-bt-download-complete=#{ download_complete_path }",
                   '--private-key=/etc/puavo/certs/host.key',
-                  "--rpc-listen-port=#{ $aria2c_rpc_port }",
-                  "--rpc-secret=#{ @rpc_token }",
                   '--seed-ratio=0.0',
                   '--summary-interval=1' ]
 
@@ -442,16 +437,11 @@ end
 
 Syslog.open( File.basename($0) )
 
-$target_dir, $aria2c_rpc_port = ARGV
-progname = File.basename($0)
+$target_dir = ARGV[0]
 if !$target_dir then
+  progname = File.basename($0)
   Syslog.log(Syslog::LOG_ERR,
              "#{ progname } was not given a target directory as an argument")
-  exit 1
-end
-if !$aria2c_rpc_port then
-  Syslog.log(Syslog::LOG_ERR,
-             "#{ progname } was not given an rpc port as an argument")
   exit 1
 end
 

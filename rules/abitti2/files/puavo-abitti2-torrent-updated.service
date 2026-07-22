@@ -3,7 +3,7 @@ Description=Puavo Abitti 2 Torrent Update Daemon
 Requires=puavo-abitti2-torrent-updated.socket
 
 [Service]
-ExecStart=/usr/lib/puavo-ltsp-install/puavo-torrent-updated /images/abitti2 6802
+ExecStart=/usr/lib/puavo-ltsp-install/puavo-torrent-updated /images/abitti2
 Type=simple
 User=puavo-update
 Group=puavo-update
