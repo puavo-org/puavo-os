@@ -11,11 +11,22 @@ require 'uri'
 class Aria
   attr_reader :last_msgs, :progress, :status, :stdout, :url
 
+  DOWNLOAD_STATE_FIELDMAP = {
+    'CN'    => 'connections',
+    'DL'    => 'download_speed',
+    'ETA'   => 'download_eta',
+    'SD'    => 'seeders',
+    'SEED'  => 'seed_ratio',
+    'UL'    => 'upload_speed',
+  }
+
   def initialize(url, use_rate_limit, seed_filename=nil)
     @url = URI(url)
     @control_file_path = nil
+    @connections_state = {}
     @last_msgs = []
     @outmsg = ''
+    @previous_state_log_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     @progress = nil
     @status = nil
 
@@ -110,8 +121,8 @@ class Aria
       new_outmsg = ''
       @outmsg += @stdout.read_nonblock(1024)
       @outmsg.each_line do |line|
-        update_progress(line)
         if line.match(/\n$/) then
+          update_connections_state(line.chomp)
           @last_msgs = (@last_msgs + [ line ]).last(20)
         else
           new_outmsg = line
@@ -124,17 +135,51 @@ class Aria
     end
   end
 
-  def update_progress(line)
-    fields = line.split
-    return unless fields[1] && fields[5] && fields[5].match(/^ETA/)
+  def update_connections_state(line)
+    m = line.match(/\A\[(.*)\]\z/)
+    return nil unless m
 
-    match = fields[1].match(/\((\d+)%\)$/)
-    if match then
+    gid, aria2_progress, *the_rest = * m[1].split
+
+    # assignments to match, not comparisons
+    if match = aria2_progress.match(/\((\d+)%\)$/) then
       @progress = match[1]
+    elsif match = aria2_progress.match(/^SEED\((.*)\)$/) then
+      @connections_state['DL']   = 0
+      @connections_state['ETA']  = 0
+      @connections_state['SEED'] = match[1]
+    end
+
+    the_rest.each do |aria2_info|
+      field, value = *aria2_info.split(':')
+      if DOWNLOAD_STATE_FIELDMAP.has_key?(field) then
+        @connections_state[ field ] = value
+      end
+    end
+
+    # if we have not logged the connections status in the last five minutes,
+    # log it now
+    time_now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    if (time_now - @previous_state_log_time) >= 300 then
+      @previous_state_log_time = time_now
+      log_connections_state
     end
   end
 
+  def log_connections_state
+    logfields = []
+    @connections_state.sort.each do |field, value|
+      fieldname = DOWNLOAD_STATE_FIELDMAP[field].to_s
+      logfields << "#{ fieldname }=#{ value }"
+    end
+    return if logfields.empty?
+    Syslog.log(Syslog::LOG_NOTICE, 'connections state for %s: %s',
+                                   @url, logfields.join(' '))
+  end
+
   def stop
+    log_connections_state
+
     if @wait_thr.alive? then
       Syslog.log(Syslog::LOG_INFO, 'killing the current aria2c process')
       Process.kill('TERM', @wait_thr.pid)
@@ -276,7 +321,7 @@ class Server
           @url_to_download = requested_url
 
           Syslog.log(Syslog::LOG_NOTICE,
-                     "client asks to download '%s'",
+                     "client asks to download %s",
                      @url_to_download)
 
           begin
@@ -302,7 +347,7 @@ class Server
         @current_progress = new_progress
         @write_progress = true
         Syslog.log(Syslog::LOG_INFO,
-                   "download progress for '%s' is now %s%%",
+                   "download progress for %s is now %s%%",
                    @aria.url,
                    @current_progress)
       end
