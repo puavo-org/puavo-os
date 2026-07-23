@@ -25,6 +25,8 @@ $(BIN): Cargo.lock Cargo.toml $(SOURCE_FILES)
 install: build
 	mkdir -p $(INSTALL_DIR)
 	cp $(BIN) $(INSTALL_DIR)/slabx64.efi
+	sed -n 's/^version = "\(.*\)"$$/\1/p' Cargo.toml \
+	  > $(INSTALL_DIR)/version
 	mkdir -p $(SBIN_DIR)
 	install -m 755 tools/slab-info tools/slab-debug tools/slab-reset \
 	  $(SBIN_DIR)/
