@@ -25,6 +25,7 @@ class Aria
     @control_file_path = nil
     @connections_state = {}
     @last_msgs = []
+    @network_torrent_friendliness_logged = false
     @outmsg = ''
     @previous_state_log_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     @progress = nil
@@ -173,8 +174,41 @@ class Aria
       logfields << "#{ fieldname }=#{ value }"
     end
     return if logfields.empty?
+
     Syslog.log(Syslog::LOG_NOTICE, 'connections state for %s: %s',
                                    @url, logfields.join(' '))
+
+    log_network_torrent_friendliness
+  end
+
+  def get_network_identifier
+    begin
+      output, cmdstatus = Open3.capture2('ip', 'route', 'show', 'default')
+      raise 'ip route returned failure' unless cmdstatus.success?
+      interface = output.split[4]
+      output, cmdstatus = Open3.capture2('iw', 'dev', interface, 'link')
+      return interface unless cmdstatus.success?
+      return "#{ interface }:#{ output[/^\s*SSID:\s*(.*)$/, 1] }"
+    rescue StandardError => e
+      Syslog.log(Syslog::LOG_WARNING,
+                 'could not determine network identifier: %s', e.message)
+      return nil
+    end
+  end
+
+  def log_network_torrent_friendliness
+    return if @network_torrent_friendliness_logged
+
+    # if we see some seeders, or we have done some uploading,
+    # then it looks like this network is torrent-friendly and we report it
+    if @connections_state['SD'].to_i > 0 || @connections_state['UL'] then
+      network_id = get_network_identifier()
+      if network_id then
+        Syslog.log(Syslog::LOG_NOTICE,
+                   "network #{ network_id } is torrent-friendly")
+      end
+      @network_torrent_friendliness_logged = true
+    end
   end
 
   def stop
