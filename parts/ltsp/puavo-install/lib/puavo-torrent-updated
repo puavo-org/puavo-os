@@ -83,7 +83,7 @@ class Aria
                   '--continue',
                   "--dir=#{ $target_dir }",
                   '--enable-color=false',
-                  '--file-allocation=none',
+                  '--file-allocation=falloc',
                   '--follow-torrent=mem',
                   '--human-readable=false',
                   "--index-out=1=#{ output_filename }",
