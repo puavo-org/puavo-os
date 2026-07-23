@@ -244,6 +244,14 @@ cleanup_previous_runs() {
   done
 }
 
+# "stat -c %s" is not good enough for files with holes and that matters here
+lookup_allocated_space() {
+  local values
+  values=$(stat -c '%b %B' -- "$1" 2>/dev/null) || return 1
+  set -- $values
+  printf "%s\n" "$(($1 * $2))" || return 1
+}
+
 ensure_enough_available_diskspace() {
   local abitti2_image abitti2_size available_diskspace extra_space msg \
         required_diskspace tmpimage_size
@@ -254,7 +262,7 @@ ensure_enough_available_diskspace() {
   cleanup_previous_runs "$abitti2_image" || true
 
   tmpimage_size=$(
-    stat -c %s "${g_abitti2_dir}/${abitti2_image}.tmp" 2>/dev/null || echo 0)
+    lookup_allocated_space "${g_abitti2_dir}/${abitti2_image}.tmp" || echo 0)
 
   # calculate required diskspace, add a bit of padding in case torrent files
   # or some such raise actual space requirements

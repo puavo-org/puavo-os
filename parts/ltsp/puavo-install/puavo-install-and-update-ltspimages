@@ -330,6 +330,14 @@ cleanup_previous_runs() {
   fi
 }
 
+# "stat -c %s" is not good enough for files with holes and that matters here
+lookup_allocated_space() {
+  local values
+  values=$(stat -c '%b %B' -- "$1" 2>/dev/null) || return 1
+  set -- $values
+  printf "%s\n" "$(($1 * $2))" || return 1
+}
+
 ensure_enough_available_diskspace() {
   local diskspace msg next_image rdiff_filename required_diskspace \
         target_image_size target_rdiff_size target_rdiff_size_on_fs \
@@ -344,7 +352,7 @@ ensure_enough_available_diskspace() {
     return 1
   fi
   target_tmpimage_size_on_fs=$(
-    stat -c %s "${incoming_images_dir}/${next_image}.tmp" 2>/dev/null \
+    lookup_allocated_space "${incoming_images_dir}/${next_image}.tmp" \
       || echo 0)
 
   if [ -z "$rdiff_filename" ] \
@@ -361,7 +369,7 @@ ensure_enough_available_diskspace() {
     # No rdiff on filesystem, check out temporary rdiff size.
     target_rdiff_size_on_fs=0
     target_tmprdiff_size_on_fs=$(
-      stat -c %s "${rdiffs_dir}/${rdiff_filename}.tmp" 2>/dev/null || echo 0)
+      lookup_allocated_space "${rdiffs_dir}/${rdiff_filename}.tmp" || echo 0)
   fi
 
   target_sizes_summed=$(echo "${target_image_size} + ${target_rdiff_size}" \
