@@ -137,7 +137,7 @@ class Aria
   end
 
   def update_connections_state(line)
-    m = line.match(/\A\[(.*)\]\z/)
+    m = line.match(/\A\[(.*?)\]/)
     return nil unless m
 
     gid, aria2_progress, *the_rest = * m[1].split
