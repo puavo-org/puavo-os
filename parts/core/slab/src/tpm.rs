@@ -10,6 +10,7 @@
 use core::mem::size_of;
 use uefi::proto::tcg::v2::{HashLogExtendEventFlags, PcrEventInputs, Tcg};
 use uefi::proto::tcg::{EventType, PcrIndex};
+use uefi::Status;
 use zerocopy::byteorder::network_endian::{U16, U32, U64};
 use zerocopy::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
@@ -276,24 +277,15 @@ impl PcrReadCommand {
     }
 }
 
-/// The outcome of a TPM command. A transport failure is the TCG2 call itself
-/// failing. A rejection carries the TPM response code, for example a counter
-/// locked against writes.
+/// The outcome of a TPM command.
 #[derive(Clone, Copy, Debug)]
 pub enum CommandError {
-    Transport,
+    /// The TCG2 call failed with this EFI status.
+    Transport(Status),
+    /// The TPM rejected the command with this response code.
     Rejected(u32),
+    /// The response could not be interpreted.
     MalformedResponse,
-}
-
-impl CommandError {
-    /// The TPM response code for a rejection, useful for diagnostics.
-    pub fn response_code(&self) -> Option<u32> {
-        match self {
-            CommandError::Rejected(code) => Some(*code),
-            _ => None,
-        }
-    }
 }
 
 pub type CommandResult<T> = Result<T, CommandError>;
@@ -372,7 +364,7 @@ impl Response {
 fn submit(tcg: &mut Tcg, command: &[u8]) -> CommandResult<Response> {
     let mut bytes = [0u8; 128];
     tcg.submit_command(command, &mut bytes)
-        .map_err(|_| CommandError::Transport)?;
+        .map_err(|error| CommandError::Transport(error.status()))?;
     // The response size is the four bytes after the two byte tag.
     let length =
         u32::from_be_bytes([bytes[2], bytes[3], bytes[4], bytes[5]]) as usize;
@@ -425,7 +417,7 @@ pub fn extend_base(tcg: &mut Tcg, base: u64) -> CommandResult<()> {
         &base.to_be_bytes(),
         event,
     )
-    .map_err(|_| CommandError::Transport)
+    .map_err(|error| CommandError::Transport(error.status()))
 }
 
 /// Reads the SHA256 bank value of the given PCR.
