@@ -11,4 +11,6 @@ mount -m -t sysfs    /sys     /sys
 mount -m -t proc     /proc    /proc
 mount -m -t devpts   /dev/pts /dev/pts
 hostname "$machine"
-sudo -u "$user" env PUAVO_CACHE_PROXY="$proxy_address" "$@"
+sudo -u "$user" env -u LANGUAGE \
+    LANG=C.UTF-8 LC_ALL=C.UTF-8 \
+    PUAVO_CACHE_PROXY="$proxy_address" "$@"

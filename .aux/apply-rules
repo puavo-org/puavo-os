@@ -10,7 +10,7 @@ test -e /etc/mtab || touch /etc/mtab
 mkdir -p /var/log/puavo/puppet
 
 apply_rules() {
-  env LC_CTYPE=en_US.UTF-8 puppet apply               \
+  env LC_CTYPE=C.UTF-8 puppet apply                   \
       --detailed-exitcodes                            \
       --logdest console                               \
       --logdest /var/log/puavo/puppet/apply-rules.log \
