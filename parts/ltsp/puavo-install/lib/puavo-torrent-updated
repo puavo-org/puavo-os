@@ -24,6 +24,7 @@ class Aria
     @url = URI(url)
     @control_file_path = nil
     @connections_state = {}
+    @in_download_stage = false
     @last_msgs = []
     @network_torrent_friendliness_logged = false
     @outmsg = ''
@@ -137,8 +138,17 @@ class Aria
   end
 
   def update_connections_state(line)
+    # progress may be reported on "FILE: [MEMORY]" downloads (torrent files),
+    # so do not update connection state until we are downloading the actual
+    # payload
+    if line.match(/\AFILE: \//) then
+      @in_download_stage = true
+    end
+
+    return unless @in_download_stage
+
     m = line.match(/\A\[(.*?)\]/)
-    return nil unless m
+    return unless m
 
     gid, aria2_progress, *the_rest = * m[1].split
 
