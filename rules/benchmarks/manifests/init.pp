@@ -10,7 +10,8 @@ class benchmarks {
       source  => 'puppet:///modules/benchmarks/puavo-benchmark';
 
     '/var/lib/puavo/benchmark':
-      ensure => directory;
+      ensure  => directory,
+      require => Package['puavo-core'];
   }
 
   # puavo-core should setup /var/lib/puavo

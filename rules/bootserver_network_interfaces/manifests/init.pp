@@ -2,6 +2,12 @@ class bootserver_network_interfaces {
   include ::puavo_conf
 
   file {
+    '/etc/network':
+      ensure => directory;
+
+    '/etc/network/if-up.d':
+      ensure => directory;
+
     '/etc/network/if-up.d/disable_flow_control':
       content => template('bootserver_network_interfaces/etc/network/if-up.d/disable_flow_control'),
       mode    => '0755';

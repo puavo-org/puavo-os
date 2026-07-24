@@ -13,6 +13,11 @@ class disable_drrs_conditionally {
                  , Package['systemd'] ],
       source  => 'puppet:///modules/disable_drrs_conditionally/puavo-maybe-disable-drrs.service';
 
+    # Trixie systemd no longer ships this directory, so create it here.
+    '/usr/lib/systemd/system-sleep':
+      ensure  => directory,
+      require => Package['systemd'];
+
     '/usr/lib/systemd/system-sleep/puavo-maybe-disable-drrs':
       mode   => '0755',
       source => 'puppet:///modules/disable_drrs_conditionally/usr_lib_systemd_system-sleep_puavo-maybe-disable-drrs';
