@@ -5,7 +5,7 @@ Maintainer: Opinsys Developers <dev@opinsys.fi>
 Build-Depends: bundler | ruby-bundler,
  cargo,
  clang,
- debhelper (>= 8),
+ debhelper-compat (= 13),
  jq,
  libasound2-dev,
  libcryptsetup-dev,
