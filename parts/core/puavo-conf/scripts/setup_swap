@@ -3,7 +3,22 @@
 set -eu
 
 list_swap_partitions() {
-  lsblk --properties-by blkid -n -o PATH -Q 'FSTYPE == "swap"'
+  lsblk --properties-by blkid -n -o PATH \
+    -Q 'PARTTYPE == "0657fd6d-a4ab-43c4-84e5-0933c84b4f4f"'
+}
+
+# Encrypt the specified swap partition with a random key each boot.
+encrypt_swap_partition() {
+  swap_partition=$1
+  mapper=$2
+
+  cryptsetup open --type plain --batch-mode \
+    --cipher aes-xts-plain64 --key-size 256 \
+    --key-file /dev/urandom \
+    "$swap_partition" "$mapper" >&2 || return 1
+  mkswap "/dev/mapper/${mapper}" >&2 || return 1
+
+  echo "/dev/mapper/${mapper}"
 }
 
 if [ "$(puavo-conf puavo.swap.local.enabled)" != 'true' ]; then
@@ -11,12 +26,23 @@ if [ "$(puavo-conf puavo.swap.local.enabled)" != 'true' ]; then
 fi
 
 status=0
+swap_index=0
 
-# Enable local swap partition if found on local disk.
-# XXX we should also make sure swap is encrypted
+# A single swap device is the norm, but a mirrored bootserver has one per
+# disk, so extra devices get a numbered name.
 for swap_partition in $(list_swap_partitions); do
-  if ! swapon "$swap_partition"; then
-    echo "error turning swap on device ${swap_partition}" >&2
+  swap_index=$((swap_index + 1))
+  mapper=swap
+  [ "$swap_index" -gt 1 ] && mapper="swap${swap_index}"
+
+  if ! swap_device=$(encrypt_swap_partition "$swap_partition" "$mapper"); then
+    echo "error: could not encrypt swap on ${swap_partition}" >&2
+    status=1
+    continue
+  fi
+
+  if ! swapon "$swap_device"; then
+    echo "error: could not enable swap on ${swap_device}" >&2
     status=1
   fi
 done
