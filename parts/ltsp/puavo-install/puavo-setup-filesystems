@@ -546,7 +546,7 @@ module DiskHandler
     end
 
     create_efi_filesystem(device)
-    initialize_swap_partition(device) if have_swap
+    clear_swap_partition(device) if have_swap
   end
 
   def self.gpt_format(partitioning_type, filesystems, windows_size=nil)
@@ -841,10 +841,10 @@ module DiskHandler
     run('mkfs.fat', '-F32', "/dev/#{ efi_partition }")
   end
 
-  def self.initialize_swap_partition(device)
+  def self.clear_swap_partition(device)
     swap_partition = wait_one_gpt_partition_by_parttype(device,
                        GPT_PARTTYPE_SWAP, try_count: 30)
-    run('mkswap', "/dev/#{ swap_partition }")
+    run('wipefs', '--all', "/dev/#{ swap_partition }")
   end
 
   def self.puavo_filesystems(fs_conf, vgname)
