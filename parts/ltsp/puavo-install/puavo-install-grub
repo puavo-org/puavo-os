@@ -571,25 +571,8 @@ if test -e "${prefix}/puavo/${puavo_optional_grub_conf}.cfg"; then
   source "${prefix}/puavo/${puavo_optional_grub_conf}.cfg"
 fi
 
-function load_video {
-  if [ x$feature_all_video_module = xy ]; then
-    insmod all_video
-  else
-    insmod efi_gop
-    insmod efi_uga
-    insmod ieee1275_fb
-    insmod vbe
-    insmod vga
-    insmod video_bochs
-    insmod video_cirrus
-  fi
-}
-
 set gfxmode=auto
-load_video
-insmod gfxterm
 set locale_dir=$prefix/locale
-insmod gettext
 terminal_output gfxterm
 
 if keystatus --shift; then
@@ -721,14 +704,6 @@ function add_boot_options {
     add_boot_entry "$windows_image_path" "$windows_boot_label" "windows"
   fi
 }
-
-insmod fat
-insmod search_fs_uuid
-insmod chain
-insmod part_gpt
-insmod jpeg
-insmod png
-insmod regexp
 
 load_puavo_config
 add_boot_options
