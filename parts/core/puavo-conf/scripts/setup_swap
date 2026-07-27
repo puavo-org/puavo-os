@@ -12,6 +12,11 @@ encrypt_swap_partition() {
   swap_partition=$1
   mapper=$2
 
+  # Turn off the swap if something has activated it. Wipe its signatures so
+  # it is no longer treated as a regular swap partition.
+  swapoff "$swap_partition" 2>/dev/null || true
+  wipefs --all "$swap_partition" >&2 || return 1
+
   cryptsetup open --type plain --batch-mode \
     --cipher aes-xts-plain64 --key-size 256 \
     --key-file /dev/urandom \
