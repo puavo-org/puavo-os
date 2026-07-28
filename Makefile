@@ -336,14 +336,15 @@ secure-boot-config:
 .PHONY: install-pcr-public-keys
 install-pcr-public-keys:
 	$(_sudo) mkdir -p /etc/puavo-conf
-	-$(_sudo) cp config/boot_keys/tpm2-pcr-public-key*.pem /etc/puavo-conf/ 2>/dev/null || true
+	-$(_sudo) cp config/boot_keys/tpm2-pcr-public-key*.pem /etc/puavo-conf/ || true
 
-/etc/puavo-conf/secure-boot.der: config/boot_keys/secure-boot.der
-	$(_sudo) mkdir -p $(@D)
-	$(_sudo) cp $< $@
+.PHONY: install-secure-boot-certificates
+install-secure-boot-certificates:
+	$(_sudo) mkdir -p /etc/puavo-conf
+	-$(_sudo) cp config/boot_keys/secure-boot*.der /etc/puavo-conf/ || true
 
 .PHONY: update
-update: prepare install-pcr-public-keys /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem /etc/puavo-conf/secure-boot.der
+update: prepare install-pcr-public-keys install-secure-boot-certificates /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem
 	$(MAKE) build
 
 	$(_sudo) apt-get update
