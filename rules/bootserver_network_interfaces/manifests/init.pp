@@ -2,10 +2,7 @@ class bootserver_network_interfaces {
   include ::puavo_conf
 
   file {
-    '/etc/network':
-      ensure => directory;
-
-    '/etc/network/if-up.d':
+    [ '/etc/network', '/etc/network/if-up.d' ]:
       ensure => directory;
 
     '/etc/network/if-up.d/disable_flow_control':
