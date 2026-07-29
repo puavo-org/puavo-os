@@ -1,14 +1,14 @@
 {
     "name": "linux",
-    "version": "6.12.90-2~bpo12+1+puavo1+buildonce",
+    "version": "6.12.95-1~bpo12+1+puavo1+buildonce",
     "tarballs": {
         "debian": {
-            "sha256sum": "ae10bce5e0e0decce54768d3848e95916c79dff2537fb4152faa13b728b9bae7",
-            "url": "https://deb.debian.org/debian/pool/main/l/linux/linux_6.12.90-2~bpo12+1.debian.tar.xz"
+            "sha256sum": "973c22fcaa8071af9efffbd8ceafb332fd86e4c1eadd535e5319b3175b558746",
+            "url": "https://ftp.debian.org/debian/pool/main/l/linux/linux_6.12.95-1~bpo12+1.debian.tar.xz"
         },
         "orig": {
-            "sha256sum": "6e7fc837feac9d07b96e60c4a97f616d33ef694f67703228f027f816117fb82b",
-            "url": "https://deb.debian.org/debian/pool/main/l/linux/linux_6.12.90.orig.tar.xz"
+            "sha256sum": "82ee332c20307c8e75b59c2779f3d554c592f5efa454bacf1e58daced5199f89",
+            "url": "https://deb.debian.org/debian/pool/main/l/linux/linux_6.12.95.orig.tar.xz"
         }
     }
 }

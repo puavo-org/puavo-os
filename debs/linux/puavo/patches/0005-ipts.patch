@@ -76,25 +76,6 @@ index d4f852f71..b76109d5d 100644
  #define IOAPIC_RANGE_START	(0xfee00000)
  #define IOAPIC_RANGE_END	(0xfeefffff)
  #define IOVA_START_ADDR		(0x1000)
-@@ -4684,6 +4697,18 @@ static void quirk_iommu_igfx(struct pci_dev *dev)
- 	disable_igfx_iommu = 1;
- }
- 
-+static void quirk_iommu_ipts(struct pci_dev *dev)
-+{
-+	if (!IS_IPTS(dev))
-+		return;
-+
-+	if (risky_device(dev))
-+		return;
-+
-+	pci_info(dev, "Disabling IOMMU for IPTS\n");
-+	dmar_map_ipts = 0;
-+}
-+
- /* G4x/GM45 integrated gfx dmar support is totally busted. */
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2a40, quirk_iommu_igfx);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2e00, quirk_iommu_igfx);
 @@ -4722,6 +4747,10 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1632, quirk_iommu_igfx);
  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x163A, quirk_iommu_igfx);
  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x163D, quirk_iommu_igfx);
