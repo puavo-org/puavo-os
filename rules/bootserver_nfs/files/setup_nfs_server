@@ -2,16 +2,15 @@
 
 set -eu
 
-if grep -Fqx "# UNCONFIGURED FSTAB FOR BASE SYSTEM" /etc/fstab; then
-  cat /dev/null > /etc/fstab
-fi
-
 # XXX Not happy about export-directory being under /images (especially admins
 # XXX might get confused and try to destroy it, which is really bad in this
 # XXX case, but when our "/" is on overlay, /export
 # XXX "does not support NFS export" according to "exportfs".
 
 mkdir -p /images/.export/home /images/.export/puavo-pkg
+
+# /etc/fstab is prepared by the "setup_swap" puavo-conf script earlier,
+# we append some export lines onto it (so this script may not destroy those!).
 
 export_line='/home	/images/.export/home	none	rw,bind	0	0'
 if ! grep -Fqx "$export_line" /etc/fstab; then
