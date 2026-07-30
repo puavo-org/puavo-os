@@ -29,7 +29,7 @@ enum PinPromptOutcome {
 }
 
 /// Minimum number of characters required for a PIN.
-const MIN_PIN_LENGTH: usize = 6;
+const MIN_PIN_LENGTH: usize = 4;
 
 /// Result of validating a PIN.
 enum PinValidation {
@@ -223,7 +223,7 @@ mod tests {
 
     #[test]
     fn rejects_short_pin() {
-        assert!(matches!(validate_pin("a1b2"), PinValidation::TooShort));
+        assert!(matches!(validate_pin("a1b"), PinValidation::TooShort));
         assert!(matches!(validate_pin(""), PinValidation::TooShort));
     }
 
