@@ -536,14 +536,65 @@ module DiskHandler
     end
   end
 
+  def self.swap_partitions_on_disk(device)
+    # Active swap devices that live on the given disk.
+    IO.readlines('/proc/swaps').drop(1).filter_map do |line|
+      swap_device = line.split.first
+      swap_device if swap_device.start_with?("/dev/#{ device }")
+    end
+  rescue Errno::ENOENT
+    []
+  end
+
+  def self.volume_groups_on_disk(device)
+    # Volume groups that have a physical volume on the given disk.
+    command = [ 'pvs', '--noheadings', '--separator', ',',
+                '-o', 'pv_name,vg_name' ]
+    IO.popen(command).readlines.filter_map do |line|
+      physical_volume, volume_group = line.strip.split(',', 2)
+      volume_group if physical_volume&.start_with?("/dev/#{ device }")
+    end.uniq
+  rescue StandardError
+    []
+  end
+
+  def self.reread_partition_table(device)
+    device_path = "/dev/#{ device }"
+    3.times do
+      return if system('partprobe', device_path, { :err => '/dev/null' })
+      sleep(1)
+    end
+    raise "could not re-read the partition table on '#{ device_path }'"
+  end
+
+  def self.reset_disk(device)
+    device_path = "/dev/#{ device }"
+
+    # Release active swap partitions on the device.
+    swap_partitions_on_disk(device).each do |swap_partition|
+      run('swapoff', swap_partition, { :err => '/dev/null' }) rescue true
+    end
+    volume_groups_on_disk(device).each do |volume_group|
+      run('vgchange', '-a', 'n', volume_group, { :err => '/dev/null' }) \
+        rescue true
+    end
+
+    # Erase all signatures and both GPT headers from the device.
+    run('wipefs', '--all', device_path, { :err => '/dev/null' }) rescue true
+    run('sgdisk', '--zap-all', device_path, { :err => '/dev/null' }) \
+      rescue true
+
+    reread_partition_table(device)
+  end
+
   def self.setup_device(device, have_swap, gpt_spec)
-    # clean up possible confusing mess from the device
-    run('dd', 'if=/dev/zero', "of=/dev/#{ device }", 'count=2K',
-        { :err => '/dev/null' })
+    reset_disk(device)
 
     IO.popen([ 'gdisk', "/dev/#{ device }"], 'w') do |f|
       f.print(gpt_spec)
     end
+
+    reread_partition_table(device)
 
     create_efi_filesystem(device)
     clear_swap_partition(device) if have_swap
