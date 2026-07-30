@@ -649,6 +649,7 @@ class packages {
     , 'gnome-settings-daemon'
     , 'gnome-shell'
     , 'gnome-shell-extensions'
+    , 'gnome-shell-extension-caffeine'
     , 'gnome-shell-extension-user-theme'
     , 'gnome-sushi'
     , 'gnome-system-monitor'
