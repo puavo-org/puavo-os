@@ -202,8 +202,8 @@ do_preinstall() {
   puavo_install_target_hosttype=$(ask_install_target_hosttype)
 
   echo
-  puavo-setup-filesystems --hosttype "$puavo_install_target_hosttype" \
-                          ${puavo_preseed_setup_filesystems_args[@]}
+  puavo-legacy-setup-filesystems --hosttype "$puavo_install_target_hosttype" \
+                                 ${puavo_preseed_setup_filesystems_args[@]}
 
   # Grub needs to be installed before images, because grub
   # configuration is updated during image installation by
@@ -363,7 +363,7 @@ install_localbootdevice() {
       return 1
     fi
   else
-    puavo-setup-filesystems ${puavo_preseed_setup_filesystems_args[@]}
+    puavo-legacy-setup-filesystems ${puavo_preseed_setup_filesystems_args[@]}
   fi
 
   setup_state "$puavo_hosttype"
