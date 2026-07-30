@@ -526,13 +526,17 @@ Puavo OS Command Shell
 Commands:
   benchmark              run some benchmarks (if available)
   bios                   configure BIOS (only on some supported machines)
+  crypt-install          install Puavo OS with encryption
+  crypt-preinstall       install with encryption but without registering
   customdescription (cd) send a custom device description to inventory backend
   erase                  secure erase a disk (only on SSD's that support it)
   expert-install         install Puavo OS with more detailed questions
   expert-preinstall      install without registering, expert mode
+  expert-sb-install      install with more detailed questions (SecureBoot)
+  expert-sb-preinstall   install without registering, expert mode (SecureBoot)
   help                   show more detailed help
   info                   show machine information
-  install                install Puavo OS to this device and reboot
+  install                install Puavo OS to this device
   kbd [layout]           set keyboard layout
   make-install-disk      make a bootable usb flash drive or some such
   mount                  mount puavo filesystems (if host is already installed)
@@ -545,6 +549,10 @@ Commands:
   reboot-to-firmware     reboot to firmware setup
   restoredisk            restore from bootserver (only on netboot devices)
   savedisk               save to bootserver (only on netboot devices)
+  sb-install             install Puavo OS to this device (SecureBoot)
+  sb-preinstall          install without registering (SecureBoot)
+  sb-preseed-install     preseed installation (SecureBoot)
+  sb-preseed-preinstall  preseed installation, without registering (SecureBoot)
   shell                  spawn a shell
   test                   run some hardware tests
   update                 update the local Puavo OS installation and reboot
@@ -553,7 +561,7 @@ EOF
 
 darkdm_print_short_help() {
   darkdm_print_help \
-    | awk '$1 !~ /benchmark|bios|customdescription|erase|expert|mount|preinstall|reboot|savedisk/'
+    | awk '$1 !~ /benchmark|bios|crypt|customdescription|erase|expert|mount|preinstall|reboot|savedisk|sb-/'
 }
 
 darkdm_shell()
