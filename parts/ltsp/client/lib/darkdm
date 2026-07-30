@@ -467,7 +467,34 @@ darkdm_reboot_to_firmware_setup()
 
 darkdm_install()
 {
-  if ! /usr/sbin/puavo-install "$@"; then
+  local install_script_path proceed_answer
+  install_script_path='/usr/sbin/puavo-install'
+  if [ "${1:-}" = '--legacy' ]; then
+    install_script_path='/usr/sbin/puavo-legacy-install'
+    shift
+  else
+    cat <<'EOF'
+
+                        ATTENTION!
+
+You have chosen to install Puavo OS with BTRFS filesystem and SecureBoot
+enabled (possibly with encryption).  This is currently EXPERIMENTAL and
+its development is still in progress.  It may work for you, but future
+upgrades may be challenging and you should plan for possible data loss.
+If using encryption we advice you to set a recovery key (passphrase)
+during the installation process, and store it in a safe place.
+If in doubt, use the ordinary installation modes.
+
+EOF
+    read -e -p "Proceed with the installation? (\"yes\" to continue) " \
+         proceed_answer
+    if [ "$proceed_answer" != 'yes' ]; then
+      echo 'Puavo OS installation aborted.' >&2
+      return 1
+    fi
+  fi
+
+  if ! "$install_script_path" "$@"; then
     # give some time for users to read the error message, if there is any
     echo
     sleep 2
@@ -673,9 +700,9 @@ darkdm_menu()
     if [ "$forced" = '--show-unforced-warning' ]; then
       cat <<-EOF >&2
 
-	  !! Attempted to force preseed installation operation even though !!
-	  !! this host already has a Puavo OS installation, unforced.      !!
-	  !! (You can still install with preseed by pressing ENTER.)       !!
+          !! Attempted to force preseed installation operation even though !!
+          !! this host already has a Puavo OS installation, unforced.      !!
+          !! (You can still install with preseed by pressing ENTER.)       !!
 
 	EOF
     fi
@@ -719,9 +746,15 @@ darkdm_menu()
         puavo-disk-erase || return 1
         ;;
       expert-install)
-        darkdm_install expert-install || return 1
+        darkdm_install --legacy expert-install || return 1
         ;;
       expert-preinstall)
+        darkdm_install --legacy expert-preinstall || return 1
+        ;;
+      expert-sb-install)
+        darkdm_install expert-install || return 1
+        ;;
+      expert-sb-preinstall)
         darkdm_install expert-preinstall || return 1
         ;;
       help|"?")
@@ -736,7 +769,7 @@ darkdm_menu()
         show_helpinfo=false
         ;;
       install)
-        darkdm_install || return 1
+        darkdm_install --legacy || return 1
         ;;
       kbd)
         darkdm_kbd "$command_args" || return 1
@@ -759,13 +792,13 @@ darkdm_menu()
         darkdm_poweroff || return 1
         ;;
       preinstall)
-        darkdm_install preinstall || return 1
+        darkdm_install --legacy preinstall || return 1
         ;;
       preseed-preinstall)
-        darkdm_install preseed-preinstall || return 1
+        darkdm_install --legacy preseed-preinstall || return 1
         ;;
       preseed-install|pi)
-        darkdm_install preseed-install || return 1
+        darkdm_install --legacy preseed-install || return 1
         ;;
       reboot)
         darkdm_reboot || return 1
@@ -782,6 +815,18 @@ darkdm_menu()
         ;;
       savedisk)
         puavo-disk-clone savedisk || return 1
+        ;;
+      sb-install)
+        darkdm_install || return 1
+        ;;
+      sb-preinstall)
+        darkdm_install preinstall || return 1
+        ;;
+      sb-preseed-preinstall)
+        darkdm_install preseed-preinstall || return 1
+        ;;
+      sb-preseed-install|sbpi)
+        darkdm_install preseed-install || return 1
         ;;
       shell)
         darkdm_shell || return 1
