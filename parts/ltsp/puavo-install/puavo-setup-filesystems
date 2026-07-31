@@ -457,7 +457,7 @@ module DiskHandler
       return if system('partprobe', device_path, { :err => '/dev/null' })
       sleep(1)
     end
-    raise "could not re-read the partition table on '#{ device_path }'"
+    raise "Could not re-read the partition table on '#{ device_path }'"
   end
 
   def self.reset_disk(device)
@@ -499,18 +499,18 @@ module DiskHandler
       raise "EFI size not found" \
         unless efi_size.kind_of?(String) && !efi_size.empty?
     rescue StandardError => e
-      raise "could not determine EFI size: #{ e.message }"
+      raise "Could not determine EFI size: #{ e.message }"
     end
 
     swap_size = nil
     begin
       if filesystems.has_key?('.SWAP') then
         swap_size = filesystems['.SWAP']['size']
-        raise "unexpected swap size" \
+        raise "Unexpected swap size" \
           unless swap_size.kind_of?(String) && !swap_size.empty?
       end
     rescue StandardError => e
-      raise "could not determine swap size: #{ e.message }"
+      raise "Could not determine swap size: #{ e.message }"
     end
 
     p_index = 0
