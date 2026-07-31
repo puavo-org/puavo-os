@@ -449,10 +449,15 @@ module DiskHandler
 
   def self.reread_partition_table(device)
     device_path = "/dev/#{ device }"
-    3.times do
-      return if system('partprobe', device_path, { :err => '/dev/null' })
+
+    5.times do
+      if system('partprobe', device_path, { :err => '/dev/null' }) then
+        run('udevadm', 'settle')
+        return
+      end
       sleep(1)
     end
+
     raise "Could not re-read the partition table on '#{ device_path }'"
   end
 
