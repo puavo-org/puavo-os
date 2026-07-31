@@ -5,6 +5,7 @@
 require 'fileutils'
 require 'getoptlong'
 require 'highline/import'
+require 'json'
 require 'open3'
 require 'pathname'
 require 'securerandom'
@@ -295,6 +296,125 @@ class BootVaultBuilder
   end
 end
 
+module DiskCleaner
+  def self.deactivate_all_swaps
+    run('swapoff', '--all')
+    raise 'some swap device is still active' \
+      unless File.readlines('/proc/swaps').length == 1
+  end
+
+  def self.deactivate_holders(device_paths)
+    blkdeactivate_opts = [ '--dmoptions',  'retry', '--errors',
+                           '--lvmoptions', 'retry', '--umount' ]
+
+    # check three times
+    3.times do
+      holders = device_holders(device_paths)
+      return if holders.empty?
+
+      holders.each do |holder|
+        # blkdeactivate may have made another holder disappear, so check
+        next unless File.blockdev?(holder)
+        run('blkdeactivate', *blkdeactivate_opts, holder)
+      end
+
+      run('udevadm', 'settle')
+    end
+
+    remaining_holders = device_holders(device_paths)
+    return if remaining_holders.empty?
+
+    raise "Could not deactivate holders of #{ device_paths.join(', ') }: " \
+          "#{ remaining_holders.join(', ') }"
+  end
+
+  def self.device_holders_for_dev(device_path)
+    stat = File.stat(device_path)
+    raise "'#{ device_path }' is not a block device" unless stat.blockdev?
+    holders_dir =
+      "/sys/dev/block/#{ stat.rdev_major }:#{ stat.rdev_minor }/holders"
+    Dir.children(holders_dir).map { |kernel_name| "/dev/#{ kernel_name }" } \
+       .flatten
+  end
+
+  def self.device_holders(device_paths)
+    device_paths.map { |dev| device_holders_for_dev(dev) }.flatten.uniq
+  end
+
+  def self.reset_disk(device)
+    device_path = "/dev/#{ device }"
+
+    puts "Resetting disk device #{ device_path }..."
+
+    run('udevadm', 'settle')
+
+    old_partition_paths \
+      = DiskHandler::get_partitions(device).map do |partition|
+          "/dev/#{ partition }"
+        end
+
+    old_device_paths = [ device_path, *old_partition_paths ]
+
+    # disable all swaps, the Puavo OS installer should not need any
+    deactivate_all_swaps()
+
+    unmount_filesystems_on(old_device_paths)
+
+    # free the devices (and subdevices)
+    deactivate_holders(old_device_paths)
+    check_no_mountpoints(old_device_paths)
+
+    run('wipefs', '--all', '--force', '--lock=yes', *old_partition_paths) \
+      unless old_partition_paths.empty?
+
+    # Erase all signatures and both GPT headers from the device.
+    run('sgdisk', '--zap-all', device_path)
+    run('wipefs', '--all', '--lock=yes', device_path)
+
+    DiskHandler::reread_partition_table(device)
+
+    puts 'Reset done.'
+  end
+
+  def check_no_mountpoints(device_paths)
+    mountpoints = mountpoints_for_devices(device_paths)
+    return if mountpoints.empty?
+    raise "Devices are still mounted at: #{ mountpoints.join(', ') }"
+  end
+
+  def self.mountpoints_for_device(device_path)
+    stdout, stderr, status = Open3.capture3(
+      'findmnt', '--json', '--list', '--output', 'TARGET',
+      '--source', device_path
+    )
+
+    # findmnt uses exit status 1 when nothing matched
+    return [] if status.exitstatus == 1 && stdout.empty? && stderr.empty?
+
+    unless status.success?
+      raise "Could not look up mounts for '#{ device_path }': #{ stderr.strip }"
+    end
+
+    JSON.parse(stdout)
+      .fetch('filesystems', [])
+      .map { |filesystem| filesystem.fetch('target') }
+  end
+
+  def self.mountpoints_for_devices(device_paths)
+    device_paths.map do |device_path|
+      mountpoints_for_device(device_path)
+    end.flatten.uniq
+  end
+
+  def self.unmount_filesystems_on(device_paths)
+    mountpoints = mountpoints_for_devices(device_paths)
+    # Unmount nested mountpoints first.
+    mountpoints.sort_by { |mountpoint| -mountpoint.length }.each do |mountpoint|
+      run('umount', mountpoint)
+    end
+  end
+end
+
 module DiskHandler
   Filesystems = {
     'bootserver' => {
@@ -394,7 +514,7 @@ module DiskHandler
       end
     end
 
-    disks_for_mirroring.each { |disk| reset_disk(disk)     }
+    disks_for_mirroring.each { |disk| DiskCleaner::reset_disk(disk)     }
     disks_for_mirroring.each { |disk| raid_partition(disk) }
 
     spare_args = (disks_for_mirroring.count > 2) \
@@ -443,80 +563,7 @@ module DiskHandler
   end
 
   def self.reset_device(fs_conf)
-    reset_disk(fs_conf['device'])
-  end
-
-  def self.device_holders_for_dev(device_path)
-    stat = File.stat(device_path)
-    raise "'#{ device_path }' is not a block device" unless stat.blockdev?
-    holders_dir =
-      "/sys/dev/block/#{ stat.rdev_major }:#{ stat.rdev_minor }/holders"
-    Dir.children(holders_dir).map { |kernel_name| "/dev/#{ kernel_name }" }
-  end
-
-  def self.device_holders(device_paths)
-    device_paths.map { |dev| device_holders_for_dev(dev) }.uniq
-  end
-
-  def self.deactivate_holders(device_paths)
-    blkdeactivate_opts = [ '--dmoptions',  'retry', '--errors',
-                           '--lvmoptions', 'retry', '--umount' ]
-
-    # check three times
-    3.times do
-      holders = device_holders(device_paths)
-      return if holders.empty?
-
-      holders.each do |holder|
-        # blkdeactivate may have made another holder disappear, so check
-        next unless File.blockdev?(holder)
-        run('blkdeactivate', *blkdeactivate_opts, holder)
-      end
-
-      run('udevadm', 'settle')
-    end
-
-    remaining_holders = device_holders(device_paths)
-    return if remaining_holders.empty?
-
-    raise "Could not deactivate holders of #{ device_paths.join(', ') }: " \
-          "#{ remaining_holders.join(', ') }"
-  end
-
-  def deactivate_all_swaps
-    run('swapoff', '--all')
-    raise 'some swap device is still active' \
-      unless File.readlines('/proc/swaps').length == 1
-  end
-
-  def self.reset_disk(device)
-    device_path = "/dev/#{ device }"
-
-    puts "Resetting disk device #{ device_path }..."
-
-    run('udevadm', 'settle')
-
-    old_partition_paths \
-      = get_partitions(device).map { |partition| "/dev/#{ partition }" }
-
-    old_device_paths = [ device_path, *old_partition_paths ]
-
-    # disable all swaps, the Puavo OS installer should not need any
-    deactivate_all_swaps()
-
-    # free the devices (and subdevices)
-    deactivate_holders(old_device_paths)
-
-    run('wipefs', '--all', '--force', '--lock=yes', *old_partition_paths) \
-      unless old_partition_paths.empty?
-
-    # Erase all signatures and both GPT headers from the device.
-    run('sgdisk', '--zap-all', device_path)
-    run('wipefs', '--all', '--lock=yes', device_path)
-
-    reread_partition_table(device)
-
-    puts 'Reset done.'
+    DiskCleaner::reset_disk(fs_conf['device'])
   end
 
   def self.setup_device(device, have_swap, gpt_spec)
