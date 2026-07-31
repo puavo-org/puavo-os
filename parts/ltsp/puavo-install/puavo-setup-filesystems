@@ -473,9 +473,16 @@ module DiskHandler
       run('vgchange', '-a', 'n', volume_group)
     end
 
+    # XXX blkdeactivate
+
+    old_partitions = get_partitions(device)
+    old_partitions.map { |p| "/dev/#{ p }" }.each do |partdev|
+      run('wipefs', '--all', '--force', '--lock=yes', partdev)
+    end
+
     # Erase all signatures and both GPT headers from the device.
-    run('wipefs', '--all', device_path)
     run('sgdisk', '--zap-all', device_path)
+    run('wipefs', '--all', '--force', '--lock=yes', device_path)
 
     reread_partition_table(device)
 
