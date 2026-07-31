@@ -49,7 +49,7 @@ module PuavoFacts
 		'puavo_hostname'    => 'hostname',
 		'puavo_hosttype'    => 'hosttype',
 		'puavo_topdomain'   => 'topdomain',
-	      }
+              }
 
   def self.all
     Hash[ FactPaths.map { |name, path| [ name, get(name) ] } ]
@@ -428,24 +428,6 @@ module DiskHandler
     end
   end
 
-  def self.swap_partitions_on_disk(device)
-    # Active swap devices that live on the given disk.
-    IO.readlines('/proc/swaps').drop(1).filter_map do |line|
-      swap_device = line.split.first
-      swap_device if swap_device.start_with?("/dev/#{ device }")
-    end
-  end
-
-  def self.volume_groups_on_disk(device)
-    # Volume groups that have a physical volume on the given disk.
-    command = [ 'pvs', '--noheadings', '--separator', ',',
-                '-o', 'pv_name,vg_name' ]
-    IO.popen(command).readlines.filter_map do |line|
-      physical_volume, volume_group = line.strip.split(',', 2)
-      volume_group if physical_volume&.start_with?("/dev/#{ device }")
-    end.uniq
-  end
-
   def self.reread_partition_table(device)
     device_path = "/dev/#{ device }"
 
@@ -464,29 +446,73 @@ module DiskHandler
     reset_disk(fs_conf['device'])
   end
 
+  def self.device_holders_for_dev(device_path)
+    stat = File.stat(device_path)
+    raise "'#{ device_path }' is not a block device" unless stat.blockdev?
+    holders_dir =
+      "/sys/dev/block/#{ stat.rdev_major }:#{ stat.rdev_minor }/holders"
+    Dir.children(holders_dir).map { |kernel_name| "/dev/#{ kernel_name }" }
+  end
+
+  def self.device_holders(device_paths)
+    device_paths.map { |dev| device_holders_for_dev(dev) }.uniq
+  end
+
+  def self.deactivate_holders(device_paths)
+    blkdeactivate_opts = [ '--dmoptions',  'retry', '--errors',
+                           '--lvmoptions', 'retry', '--umount' ]
+
+    # check three times
+    3.times do
+      holders = device_holders(device_paths)
+      return if holders.empty?
+
+      holders.each do |holder|
+        # blkdeactivate may have made another holder disappear, so check
+        next unless File.blockdev?(holder)
+        run('blkdeactivate', *blkdeactivate_opts, holder)
+      end
+
+      run('udevadm', 'settle')
+    end
+
+    remaining_holders = device_holders(device_paths)
+    return if remaining_holders.empty?
+
+    raise "Could not deactivate holders of #{ device_paths.join(', ') }: " \
+          "#{ remaining_holders.join(', ') }"
+  end
+
+  def deactivate_all_swaps
+    run('swapoff', '--all')
+    raise 'some swap device is still active' \
+      unless File.readlines('/proc/swaps').length == 1
+  end
+
   def self.reset_disk(device)
     device_path = "/dev/#{ device }"
 
     puts "Resetting disk device #{ device_path }..."
 
-    # Release active swap partitions on the device.
-    swap_partitions_on_disk(device).each do |swap_partition|
-      run('swapoff', swap_partition)
-    end
-    volume_groups_on_disk(device).each do |volume_group|
-      run('vgchange', '-a', 'n', volume_group)
-    end
+    run('udevadm', 'settle')
 
-    # XXX blkdeactivate
+    old_partition_paths \
+      = get_partitions(device).map { |partition| "/dev/#{ partition }" }
 
-    old_partitions = get_partitions(device)
-    old_partitions.map { |p| "/dev/#{ p }" }.each do |partdev|
-      run('wipefs', '--all', '--force', '--lock=yes', partdev)
-    end
+    old_device_paths = [ device_path, *old_partition_paths ]
+
+    # disable all swaps, the Puavo OS installer should not need any
+    deactivate_all_swaps()
+
+    # free the devices (and subdevices)
+    deactivate_holders(old_device_paths)
+
+    run('wipefs', '--all', '--force', '--lock=yes', *old_partition_paths) \
+      unless old_partition_paths.empty?
 
     # Erase all signatures and both GPT headers from the device.
     run('sgdisk', '--zap-all', device_path)
-    run('wipefs', '--all', '--force', '--lock=yes', device_path)
+    run('wipefs', '--all', '--lock=yes', device_path)
 
     reread_partition_table(device)
 
