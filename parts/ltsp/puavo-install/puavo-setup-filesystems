@@ -561,17 +561,6 @@ module DiskHandler
     end
   end
 
-  def self.get_gpt_partitions_by_parttype(device, parttype)
-    cmd = [ 'lsblk', '-l', '-n', '-oPARTTYPE,NAME', "/dev/#{ device }" ]
-    IO.popen(cmd).readlines.map do |line|
-      line.strip.split(' ')
-    end.select do |lineparts|
-      lineparts.length > 1 && lineparts[0].downcase == parttype.downcase
-    end.map do |lineparts|
-      lineparts[1..].join(' ')
-    end
-  end
-
   def self.get_partition_by_partnum(device, partnum)
     partitions = get_partitions(device)
 
