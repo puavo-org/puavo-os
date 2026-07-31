@@ -175,12 +175,12 @@ class LuksPartitionHandler
     Tempfile.create('puavo-luks-control-key-') do |control_key_file|
       control_key_file.write(control_key)
       control_key_file.flush
-      File.chmod(0600, control_key_file.path) rescue nil
+      File.chmod(0600, control_key_file.path)
 
       Tempfile.create('puavo-luks-new-key-') do |new_key_file|
         new_key_file.write(new_key)
         new_key_file.flush
-        File.chmod(0600, new_key_file.path) rescue nil
+        File.chmod(0600, new_key_file.path)
 
         run('cryptsetup', 'luksAddKey',
             "--key-file=#{ control_key_file.path }",
@@ -224,7 +224,7 @@ class BootVaultBuilder
   def create_image(build_directory)
     image_path = File.join(build_directory, @image_name)
     run('truncate', '--size', @size, image_path)
-    File.chmod(0600, image_path) rescue nil
+    File.chmod(0600, image_path)
     image_path
   end
 
@@ -252,7 +252,7 @@ class BootVaultBuilder
 
           control_key_property = File.join(mountpoint, CONTROL_KEY_PROPERTY)
           File.write(control_key_property, @control_key)
-          File.chmod(0600, control_key_property) rescue nil
+          File.chmod(0600, control_key_property)
 
           version_property = File.join(mountpoint, VERSION_PROPERTY)
           File.write(version_property, VERSION.to_s)
@@ -260,12 +260,12 @@ class BootVaultBuilder
           # Copy all device keys (Secure Boot keys, TPM keys, etc.) into the vault
           copy_device_keys(mountpoint, device_keys_temporary_directory)
         ensure
-          run('umount', mountpoint) rescue nil
+          run('umount', mountpoint)
         end
       end
     ensure
-      run('cryptsetup', 'close', @luks_name) rescue nil
-      run('losetup', '--detach', loop_device) rescue nil
+      run('cryptsetup', 'close', @luks_name)
+      run('losetup', '--detach', loop_device)
     end
   end
 
@@ -284,7 +284,7 @@ class BootVaultBuilder
           File.join(mountpoint, "EFI", "puavo", @image_name))
         run('sync')
       ensure
-        run('umount', mountpoint) rescue nil
+        run('umount', mountpoint)
       end
     end
   end
@@ -435,8 +435,6 @@ module DiskHandler
       swap_device = line.split.first
       swap_device if swap_device.start_with?("/dev/#{ device }")
     end
-  rescue Errno::ENOENT
-    []
   end
 
   def self.volume_groups_on_disk(device)
@@ -447,8 +445,6 @@ module DiskHandler
       physical_volume, volume_group = line.strip.split(',', 2)
       volume_group if physical_volume&.start_with?("/dev/#{ device }")
     end.uniq
-  rescue StandardError
-    []
   end
 
   def self.reread_partition_table(device)
