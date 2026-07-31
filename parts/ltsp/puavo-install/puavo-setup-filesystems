@@ -361,7 +361,7 @@ module DiskHandler
 
   EncryptionDeviceName = "puavo-cryptroot"
 
-  def self.cleanup_disk_environment(hosttype, vgname, close_luks_device)
+  def self.cleanup_disk_environment(hosttype, vgname)
     # Unmount filesystems, if those are mounted.
     btrfs_subvolumes(hosttype).each do |name, attrs|
       run('umount', '-f', "/#{ name }", { :err => '/dev/null' }) rescue true
@@ -403,13 +403,8 @@ module DiskHandler
         { :close_others => :true, :err => '/dev/null' }) \
       rescue true
 
-    # If there's a LUKS based installation, we should be able to close the
-    # LUKS device as the nested filesystems should be unmounted by now.
-    if close_luks_device then
-      run('cryptsetup', 'close', EncryptionDeviceName,
-          { :err => '/dev/null' }) \
-          rescue true
-    end
+    run('cryptsetup', 'close', EncryptionDeviceName, { :err => '/dev/null' }) \
+      rescue true
   end
 
   def self.maybe_wipe_current_raid_setups()
@@ -899,11 +894,6 @@ module DiskHandler
   end
 
   def self.puavo_filesystems(fs_conf, vgname)
-    # this is needed again, because gdisk may activate kernel with the
-    # new partitions, with lvm activated as well (probably only in the case
-    # where the partitioning is the same)
-    cleanup_disk_environment(fs_conf['hosttype'], vgname, false)
-
     install_target_dev = fs_conf['install_target']
 
     # clean up possible confusing mess from the partition
@@ -1472,7 +1462,7 @@ end
 vgname = (hosttype == 'diskinstaller') ? 'puavoinstaller' : \
          (hosttype == 'exam')          ? 'puavoexam'      : 'puavo'
 
-DiskHandler::cleanup_disk_environment(hosttype, vgname, true)
+DiskHandler::cleanup_disk_environment(hosttype, vgname)
 
 raid_setup_done = false
 if hosttype == 'bootserver' then
