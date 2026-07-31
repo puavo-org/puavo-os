@@ -409,7 +409,7 @@ module DiskHandler
                  '--level=mirror',
                  '--raid-devices=2',
                  *spare_args,
-                 "/dev/#{ dev }3")
+                 *(disks_for_mirroring.map { |dev| "/dev/#{ dev }3" }))
 
     puts ''
 
