@@ -14,6 +14,7 @@ require 'tmpdir'
 
 GPT_PARTTYPE_EFI   = 'c12a7328-f81f-11d2-ba4b-00a0c93ec93b'
 GPT_PARTTYPE_LINUX = '4f68bce3-e8cd-4db1-96e7-fbcaf984b709'
+GPT_PARTTYPE_RAID  = 'a19d880f-05fc-4d3b-a006-743f0f84911e'
 GPT_PARTTYPE_SWAP  = '0657fd6d-a4ab-43c4-84e5-0933c84b4f4f'
 
 GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C = 'Puavo_Installed_Windows_C'
@@ -333,8 +334,7 @@ module DiskCleaner
     raise "'#{ device_path }' is not a block device" unless stat.blockdev?
     holders_dir =
       "/sys/dev/block/#{ stat.rdev_major }:#{ stat.rdev_minor }/holders"
-    Dir.children(holders_dir).map { |kernel_name| "/dev/#{ kernel_name }" } \
-       .flatten
+    Dir.children(holders_dir).map { |kernel_name| "/dev/#{ kernel_name }" }
   end
 
   def self.device_holders(device_paths)
@@ -373,10 +373,15 @@ module DiskCleaner
 
     DiskHandler::reread_partition_table(device)
 
+    remaining_partitions = DiskHandler::get_partitions(device)
+    raise "Partitions remain on '#{ device_path }' after reset: " \
+          "#{ remaining_partitions.join(', ') }" \
+      unless remaining_partitions.empty?
+
     puts 'Reset done.'
   end
 
-  def check_no_mountpoints(device_paths)
+  def self.check_no_mountpoints(device_paths)
     mountpoints = mountpoints_for_devices(device_paths)
     return if mountpoints.empty?
     raise "Devices are still mounted at: #{ mountpoints.join(', ') }"
@@ -521,14 +526,15 @@ module DiskHandler
                    ? [ "--spare-devices=#{ disks_for_mirroring.count - 2 }" ] \
                    : []
 
-    run('mdadm', '--create',
-                 '--run',
-                 '--verbose',
-                 '/dev/md0',
-                 '--level=mirror',
-                 '--raid-devices=2',
-                 *spare_args,
-                 *(disks_for_mirroring.map { |dev| "/dev/#{ dev }3" }))
+    raid_members = disks_for_mirroring.map do |device|
+                     partition = wait_one_gpt_partition_by_parttype(
+                       device, GPT_PARTTYPE_LINUX_RAID, try_count: 30)
+                     "/dev/#{ partition }"
+                   end
+
+    run('mdadm', '--create', '--run', '--verbose', '/dev/md0',
+                 '--level=mirror', '--raid-devices=2', *spare_args,
+                 *raid_members)
 
     puts ''
 
@@ -566,15 +572,15 @@ module DiskHandler
     DiskCleaner::reset_disk(fs_conf['device'])
   end
 
-  def self.setup_device(device, have_swap, gpt_spec)
+  def self.setup_device(device, gpt_spec, create_efi:, create_swap:)
     IO.popen([ 'gdisk', "/dev/#{ device }"], 'w') do |f|
       f.print(gpt_spec)
     end
 
     reread_partition_table(device)
 
-    create_efi_filesystem(device)
-    clear_swap_partition(device) if have_swap
+    create_efi_filesystem(device) if create_efi
+    clear_swap_partition(device)  if create_swap
   end
 
   def self.gpt_format(partitioning_type, filesystems, windows_size=nil)
@@ -631,17 +637,22 @@ module DiskHandler
   def self.raid_partition(device)
     # we only support bootserver hosttype with RAID
     fs_conf = DiskHandler::Filesystems['bootserver']
-    setup_device(device, true, gpt_format(:raid_boot, fs_conf))
+    setup_device(device, gpt_format(:raid_boot, fs_conf),
+                 create_efi: true, create_swap: true)
   end
 
   def self.get_partitions(device)
-    cmd = [ 'lsblk', '-l', '-n', '-oTYPE,NAME', "/dev/#{ device }" ]
-    IO.popen(cmd).readlines.map do |line|
-      line.strip.split(' ')
-    end.select do |lineparts|
-      lineparts.length > 1 && lineparts[0].downcase == 'part'
-    end.map do |lineparts|
-      lineparts[1..].join(' ')
+    device_path = "/dev/#{ device }"
+
+    stdout, stderr, status = Open3.capture3(
+      'lsblk', '--list', '--noheadings', '--output', 'TYPE,NAME', device_path,
+    )
+    raise "Could not list partitions on '#{ device_path }': #{ stderr.strip }" \
+      unless status.success?
+
+    stdout.lines.filter_map do |line|
+      type, name = line.strip.split(/\s+/, 2)
+      name if type&.casecmp?('part')
     end
   end
 
@@ -838,8 +849,11 @@ module DiskHandler
       gpt_spec = gpt_format(partitioning_scheme, fs_conf['filesystems'])
     end
 
-    have_swap = fs_conf['filesystems'].has_key?('.SWAP')
-    setup_device(fs_conf['device'], have_swap, gpt_spec)
+    create_efi  = !raid_setup_done && fs_conf['filesystems'].has_key?('.EFI')
+    create_swap = !raid_setup_done && fs_conf['filesystems'].has_key?('.SWAP')
+    setup_device(fs_conf['device'], gpt_spec,
+                 create_efi:  create_efi,
+                 create_swap: create_swap)
     fs_conf['puavo_partition'] = get_puavo_partition(fs_conf['device'])
   end
 
