@@ -456,6 +456,10 @@ module DiskHandler
     raise "Could not re-read the partition table on '#{ device_path }'"
   end
 
+  def self.reset_device(fs_conf)
+    reset_disk(fs_conf['device'])
+  end
+
   def self.reset_disk(device)
     device_path = "/dev/#{ device }"
 
@@ -479,8 +483,6 @@ module DiskHandler
   end
 
   def self.setup_device(device, have_swap, gpt_spec)
-    reset_disk(device)
-
     IO.popen([ 'gdisk', "/dev/#{ device }"], 'w') do |f|
       f.print(gpt_spec)
     end
@@ -688,7 +690,7 @@ module DiskHandler
     fs_conf = conf.clone
 
     Dir.mktmpdir('puavo-device-keys-') do |device_keys_temporary_directory|
-      fs_setup_phases = []
+      fs_setup_phases = [ :reset_device ]
       fs_setup_phases += [ :wipe_device ] if conf['wipe']
       fs_setup_phases += [ :create_partitions ]
 
@@ -815,8 +817,6 @@ module DiskHandler
   end
 
   def self.wipe(device)
-    reset_disk(device)
-
     run('nwipe', '--autonuke',
                  '--method=quick',
                  '--nowait',
