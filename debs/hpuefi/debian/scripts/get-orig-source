@@ -1,0 +1,38 @@
+#!/bin/sh
+
+set -eu
+
+upstream_version=$(dpkg-parsechangelog -S Version \
+  | sed -r -n 's/^(.*)-.*$/\1/p')
+orig_tarball="../hpuefi_${upstream_version}.orig.tar.gz"
+
+upstream_pack_url="https://ftp.ext.hp.com/pub/softpaq/sp171001-171500/sp171387.tgz"
+upstream_pack_sha384="daa344c6e9cdfb88d0ac0f99719c017d7b2dcda0356363716db711fa31ce3408e427292761bff64d15078c808785085c"
+
+if [ ! -e "${orig_tarball}" ]; then
+  temporary_directory=$(mktemp -d)
+  trap 'rm -rf "${temporary_directory}"' EXIT
+
+  upstream_pack="${temporary_directory}/upstream-pack.tgz"
+
+  echo "Downloading the HP pack..."
+  curl -fsSL ${PUAVO_CACHE_PROXY:+-x "${PUAVO_CACHE_PROXY}"} \
+    -o "${upstream_pack}" "${upstream_pack_url}"
+  echo "${upstream_pack_sha384}  ${upstream_pack}" | sha384sum --check -
+
+  # The pack holds another pack that has the module source.
+  tar --no-same-owner -zxf "${upstream_pack}" \
+    -C "${temporary_directory}"
+  tar --no-same-owner -zxf \
+    "${temporary_directory}/non-rpms/hpuefi-mod-${upstream_version}.tgz" \
+    -C "${temporary_directory}"
+
+  echo "Creating orig tarball..."
+  mv "${temporary_directory}/hpuefi-mod-${upstream_version}" \
+     "${temporary_directory}/hpuefi-${upstream_version}"
+  tar -czf "${orig_tarball}" \
+    -C "${temporary_directory}" \
+    "hpuefi-${upstream_version}"
+fi
+
+tar -zxf "${orig_tarball}" --strip-components=1

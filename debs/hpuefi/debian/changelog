@@ -1,0 +1,7 @@
+hpuefi (3.07-1+puavo1) trixie; urgency=medium
+
+  * Initial Puavo OS packaging of the HP UEFI kernel module.
+  * Ships the module source for DKMS so that the module is
+    compiled and signed for each installed kernel.
+
+ -- Puavo Org <dev@opinsys.fi>  Fri, 31 Jul 2026 12:00:00 +0000

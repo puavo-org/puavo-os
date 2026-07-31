@@ -20,8 +20,9 @@ else
   _pkgs_extraports := collabora
   _pkgs_parts      := puavo-ds puavo-os
   _pkgs_ports      := cups cups-filters facter gnome-control-center \
-                      gnome-shell gtk+3.0 gtk4 hooktftp libpam-ccreds \
-                      linux-default linux-modern mutter veyon wsmancli
+                      gnome-shell gtk+3.0 gtk4 hooktftp hpuefi \
+                      libpam-ccreds linux-default linux-modern mutter \
+                      veyon wsmancli
 
   # sblim-sfcc openwsman are dependencies for wsmancli
   _pkgs_ports_builddeps := sblim-sfcc openwsman

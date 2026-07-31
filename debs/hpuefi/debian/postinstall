@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+
+kernel_version=$1
+script_directory=$(cd "$(dirname "$0")" && pwd)
+
+# The BIOS tools look for mkdevhpuefi next to the module.
+install -D -m 755 "${script_directory}/mkdevhpuefi" \
+  "/lib/modules/${kernel_version}/kernel/drivers/hpuefi/mkdevhpuefi"

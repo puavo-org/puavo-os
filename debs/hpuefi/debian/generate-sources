@@ -1,0 +1,35 @@
+#!/bin/sh
+set -eu
+
+# The module ships as templates with a few lines left open, because their
+# form depends on the kernel the module is built for. Decide them from
+# the headers of the kernel being built against.
+
+kernel_version=$1
+
+# Debian keeps the generic headers apart from the architecture ones.
+headers="/lib/modules/${kernel_version}/source/include/linux"
+
+# Without this the checks below would quietly report every feature as
+# missing and the generated sources would be for an old kernel.
+if [ ! -f "${headers}/mm.h" ]; then
+  echo "no kernel headers for ${kernel_version}" >&2
+  exit 1
+fi
+
+if grep -q vm_flags_set "${headers}/mm.h"; then
+  vm_flags_locked='vm_flags_set(vma, VM_LOCKED)'
+else
+  vm_flags_locked='vma->vm_flags |= VM_LOCKED'
+fi
+
+if grep -q memdesc_flags_t "${headers}/mm_types.h"; then
+  page_flags='flags.f'
+else
+  page_flags='flags'
+fi
+
+sed -e "s/HP_KVER_VM_FLAGS_LOCKED/${vm_flags_locked}/g" \
+  hpuefi.c-template > hpuefi.c
+sed -e "s/HP_KVER_PAGE_FLAGS/${page_flags}/g" \
+  hpuefi.h-template > hpuefi.h
