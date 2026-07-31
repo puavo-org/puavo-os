@@ -26,6 +26,8 @@ class kernels::dkms {
     case $dkms_module {
       /^broadcom-sta\//: { $dkms_module_package = 'broadcom-sta-dkms' }
 
+      /^hpuefi\//: { $dkms_module_package = 'hpuefi-dkms' }
+
       /^nvidia-current\//: {
         $dkms_module_package = 'nvidia-kernel-dkms'
       }

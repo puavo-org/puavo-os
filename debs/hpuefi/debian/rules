@@ -1,0 +1,28 @@
+#!/usr/bin/make -f
+
+module_name = hpuefi
+module_version = 3.07
+dkms_source_directory = \
+  debian/hpuefi-dkms/usr/src/$(module_name)-$(module_version)
+
+%:
+	dh $@ --with dkms
+
+override_dh_auto_configure:
+	# There is nothing to configure
+
+override_dh_auto_build:
+	# The sources are generated per kernel at module build time
+
+override_dh_auto_install:
+	install -D -m 644 hpuefi.c-template \
+		$(dkms_source_directory)/hpuefi.c-template
+	install -m 644 hpuefi.h-template $(dkms_source_directory)/
+	install -m 644 COPYING $(dkms_source_directory)/
+	install -m 644 debian/Kbuild $(dkms_source_directory)/Makefile
+	install -m 755 mkdevhpuefi $(dkms_source_directory)/
+	install -m 755 debian/generate-sources $(dkms_source_directory)/
+	install -m 755 debian/postinstall $(dkms_source_directory)/
+
+override_dh_auto_clean:
+	# Nothing is generated at package build time

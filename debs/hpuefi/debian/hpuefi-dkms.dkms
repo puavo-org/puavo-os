@@ -1,0 +1,7 @@
+PACKAGE_NAME="hpuefi"
+PACKAGE_VERSION="3.07"
+BUILT_MODULE_NAME[0]="hpuefi"
+DEST_MODULE_LOCATION[0]="/extra"
+PRE_BUILD="generate-sources $kernelver"
+POST_INSTALL="postinstall $kernelver"
+AUTOINSTALL="yes"

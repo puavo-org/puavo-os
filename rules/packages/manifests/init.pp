@@ -848,6 +848,7 @@ class packages {
   }
 
   $broadcom_sta_dkms_module          = 'broadcom-sta/6.30.223.271'
+  $hpuefi_module                     = 'hpuefi/3.07'
   $nvidia_dkms_535_module            = 'nvidia-current/550.163.01'
   $puavo_command_line_signer_module  = 'puavo-command-line-signer/1.0'
   $r8168_module                      = 'r8168/8.051.02'
@@ -857,6 +858,7 @@ class packages {
     $::puavoimage_class ? {
       'exam'  => [ $broadcom_sta_dkms_module ],
       default => [ $broadcom_sta_dkms_module
+                 , $hpuefi_module
                  , $nvidia_dkms_535_module
                  , $puavo_command_line_signer_module
                  , $virtualbox_module ]
@@ -870,7 +872,8 @@ class packages {
       version      => '6.12.95+deb13.1-amd64';
 
     'modern':
-      dkms_modules   => [ $puavo_command_line_signer_module ],
+      dkms_modules   => [ $hpuefi_module
+                        , $puavo_command_line_signer_module ],
       extra_packages => [ 'linux-modules-7.0.13+deb13-amd64' ],
       package_name   => 'linux-binary-unsigned-7.0.13+deb13-amd64',
       version        => '7.0.13+deb13-amd64';
@@ -882,6 +885,7 @@ class packages {
       tag => [ 'tag_debian_desktop', 'tag_debian_desktop_nonfree', ];
 
     [ 'broadcom-sta-dkms'
+    , 'hpuefi-dkms'
     , 'intel-media-va-driver-non-free' # the free version seems to cause crashes in bullseye
     , 'nvidia-kernel-dkms'
     , 'r8168-dkms'

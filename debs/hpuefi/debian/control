@@ -1,0 +1,23 @@
+Source: hpuefi
+Section: kernel
+Priority: optional
+Maintainer: Puavo Org <dev@opinsys.fi>
+Build-Depends:
+ ca-certificates,
+ curl,
+ debhelper-compat (= 13),
+ dh-dkms,
+Standards-Version: 4.7.0
+
+Package: hpuefi-dkms
+Architecture: all
+Depends:
+ dkms,
+ ${misc:Depends},
+Description: HP UEFI kernel module source for DKMS
+ The hpuefi kernel module gives userspace access to the HP
+ BIOS through UEFI runtime services. The HP BIOS
+ configuration and firmware update tools require it.
+ .
+ This package ships the module source for DKMS, which
+ compiles the module for each installed kernel.
