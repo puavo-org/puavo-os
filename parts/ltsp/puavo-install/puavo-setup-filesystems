@@ -463,19 +463,23 @@ module DiskHandler
   def self.reset_disk(device)
     device_path = "/dev/#{ device }"
 
+    puts "Resetting disk device #{ device_path }..."
+
     # Release active swap partitions on the device.
     swap_partitions_on_disk(device).each do |swap_partition|
-      run('swapoff', swap_partition, { :err => '/dev/null' })
+      run('swapoff', swap_partition)
     end
     volume_groups_on_disk(device).each do |volume_group|
-      run('vgchange', '-a', 'n', volume_group, { :err => '/dev/null' })
+      run('vgchange', '-a', 'n', volume_group)
     end
 
     # Erase all signatures and both GPT headers from the device.
-    run('wipefs', '--all', device_path, { :err => '/dev/null' })
-    run('sgdisk', '--zap-all', device_path, { :err => '/dev/null' })
+    run('wipefs', '--all', device_path)
+    run('sgdisk', '--zap-all', device_path)
 
     reread_partition_table(device)
+
+    puts 'Reset done.'
   end
 
   def self.setup_device(device, have_swap, gpt_spec)
