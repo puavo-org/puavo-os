@@ -497,9 +497,6 @@ module DiskHandler
       raid_partition(disk)
     end
 
-    # gdisk may activate a partial old RAID setup (!?!)
-    maybe_wipe_current_raid_setups()
-
     spare_args = (disks_for_mirroring.count > 2) \
                    ? [ "--spare-devices=#{ disks_for_mirroring.count - 2 }" ] \
                    : []
