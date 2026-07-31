@@ -465,17 +465,15 @@ module DiskHandler
 
     # Release active swap partitions on the device.
     swap_partitions_on_disk(device).each do |swap_partition|
-      run('swapoff', swap_partition, { :err => '/dev/null' }) rescue true
+      run('swapoff', swap_partition, { :err => '/dev/null' })
     end
     volume_groups_on_disk(device).each do |volume_group|
-      run('vgchange', '-a', 'n', volume_group, { :err => '/dev/null' }) \
-        rescue true
+      run('vgchange', '-a', 'n', volume_group, { :err => '/dev/null' })
     end
 
     # Erase all signatures and both GPT headers from the device.
-    run('wipefs', '--all', device_path, { :err => '/dev/null' }) rescue true
-    run('sgdisk', '--zap-all', device_path, { :err => '/dev/null' }) \
-      rescue true
+    run('wipefs', '--all', device_path, { :err => '/dev/null' })
+    run('sgdisk', '--zap-all', device_path, { :err => '/dev/null' })
 
     reread_partition_table(device)
   end
