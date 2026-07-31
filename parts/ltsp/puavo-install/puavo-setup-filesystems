@@ -815,6 +815,8 @@ module DiskHandler
   end
 
   def self.wipe(device)
+    reset_disk(device)
+
     run('nwipe', '--autonuke',
                  '--method=quick',
                  '--nowait',
