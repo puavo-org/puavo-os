@@ -394,9 +394,8 @@ module DiskHandler
       end
     end
 
-    disks_for_mirroring.each do |disk|
-      raid_partition(disk)
-    end
+    disks_for_mirroring.each { |disk| reset_disk(disk)     }
+    disks_for_mirroring.each { |disk| raid_partition(disk) }
 
     spare_args = (disks_for_mirroring.count > 2) \
                    ? [ "--spare-devices=#{ disks_for_mirroring.count - 2 }" ] \
