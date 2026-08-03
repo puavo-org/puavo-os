@@ -20,6 +20,17 @@ def _main() -> int:
             # We don't need any special feature sets.
             defines["featureset"] = [{"name": "none"}]
 
+            # We only ship the default flavour. Dropping the extra
+            # cloud and realtime flavours cuts the kernel build time.
+            if "flavour" in defines:
+                default_flavours = [
+                    flavour
+                    for flavour in defines["flavour"]
+                    if flavour.get("defs", {}).get("is_default")
+                ]
+                if default_flavours:
+                    defines["flavour"] = default_flavours
+
             with open(defines_filepath, "w", encoding="utf-8") as defines_file:
                 toml.dump(defines, defines_file)
 
