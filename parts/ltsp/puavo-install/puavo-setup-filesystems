@@ -1044,6 +1044,7 @@ module QueryDiskInfo
   def self.list_disks_for_mirroring()
     # return a list of devices if there are multiple disks with the same size,
     # otherwise return nil
+    current_system_devices = get_current_system_devices()
 
     devices_by_size = {}
     IO.readlines('/proc/partitions').each do |line|
@@ -1051,6 +1052,7 @@ module QueryDiskInfo
       next unless disk_size && disk_name
       next unless disk_name.match(disk_device_regexp)
       next if disk_name.match(/\Amd[0-9]+\z/)       # no raid devices
+      next if current_system_devices.include?(disk_name)
       (devices_by_size[disk_size.to_i] ||= []) << "#{ disk_name }"
     end
 
