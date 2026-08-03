@@ -422,7 +422,7 @@ module DiskCleaner
       unless old_partition_paths.empty?
 
     # Erase all signatures and both GPT headers from the device.
-    run('sgdisk', '--zap-all', device_path)
+    run('sgdisk', '--zap-all', device_path) rescue nil # may fail but redundant
     run('wipefs', '--all', '--lock=yes', device_path)
 
     DiskHandler::reread_partition_table(device)
