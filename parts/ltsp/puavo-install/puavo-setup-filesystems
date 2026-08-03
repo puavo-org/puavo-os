@@ -47,17 +47,17 @@ module PuavoFacts
   Puavodir = '/etc/puavo'
 
   FactPaths = {
-		'kerberos_master'   => 'kerberos/master',
-		'kerberos_realm'    => 'kerberos/realm',
-		'kerberos_toprealm' => 'kerberos/toprealm',
-		'ldap_base'         => 'ldap/base',
-		'ldap_binddn'       => 'ldap/dn',
-		'ldap_bindpw'       => 'ldap/password',
-		'ldap_master'       => 'ldap/master',
-		'puavo_domain'      => 'domain',
-		'puavo_hostname'    => 'hostname',
-		'puavo_hosttype'    => 'hosttype',
-		'puavo_topdomain'   => 'topdomain',
+                'kerberos_master'   => 'kerberos/master',
+                'kerberos_realm'    => 'kerberos/realm',
+                'kerberos_toprealm' => 'kerberos/toprealm',
+                'ldap_base'         => 'ldap/base',
+                'ldap_binddn'       => 'ldap/dn',
+                'ldap_bindpw'       => 'ldap/password',
+                'ldap_master'       => 'ldap/master',
+                'puavo_domain'      => 'domain',
+                'puavo_hostname'    => 'hostname',
+                'puavo_hosttype'    => 'hosttype',
+                'puavo_topdomain'   => 'topdomain',
               }
 
   def self.all
@@ -1121,7 +1121,7 @@ module QueryDiskInfo
 
     puts %Q{\nYou are going to install to device "/dev/#{ device }":}
     UI::colormsg("IF YOU PROCEED, ALL DATA ON THAT DEVICE IS DESTROYED!\n",
-		 HighLine::RED)
+                 HighLine::RED)
 
     prompt = %q{Are you sure you want to proceed (write "yes" if this is okay?)}
 
