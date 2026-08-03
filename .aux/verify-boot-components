@@ -33,6 +33,15 @@ class Configuration:
         self.manifest_path = manifest_path
 
 
+class SecureBootGroup(BaseModel):
+    """A set of components verified against a single Secure Boot certificate."""
+
+    # Certificate path relative to the key directory
+    certificate: str
+    # Component paths (relative to rootfs) signed with that certificate
+    components: list[str]
+
+
 class Manifest(BaseModel):
     """
     Boot manifest describing expected components and key patterns.
@@ -45,12 +54,20 @@ class Manifest(BaseModel):
     patterns: list[str]
     # Exact list of expected boot component paths in rootfs (must match files found by patterns)
     expected_components: list[str]
-    # Glob patterns to find Secure Boot certificates in key directory
-    secure_boot_certificate_patterns: list[str]
+    # Secure Boot signature groups: each names one certificate and the components verified against it
+    secure_boot_signatures: list[SecureBootGroup]
     # Glob patterns to find TPM PCR public keys in key directory
     tpm_pcr_public_key_patterns: list[str]
     # Key filenames (in key directory) that should be installed in rootfs
     installed_keys: list[str]
+
+    def secure_boot_signed_components(self) -> list[str]:
+        """The expected components that carry a Secure Boot signature."""
+        return [
+            component
+            for component in self.expected_components
+            if component.endswith(".efi") or component.endswith(".efi.signed")
+        ]
 
     def list_files(self, rootfs: str) -> list[str]:
         """List all files in rootfs matching the manifest patterns."""
@@ -59,16 +76,6 @@ class Manifest(BaseModel):
             for path in Path(rootfs).glob(pattern):
                 files.append(str(path))
         return sorted(files)
-
-    def find_secure_boot_certificates(self, key_directory: str) -> list[Path]:
-        """Find Secure Boot certificates in the key directory."""
-        key_directory_path = Path(key_directory)
-        certificates = []
-        for pattern in self.secure_boot_certificate_patterns:
-            certificates.extend(key_directory_path.glob(pattern))
-        if not certificates:
-            panic(f"no secure boot certificates found in '{key_directory}'", code=2)
-        return sorted(certificates)
 
     def find_tpm_pcr_public_keys(self, key_directory: str) -> list[Path]:
         """Find TPM PCR public keys in the key directory."""
@@ -337,26 +344,21 @@ def verify_boot_component_files(
 def verify_secure_boot_keys_and_signatures(
     configuration: Configuration, manifest: Manifest
 ) -> None:
-    """Verify all EFI binaries are signed with the expected Secure Boot certificates."""
+    """Verify each EFI binary is signed with the certificate the manifest declares for it."""
     print("verifying Secure Boot keys and signatures")
 
-    certificate_paths = manifest.find_secure_boot_certificates(
-        configuration.key_directory
-    )
-    for certificate_path in certificate_paths:
-        print(f"using certificate: {certificate_path}")
+    for group in manifest.secure_boot_signatures:
+        certificate_path = Path(configuration.key_directory) / group.certificate
+        if not certificate_path.is_file():
+            panic(f"certificate '{group.certificate}' not found in key directory", code=2)
+        print(f"using certificate: {group.certificate}")
 
-    for component in manifest.expected_components:
-        if not component.endswith(".efi") and not component.endswith(".efi.signed"):
-            continue
+        for component in group.components:
+            efi_path = Path(configuration.rootfs) / component
+            print(f"verifying signature: {component}")
 
-        efi_path = Path(configuration.rootfs) / component
-        print(f"verifying signature: {component}")
-
-        if not verify_efi_signature(efi_path, certificate_paths):
-            panic(f"signature verification failed for '{component}'")
-
-        print("  valid")
+            if not verify_efi_signature(efi_path, [certificate_path]):
+                panic(f"signature verification failed for '{component}'")
 
 
 def verify_tpm_keys_and_signatures(
