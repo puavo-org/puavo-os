@@ -28,6 +28,13 @@ def run(*cmd)
   system(*cmd) or raise "Error running command: '#{ cmd.inspect }'"
 end
 
+def run_and_get_lines(*cmd)
+  stdout, stderr, status = Open3.capture3(*cmd)
+  raise "Command failed: #{ cmd.join(' ') }: #{ stderr.strip }" \
+    unless status.success?
+  stdout.lines(chomp: true)
+end
+
 def tpm2_available?
   system(
     'grep', '-q', '2',
@@ -298,10 +305,59 @@ class BootVaultBuilder
 end
 
 module DiskCleaner
-  def self.deactivate_all_swaps
-    run('swapoff', '--all')
-    raise 'some swap device is still active' \
-      unless File.readlines('/proc/swaps').length == 1
+  def self.active_swap_paths
+    run_and_get_lines('swapon', '--show=NAME', '--noheadings', '--raw')
+  end
+
+  def self.block_device_number(device_path)
+    stat = File.stat(device_path)
+    raise "'#{ device_path }' is not a block device" unless stat.blockdev?
+    "#{ stat.rdev_major }:#{ stat.rdev_minor }"
+  end
+
+  def self.device_dependency_numbers(device_path)
+    run_and_get_lines('lsblk', '--inverse', '--list', '--noheadings',
+                      '--output', 'MAJ:MIN', device_path) \
+      .map(&:strip)
+  end
+
+  def self.swap_backing_device(swap_path)
+    return swap_path if File.blockdev?(swap_path)
+
+    # The swap is a file. Find the block device containing its filesystem.
+    sources = run_and_get_lines('findmnt', '--first-only', '--noheadings',
+                '--evaluate', '--nofsroot', '--output', 'SOURCE', '--target',
+                swap_path)
+    source = sources.first
+
+    raise "Could not determine block device backing swap '#{ swap_path }'" \
+      unless source && File.blockdev?(source)
+
+    source
+  end
+
+  def self.swap_uses_device?(swap_path, target_number)
+    backing_device = swap_backing_device(swap_path)
+    device_dependency_numbers(backing_device).include?(target_number)
+  end
+
+  def self.active_swaps_on_device(device_path)
+    target_number = block_device_number(device_path)
+    active_swap_paths.select do |swap_path|
+      swap_uses_device?(swap_path, target_number)
+    end
+  end
+
+  def self.deactivate_swaps_on(device_path)
+    active_swaps_on_device(device_path).each do |swap_path|
+      run('swapoff', swap_path)
+    end
+
+    remaining = active_swaps_on_device(device_path)
+    return if remaining.empty?
+
+    raise "Swap remains active on '#{ device_path }': " \
+          "#{ remaining.join(', ') }"
   end
 
   def self.deactivate_holders(device_paths)
@@ -353,11 +409,9 @@ module DiskCleaner
           "/dev/#{ partition }"
         end
 
+    deactivate_swaps_on(device_path)
+
     old_device_paths = [ device_path, *old_partition_paths ]
-
-    # disable all swaps, the Puavo OS installer should not need any
-    deactivate_all_swaps()
-
     unmount_filesystems_on(old_device_paths)
 
     # free the devices (and subdevices)
