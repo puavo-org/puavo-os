@@ -678,8 +678,11 @@ module DiskHandler
   end
 
   def self.setup_device(device, gpt_spec, create_efi:, create_swap:)
-    IO.popen([ 'gdisk', "/dev/#{ device }"], 'w') do |f|
-      f.print(gpt_spec)
+    device_path = "/dev/#{ device }"
+    stdout, stderr, status = Open3.capture3('gdisk', device_path,
+                                            stdin_data: gpt_spec)
+    unless status.success? then
+      raise "gdisk failed on #{ device_path }:\n#{ stderr }"
     end
 
     reread_partition_table(device)
