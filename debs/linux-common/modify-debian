@@ -33,6 +33,11 @@ patch -p1 <<'EOF'
          self.write_tests_control()
 EOF
 
+# Keep the kernel image in /boot
+if [ -f debian/templates/binary.install.j2 ]; then
+  echo 'boot/vmlinu*-*' > debian/templates/binary.install.j2
+fi
+
 # Simplify featuresets (single "none" featureset)
 "${common}/tools/modify-defines.py"
 debian/rules debian/control-real || true
