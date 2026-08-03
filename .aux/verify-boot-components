@@ -42,6 +42,22 @@ class SecureBootGroup(BaseModel):
     components: list[str]
 
 
+class SecureBootDatabase(BaseModel):
+    """The signature lists that combine into the enrolled db variable."""
+
+    # Glob patterns (relative to rootfs) matching the signature lists
+    patterns: list[str]
+    # Largest total size the firmware variable store is expected to hold
+    max_bytes: int
+
+    def find_signature_lists(self, rootfs: str) -> list[Path]:
+        """Find the signature lists in rootfs."""
+        signature_lists: list[Path] = []
+        for pattern in self.patterns:
+            signature_lists.extend(Path(rootfs).glob(pattern))
+        return sorted(signature_lists)
+
+
 class Manifest(BaseModel):
     """
     Boot manifest describing expected components and key patterns.
@@ -56,6 +72,8 @@ class Manifest(BaseModel):
     expected_components: list[str]
     # Secure Boot signature groups: each names one certificate and the components verified against it
     secure_boot_signatures: list[SecureBootGroup]
+    # The signature lists that combine into the enrolled db variable
+    secure_boot_database: SecureBootDatabase
     # Glob patterns to find TPM PCR public keys in key directory
     tpm_pcr_public_key_patterns: list[str]
     # Key filenames (in key directory) that should be installed in rootfs
@@ -341,6 +359,31 @@ def verify_boot_component_files(
         )
 
 
+def verify_secure_boot_database_size(
+    configuration: Configuration, manifest: Manifest
+) -> None:
+    """Verify the enrolled db variable fits the firmware variable store."""
+    print("verifying Secure Boot database size")
+
+    database = manifest.secure_boot_database
+    signature_lists = database.find_signature_lists(configuration.rootfs)
+    if not signature_lists:
+        panic("no Secure Boot signature lists found in root filesystem", code=2)
+
+    total_bytes = 0
+    for signature_list in signature_lists:
+        size = signature_list.stat().st_size
+        print(f"  {signature_list.name}: {size} bytes")
+        total_bytes += size
+
+    if total_bytes > database.max_bytes:
+        panic(
+            f"Secure Boot database is {total_bytes} bytes, which exceeds the {database.max_bytes} byte limit"
+        )
+
+    print(f"  total {total_bytes} bytes, limit {database.max_bytes} bytes")
+
+
 def verify_secure_boot_keys_and_signatures(
     configuration: Configuration, manifest: Manifest
 ) -> None:
@@ -395,8 +438,6 @@ def verify_tpm_keys_and_signatures(
         if not verify_uki_pcr_public_key(uki_path, expected_fingerprints):
             panic(f"embedded PCR public key verification failed for '{component}'")
 
-        print("  valid")
-
 
 def verify_installed_keys(configuration: Configuration, manifest: Manifest) -> None:
     """Verify keys from key directory are correctly installed in rootfs."""
@@ -423,6 +464,7 @@ def verify_installed_keys(configuration: Configuration, manifest: Manifest) -> N
 def verify_boot_components(configuration: Configuration, manifest: Manifest) -> None:
     """Run all boot component verifications."""
     verify_boot_component_files(configuration, manifest)
+    verify_secure_boot_database_size(configuration, manifest)
     verify_secure_boot_keys_and_signatures(configuration, manifest)
     verify_tpm_keys_and_signatures(configuration, manifest)
     verify_installed_keys(configuration, manifest)

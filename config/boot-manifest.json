@@ -50,6 +50,10 @@
       ]
     }
   ],
+  "secure_boot_database": {
+    "patterns": ["etc/puavo-secure-boot/db/*.esl"],
+    "max_bytes": 16384
+  },
   "tpm_pcr_public_key_patterns": ["tpm2-pcr-public-key*.pem"],
   "installed_keys": ["secure-boot.der", "tpm2-pcr-public-key.pem"]
 }
