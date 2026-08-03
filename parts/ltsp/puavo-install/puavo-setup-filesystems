@@ -422,7 +422,7 @@ module DiskCleaner
       unless old_partition_paths.empty?
 
     # Erase all signatures and both GPT headers from the device.
-    run('sgdisk', '--zap-all', device_path) rescue nil # may fail but redundant
+    run('sgdisk', '--zap-all', device_path) rescue true # may fail but redundant
     run('wipefs', '--all', '--lock=yes', device_path)
 
     DiskHandler::reread_partition_table(device)
@@ -608,59 +608,8 @@ module DiskHandler
     end
   end
 
-  def self.swap_partitions_on_disk(device)
-    # Active swap devices that live on the given disk.
-    IO.readlines('/proc/swaps').drop(1).filter_map do |line|
-      swap_device = line.split.first
-      swap_device if swap_device.start_with?("/dev/#{ device }")
-    end
-  rescue Errno::ENOENT
-    []
-  end
-
-  def self.volume_groups_on_disk(device)
-    # Volume groups that have a physical volume on the given disk.
-    command = [ 'pvs', '--noheadings', '--separator', ',',
-                '-o', 'pv_name,vg_name' ]
-    IO.popen(command).readlines.filter_map do |line|
-      physical_volume, volume_group = line.strip.split(',', 2)
-      volume_group if physical_volume&.start_with?("/dev/#{ device }")
-    end.uniq
-  rescue StandardError
-    []
-  end
-
   def self.reread_partition_table(device)
     device_path = "/dev/#{ device }"
-    3.times do
-      return if system('partprobe', device_path, { :err => '/dev/null' })
-      sleep(1)
-    end
-    raise "could not re-read the partition table on '#{ device_path }'"
-  end
-
-  def self.reset_disk(device)
-    device_path = "/dev/#{ device }"
-
-    # Release active swap partitions on the device.
-    swap_partitions_on_disk(device).each do |swap_partition|
-      run('swapoff', swap_partition, { :err => '/dev/null' }) rescue true
-    end
-    volume_groups_on_disk(device).each do |volume_group|
-      run('vgchange', '-a', 'n', volume_group, { :err => '/dev/null' }) \
-        rescue true
-    end
-
-    # Erase all signatures and both GPT headers from the device.
-    run('wipefs', '--all', device_path, { :err => '/dev/null' }) rescue true
-    run('sgdisk', '--zap-all', device_path, { :err => '/dev/null' }) \
-      rescue true
-
-    reread_partition_table(device)
-  end
-
-  def self.setup_device(device, have_swap, gpt_spec)
-    reset_disk(device)
 
     5.times do
       if system('partprobe', device_path, { :err => '/dev/null' }) then
