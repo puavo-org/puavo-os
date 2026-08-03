@@ -582,7 +582,7 @@ module DiskHandler
 
     raid_members = disks_for_mirroring.map do |device|
                      partition = wait_one_gpt_partition_by_parttype(
-                       device, GPT_PARTTYPE_LINUX_RAID, try_count: 30)
+                       device, GPT_PARTTYPE_RAID, try_count: 30)
                      "/dev/#{ partition }"
                    end
 
