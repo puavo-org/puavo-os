@@ -249,6 +249,11 @@ update_boot_device_environments() {
     return 0
   fi
 
+  if [ -e /run/puavo/nbd-server ]; then
+    echo 'skipping Grub environment update, booted over the network'
+    return 0
+  fi
+
   boot_disks=$(/usr/lib/puavo-core/puavo-get-boot-disks "$images_dir")
   status=0
 
