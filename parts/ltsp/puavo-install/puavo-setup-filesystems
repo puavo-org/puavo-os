@@ -386,11 +386,16 @@ module DiskCleaner
   end
 
   def self.device_holders_for_dev(device_path)
-    stat = File.stat(device_path)
-    raise "'#{ device_path }' is not a block device" unless stat.blockdev?
-    holders_dir =
-      "/sys/dev/block/#{ stat.rdev_major }:#{ stat.rdev_minor }/holders"
-    Dir.children(holders_dir).map { |kernel_name| "/dev/#{ kernel_name }" }
+    begin
+      stat = File.stat(device_path)
+      raise "'#{ device_path }' is not a block device" unless stat.blockdev?
+      holders_dir =
+        "/sys/dev/block/#{ stat.rdev_major }:#{ stat.rdev_minor }/holders"
+      Dir.children(holders_dir).map { |kernel_name| "/dev/#{ kernel_name }" }
+    rescue Errno::ENOENT
+      # we do not need to consider devices that disappear due to deactivations
+      []
+    end
   end
 
   def self.device_holders(device_paths)
@@ -418,8 +423,11 @@ module DiskCleaner
     deactivate_holders(old_device_paths)
     check_no_mountpoints(old_device_paths)
 
-    run('wipefs', '--all', '--force', '--lock=yes', *old_partition_paths) \
-      unless old_partition_paths.empty?
+    still_existing_partition_paths \
+      = old_partition_paths.select { |path| File.exist?(path) }
+    run('wipefs', '--all', '--force', '--lock=yes',
+        *still_existing_partition_paths) \
+      unless still_existing_partition_paths.empty?
 
     # Erase all signatures and both GPT headers from the device.
     run('sgdisk', '--zap-all', device_path) rescue true # may fail but redundant
