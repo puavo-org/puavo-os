@@ -290,15 +290,6 @@ if (\$hostname == "${hostname}") then {
     stop
   }
 
-  if \$programname == "puavo-ers-applet" then {
-    # use two files, one that not include debug messages and one that does
-    if \$syslogseverity < 7 then {
-      action(type="omfile" file="/var/log/puavo/puavo-ers-applet.log")
-    }
-    action(type="omfile" file="/var/log/puavo/puavo-ers-applet-debug.log")
-    stop
-  }
-
   if \$programname == "puavo-pkg" or \$programname == "puavo-pkg-update" then {
     action(type="omfile" file="/var/log/puavo/puavo-pkg.log")
     stop

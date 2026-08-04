@@ -49,16 +49,10 @@ open_in_terminal() {
 ers_mode="$(puavo-conf puavo.ers.mode)"
 case "$ers_mode" in
   abitti2server*)
-    open_in_terminal "abitti2server" /opt/ktp-controller/ktp-controller
-    ;;
-  ers-applet)
-    open_in_terminal "ers-applet" sudo -g puavo /usr/bin/puavo-ers-applet "$@"
-    ;;
-  naksu)
-    open_in_terminal "naksu" /usr/bin/puavo-ers-naksu
+    open_in_terminal abitti2server /opt/ktp-controller/ktp-controller
     ;;
   naksu2)
-    open_in_terminal "naksu2" /usr/bin/puavo-ers-naksu2
+    open_in_terminal naksu2 /usr/bin/puavo-ers-naksu2
     ;;
   *)
     logger -p user.err -t puavo-ers-startup \

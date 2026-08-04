@@ -13,19 +13,6 @@ if [ "$(puavo-conf puavo.admin.autoreboot.enabled)" != 'true' ]; then
   exit 0
 fi
 
-log notice 'automatic reboot enabled'
-
-# if puavo-ers user is active we need to handle reboot through it
-if puavo_ers_uid="$(id -u puavo-ers 2>/dev/null)" \
-  && [ -n "$puavo_ers_uid" ]; then
-    puavo_ers_run_dir="/run/user/${puavo_ers_uid}"
-    if [ -e "$puavo_ers_run_dir" ]; then
-      log notice 'puavo-ers is active, requesting puavo-ers-applet to reboot'
-      touch "${puavo_ers_run_dir}/.reboot"
-      exit 0
-    fi
-fi
-
-log notice 'triggering reboot'
+log notice 'automatic reboot enabled, rebooting'
 
 exec /usr/sbin/reboot

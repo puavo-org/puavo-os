@@ -155,16 +155,10 @@ Description: Puavo developer tools
 Package: puavo-ers
 Architecture: all
 Depends: ${misc:Depends},
- gir1.2-ayatanaappindicator3-0.1,
- python3,
- python3-aionotify,
- python3-dbus,
- python3-gi,
- python3-validators,
- python3-websocket
+ docker-compose-plugin,
+ terminator
 Description: Puavo Examination Room Server
- A script for managing virtual machines for examination room servers
- (currently Abitti KTP).
+ A script for managing examination room servers (currently Abitti 2).
  .
 
 Package: puavo-exammode
