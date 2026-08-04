@@ -5,6 +5,7 @@
 require 'fileutils'
 require 'getoptlong'
 require 'highline/import'
+require 'json'
 require 'open3'
 require 'pathname'
 require 'securerandom'
@@ -13,6 +14,7 @@ require 'tmpdir'
 
 GPT_PARTTYPE_EFI   = 'c12a7328-f81f-11d2-ba4b-00a0c93ec93b'
 GPT_PARTTYPE_LINUX = '4f68bce3-e8cd-4db1-96e7-fbcaf984b709'
+GPT_PARTTYPE_RAID  = 'a19d880f-05fc-4d3b-a006-743f0f84911e'
 GPT_PARTTYPE_SWAP  = '0657fd6d-a4ab-43c4-84e5-0933c84b4f4f'
 
 GPT_PARTLABEL_PUAVO_INSTALLED_WINDOWS_C = 'Puavo_Installed_Windows_C'
@@ -24,6 +26,13 @@ DUALBOOT_LAPTOP_DISK_MIN_SIZE_G = DUALBOOT_LAPTOP_WINDOWS_MIN_SIZE_G + DUALBOOT_
 
 def run(*cmd)
   system(*cmd) or raise "Error running command: '#{ cmd.inspect }'"
+end
+
+def run_and_get_lines(*cmd)
+  stdout, stderr, status = Open3.capture3(*cmd)
+  raise "Command failed: #{ cmd.join(' ') }: #{ stderr.strip }" \
+    unless status.success?
+  stdout.lines(chomp: true)
 end
 
 def tpm2_available?
@@ -38,18 +47,18 @@ module PuavoFacts
   Puavodir = '/etc/puavo'
 
   FactPaths = {
-		'kerberos_master'   => 'kerberos/master',
-		'kerberos_realm'    => 'kerberos/realm',
-		'kerberos_toprealm' => 'kerberos/toprealm',
-		'ldap_base'         => 'ldap/base',
-		'ldap_binddn'       => 'ldap/dn',
-		'ldap_bindpw'       => 'ldap/password',
-		'ldap_master'       => 'ldap/master',
-		'puavo_domain'      => 'domain',
-		'puavo_hostname'    => 'hostname',
-		'puavo_hosttype'    => 'hosttype',
-		'puavo_topdomain'   => 'topdomain',
-	      }
+                'kerberos_master'   => 'kerberos/master',
+                'kerberos_realm'    => 'kerberos/realm',
+                'kerberos_toprealm' => 'kerberos/toprealm',
+                'ldap_base'         => 'ldap/base',
+                'ldap_binddn'       => 'ldap/dn',
+                'ldap_bindpw'       => 'ldap/password',
+                'ldap_master'       => 'ldap/master',
+                'puavo_domain'      => 'domain',
+                'puavo_hostname'    => 'hostname',
+                'puavo_hosttype'    => 'hosttype',
+                'puavo_topdomain'   => 'topdomain',
+              }
 
   def self.all
     Hash[ FactPaths.map { |name, path| [ name, get(name) ] } ]
@@ -175,12 +184,12 @@ class LuksPartitionHandler
     Tempfile.create('puavo-luks-control-key-') do |control_key_file|
       control_key_file.write(control_key)
       control_key_file.flush
-      File.chmod(0600, control_key_file.path) rescue nil
+      File.chmod(0600, control_key_file.path)
 
       Tempfile.create('puavo-luks-new-key-') do |new_key_file|
         new_key_file.write(new_key)
         new_key_file.flush
-        File.chmod(0600, new_key_file.path) rescue nil
+        File.chmod(0600, new_key_file.path)
 
         run('cryptsetup', 'luksAddKey',
             "--key-file=#{ control_key_file.path }",
@@ -224,7 +233,7 @@ class BootVaultBuilder
   def create_image(build_directory)
     image_path = File.join(build_directory, @image_name)
     run('truncate', '--size', @size, image_path)
-    File.chmod(0600, image_path) rescue nil
+    File.chmod(0600, image_path)
     image_path
   end
 
@@ -252,7 +261,7 @@ class BootVaultBuilder
 
           control_key_property = File.join(mountpoint, CONTROL_KEY_PROPERTY)
           File.write(control_key_property, @control_key)
-          File.chmod(0600, control_key_property) rescue nil
+          File.chmod(0600, control_key_property)
 
           version_property = File.join(mountpoint, VERSION_PROPERTY)
           File.write(version_property, VERSION.to_s)
@@ -260,12 +269,12 @@ class BootVaultBuilder
           # Copy all device keys (Secure Boot keys, TPM keys, etc.) into the vault
           copy_device_keys(mountpoint, device_keys_temporary_directory)
         ensure
-          run('umount', mountpoint) rescue nil
+          run('umount', mountpoint)
         end
       end
     ensure
-      run('cryptsetup', 'close', @luks_name) rescue nil
-      run('losetup', '--detach', loop_device) rescue nil
+      run('cryptsetup', 'close', @luks_name)
+      run('losetup', '--detach', loop_device)
     end
   end
 
@@ -284,7 +293,7 @@ class BootVaultBuilder
           File.join(mountpoint, "EFI", "puavo", @image_name))
         run('sync')
       ensure
-        run('umount', mountpoint) rescue nil
+        run('umount', mountpoint)
       end
     end
   end
@@ -292,6 +301,184 @@ class BootVaultBuilder
   def copy_device_keys(mountpoint, device_keys_temporary_directory)
     # Copy all device key files from the temporary directory to the vault
     FileUtils.cp_r(Pathname(device_keys_temporary_directory).children, mountpoint)
+  end
+end
+
+module DiskCleaner
+  def self.active_swap_paths
+    run_and_get_lines('swapon', '--show=NAME', '--noheadings', '--raw')
+  end
+
+  def self.block_device_number(device_path)
+    stat = File.stat(device_path)
+    raise "'#{ device_path }' is not a block device" unless stat.blockdev?
+    "#{ stat.rdev_major }:#{ stat.rdev_minor }"
+  end
+
+  def self.device_dependency_numbers(device_path)
+    run_and_get_lines('lsblk', '--inverse', '--list', '--noheadings',
+                      '--output', 'MAJ:MIN', device_path) \
+      .map(&:strip)
+  end
+
+  def self.swap_backing_device(swap_path)
+    return swap_path if File.blockdev?(swap_path)
+
+    # The swap is a file. Find the block device containing its filesystem.
+    sources = run_and_get_lines('findmnt', '--first-only', '--noheadings',
+                '--evaluate', '--nofsroot', '--output', 'SOURCE', '--target',
+                swap_path)
+    source = sources.first
+
+    raise "Could not determine block device backing swap '#{ swap_path }'" \
+      unless source && File.blockdev?(source)
+
+    source
+  end
+
+  def self.swap_uses_device?(swap_path, target_number)
+    backing_device = swap_backing_device(swap_path)
+    device_dependency_numbers(backing_device).include?(target_number)
+  end
+
+  def self.active_swaps_on_device(device_path)
+    target_number = block_device_number(device_path)
+    active_swap_paths.select do |swap_path|
+      swap_uses_device?(swap_path, target_number)
+    end
+  end
+
+  def self.deactivate_swaps_on(device_path)
+    active_swaps_on_device(device_path).each do |swap_path|
+      run('swapoff', swap_path)
+    end
+
+    remaining = active_swaps_on_device(device_path)
+    return if remaining.empty?
+
+    raise "Swap remains active on '#{ device_path }': " \
+          "#{ remaining.join(', ') }"
+  end
+
+  def self.deactivate_holders(device_paths)
+    blkdeactivate_opts = [ '--dmoptions',  'retry', '--errors',
+                           '--lvmoptions', 'retry', '--umount' ]
+
+    # check three times
+    3.times do
+      holders = device_holders(device_paths)
+      return if holders.empty?
+
+      holders.each do |holder|
+        # blkdeactivate may have made another holder disappear, so check
+        next unless File.blockdev?(holder)
+        run('blkdeactivate', *blkdeactivate_opts, holder)
+      end
+
+      run('udevadm', 'settle')
+    end
+
+    remaining_holders = device_holders(device_paths)
+    return if remaining_holders.empty?
+
+    raise "Could not deactivate holders of #{ device_paths.join(', ') }: " \
+          "#{ remaining_holders.join(', ') }"
+  end
+
+  def self.device_holders_for_dev(device_path)
+    begin
+      stat = File.stat(device_path)
+      raise "'#{ device_path }' is not a block device" unless stat.blockdev?
+      holders_dir =
+        "/sys/dev/block/#{ stat.rdev_major }:#{ stat.rdev_minor }/holders"
+      Dir.children(holders_dir).map { |kernel_name| "/dev/#{ kernel_name }" }
+    rescue Errno::ENOENT
+      # we do not need to consider devices that disappear due to deactivations
+      []
+    end
+  end
+
+  def self.device_holders(device_paths)
+    device_paths.map { |dev| device_holders_for_dev(dev) }.flatten.uniq
+  end
+
+  def self.reset_disk(device)
+    device_path = "/dev/#{ device }"
+
+    puts "Resetting disk device #{ device_path }..."
+
+    run('udevadm', 'settle')
+
+    old_partition_paths \
+      = DiskHandler::get_partitions(device).map do |partition|
+          "/dev/#{ partition }"
+        end
+
+    deactivate_swaps_on(device_path)
+
+    old_device_paths = [ device_path, *old_partition_paths ]
+    unmount_filesystems_on(old_device_paths)
+
+    # free the devices (and subdevices)
+    deactivate_holders(old_device_paths)
+    check_no_mountpoints(old_device_paths)
+
+    still_existing_partition_paths \
+      = old_partition_paths.select { |path| File.exist?(path) }
+    run('wipefs', '--all', '--force', '--lock=yes',
+        *still_existing_partition_paths) \
+      unless still_existing_partition_paths.empty?
+
+    # Erase all signatures and both GPT headers from the device.
+    run('sgdisk', '--zap-all', device_path) rescue true # may fail but redundant
+    run('wipefs', '--all', '--lock=yes', device_path)
+
+    DiskHandler::reread_partition_table(device)
+
+    remaining_partitions = DiskHandler::get_partitions(device)
+    raise "Partitions remain on '#{ device_path }' after reset: " \
+          "#{ remaining_partitions.join(', ') }" \
+      unless remaining_partitions.empty?
+
+    puts 'Reset done.'
+  end
+
+  def self.check_no_mountpoints(device_paths)
+    mountpoints = mountpoints_for_devices(device_paths)
+    return if mountpoints.empty?
+    raise "Devices are still mounted at: #{ mountpoints.join(', ') }"
+  end
+
+  def self.mountpoints_for_device(device_path)
+    stdout, stderr, status = Open3.capture3(
+      'findmnt', '--json', '--list', '--output', 'TARGET',
+      '--source', device_path
+    )
+
+    # findmnt uses exit status 1 when nothing matched
+    return [] if status.exitstatus == 1 && stdout.empty? && stderr.empty?
+
+    unless status.success?
+      raise "Could not look up mounts for '#{ device_path }': #{ stderr.strip }"
+    end
+
+    JSON.parse(stdout)
+      .fetch('filesystems', [])
+      .map { |filesystem| filesystem.fetch('target') }
+  end
+
+  def self.mountpoints_for_devices(device_paths)
+    device_paths.map do |device_path|
+      mountpoints_for_device(device_path)
+    end.flatten.uniq
+  end
+
+  def self.unmount_filesystems_on(device_paths)
+    mountpoints = mountpoints_for_devices(device_paths)
+    # Unmount nested mountpoints first.
+    mountpoints.sort_by { |mountpoint| -mountpoint.length }.each do |mountpoint|
+      run('umount', mountpoint)
+    end
   end
 end
 
@@ -361,108 +548,6 @@ module DiskHandler
 
   EncryptionDeviceName = "puavo-cryptroot"
 
-  def self.cleanup_disk_environment(hosttype, vgname, close_luks_device)
-    # Unmount filesystems, if those are mounted.
-    btrfs_subvolumes(hosttype).each do |name, attrs|
-      run('umount', '-f', "/#{ name }", { :err => '/dev/null' }) rescue true
-    end
-
-    if hosttype != 'diskinstaller' then
-      # Turn off swap partitions from the target device (and possibly some
-      # else...).  If our target hosttype is "diskinstaller", we do not need
-      # to do this because installer disks should not contain (active) swap
-      # partitions (and turning swap off from the current host is not
-      # appropriate).  (The really proper solution should disable swap
-      # selectively from the disk we are installing to.)
-      run('swapoff', '-a', { :err => '/dev/null' }) rescue true
-    end
-
-    dm_device_list = \
-      case hosttype
-        when 'diskinstaller'
-          %w(puavoinstaller-installimages)
-        else
-          %w(swap0) \
-            + btrfs_subvolumes(hosttype).keys.map do |partname|
-                "puavo-#{ partname }"
-              end
-      end
-
-    # remove all dmsetup volumes which may exists on the target host
-    dm_device_list.each do |dm_device|
-      run('dmsetup', 'remove', '--force', dm_device, { :err => '/dev/null' }) \
-        rescue true
-    end
-
-    # XXX give some time for "dmsetup remove --force" to have an effect in
-    # XXX (frankly: I do not know why this is needed in some situations)
-    sleep(2)
-
-    # switch off all volume groups that may interfere with following operations
-    run('vgchange', '-a', 'n', vgname,
-        { :close_others => :true, :err => '/dev/null' }) \
-      rescue true
-
-    # If there's a LUKS based installation, we should be able to close the
-    # LUKS device as the nested filesystems should be unmounted by now.
-    if close_luks_device then
-      run('cryptsetup', 'close', EncryptionDeviceName,
-          { :err => '/dev/null' }) \
-          rescue true
-    end
-  end
-
-  def self.maybe_wipe_current_raid_setups()
-    md_device_list \
-      = begin
-          IO.readlines('/proc/mdstat').map do |line|
-            first_field = line.split[0]
-            first_field && first_field.match(/\Amd[0-9]+\z/) \
-              ? first_field \
-              : nil
-          end.compact
-        rescue Errno::ENOENT
-          return
-        end
-
-    return unless md_device_list.count > 0
-
-    raise 'System has more than one raid setup, not daring to touch those.' \
-      unless md_device_list.count == 1
-
-    md_device_path = "/dev/#{ md_device_list.first }"
-
-    raid_disk_partitions = []
-    IO.popen([ 'mdadm', '--detail', md_device_path ]) do |f|
-      f.readlines.each do |line|
-        fields = line.split
-        next unless (0..2).all? do |i|
-          fields[i] && fields[i].match(/\A[0-9]+\z/)
-        end
-        fields.each do |s|
-          raid_disk_partitions << s if s.match(/^\/dev/)
-        end
-      end
-    end
-    raise 'error running mdadm --detail' unless $?.success?
-
-    # these may not exist and operations may fail, but we must try anyway
-    # in case these reserve the raid devices
-    system('swapoff', '-a', :err => File::NULL)
-    Dir.glob('/dev/puavo/*') do |puavofsdev|
-      system('lvremove', '-f', puavofsdev, :err => File::NULL)
-    end
-    system('vgremove', '-f', 'puavo', :err => File::NULL)
-
-    # these should not fail
-    run('mdadm', '--stop', md_device_path)
-    raid_disk_partitions.each do |raid_partition|
-      run('mdadm', '--zero-superblock', '--force', raid_partition)
-    end
-    sleep(2)    # give some time for kernel
-    run('mdadm', '--remove', md_device_path) if File.exist?(md_device_path)
-  end
-
   def self.setup_raid_if_possible
     disks_for_mirroring = nil
 
@@ -496,27 +581,22 @@ module DiskHandler
       end
     end
 
-    maybe_wipe_current_raid_setups()
-
-    disks_for_mirroring.each do |disk|
-      raid_partition(disk)
-    end
-
-    # gdisk may activate a partial old RAID setup (!?!)
-    maybe_wipe_current_raid_setups()
+    disks_for_mirroring.each { |disk| DiskCleaner::reset_disk(disk)     }
+    disks_for_mirroring.each { |disk| raid_partition(disk) }
 
     spare_args = (disks_for_mirroring.count > 2) \
                    ? [ "--spare-devices=#{ disks_for_mirroring.count - 2 }" ] \
                    : []
 
-    run('mdadm', '--create',
-                 '--run',
-                 '--verbose',
-                 '/dev/md0',
-                 '--level=mirror',
-                 '--raid-devices=2',
-                 *spare_args,
-                 "/dev/#{ dev }3")
+    raid_members = disks_for_mirroring.map do |device|
+                     partition = wait_one_gpt_partition_by_parttype(
+                       device, GPT_PARTTYPE_RAID, try_count: 30)
+                     "/dev/#{ partition }"
+                   end
+
+    run('mdadm', '--create', '--run', '--verbose', '/dev/md0',
+                 '--level=mirror', '--raid-devices=2', *spare_args,
+                 *raid_members)
 
     puts ''
 
@@ -536,17 +616,36 @@ module DiskHandler
     end
   end
 
-  def self.setup_device(device, have_swap, gpt_spec)
-    # clean up possible confusing mess from the device
-    run('dd', 'if=/dev/zero', "of=/dev/#{ device }", 'count=2K',
-        { :err => '/dev/null' })
+  def self.reread_partition_table(device)
+    device_path = "/dev/#{ device }"
 
-    IO.popen([ 'gdisk', "/dev/#{ device }"], 'w') do |f|
-      f.print(gpt_spec)
+    5.times do
+      if system('partprobe', device_path, { :err => '/dev/null' }) then
+        run('udevadm', 'settle')
+        return
+      end
+      sleep(1)
     end
 
-    create_efi_filesystem(device)
-    clear_swap_partition(device) if have_swap
+    raise "Could not re-read the partition table on '#{ device_path }'"
+  end
+
+  def self.reset_device(fs_conf)
+    DiskCleaner::reset_disk(fs_conf['device'])
+  end
+
+  def self.setup_device(device, gpt_spec, create_efi:, create_swap:)
+    device_path = "/dev/#{ device }"
+    stdout, stderr, status = Open3.capture3('gdisk', device_path,
+                                            stdin_data: gpt_spec)
+    unless status.success? then
+      raise "gdisk failed on #{ device_path }:\n#{ stderr }"
+    end
+
+    reread_partition_table(device)
+
+    create_efi_filesystem(device) if create_efi
+    clear_swap_partition(device)  if create_swap
   end
 
   def self.gpt_format(partitioning_type, filesystems, windows_size=nil)
@@ -555,18 +654,18 @@ module DiskHandler
       raise "EFI size not found" \
         unless efi_size.kind_of?(String) && !efi_size.empty?
     rescue StandardError => e
-      raise "could not determine EFI size: #{ e.message }"
+      raise "Could not determine EFI size: #{ e.message }"
     end
 
     swap_size = nil
     begin
       if filesystems.has_key?('.SWAP') then
         swap_size = filesystems['.SWAP']['size']
-        raise "unexpected swap size" \
+        raise "Unexpected swap size" \
           unless swap_size.kind_of?(String) && !swap_size.empty?
       end
     rescue StandardError => e
-      raise "could not determine swap size: #{ e.message }"
+      raise "Could not determine swap size: #{ e.message }"
     end
 
     p_index = 0
@@ -603,28 +702,22 @@ module DiskHandler
   def self.raid_partition(device)
     # we only support bootserver hosttype with RAID
     fs_conf = DiskHandler::Filesystems['bootserver']
-    setup_device(device, true, gpt_format(:raid_boot, fs_conf))
+    setup_device(device, gpt_format(:raid_boot, fs_conf),
+                 create_efi: true, create_swap: true)
   end
 
   def self.get_partitions(device)
-    cmd = [ 'lsblk', '-l', '-n', '-oTYPE,NAME', "/dev/#{ device }" ]
-    IO.popen(cmd).readlines.map do |line|
-      line.strip.split(' ')
-    end.select do |lineparts|
-      lineparts.length > 1 && lineparts[0].downcase == 'part'
-    end.map do |lineparts|
-      lineparts[1..].join(' ')
-    end
-  end
+    device_path = "/dev/#{ device }"
 
-  def self.get_gpt_partitions_by_parttype(device, parttype)
-    cmd = [ 'lsblk', '-l', '-n', '-oPARTTYPE,NAME', "/dev/#{ device }" ]
-    IO.popen(cmd).readlines.map do |line|
-      line.strip.split(' ')
-    end.select do |lineparts|
-      lineparts.length > 1 && lineparts[0].downcase == parttype.downcase
-    end.map do |lineparts|
-      lineparts[1..].join(' ')
+    stdout, stderr, status = Open3.capture3(
+      'lsblk', '--list', '--noheadings', '--output', 'TYPE,NAME', device_path,
+    )
+    raise "Could not list partitions on '#{ device_path }': #{ stderr.strip }" \
+      unless status.success?
+
+    stdout.lines.filter_map do |line|
+      type, name = line.strip.split(/\s+/, 2)
+      name if type&.casecmp?('part')
     end
   end
 
@@ -757,7 +850,7 @@ module DiskHandler
     fs_conf = conf.clone
 
     Dir.mktmpdir('puavo-device-keys-') do |device_keys_temporary_directory|
-      fs_setup_phases = []
+      fs_setup_phases = [ :reset_device ]
       fs_setup_phases += [ :wipe_device ] if conf['wipe']
       fs_setup_phases += [ :create_partitions ]
 
@@ -821,8 +914,11 @@ module DiskHandler
       gpt_spec = gpt_format(partitioning_scheme, fs_conf['filesystems'])
     end
 
-    have_swap = fs_conf['filesystems'].has_key?('.SWAP')
-    setup_device(fs_conf['device'], have_swap, gpt_spec)
+    create_efi  = !raid_setup_done && fs_conf['filesystems'].has_key?('.EFI')
+    create_swap = !raid_setup_done && fs_conf['filesystems'].has_key?('.SWAP')
+    setup_device(fs_conf['device'], gpt_spec,
+                 create_efi:  create_efi,
+                 create_swap: create_swap)
     fs_conf['puavo_partition'] = get_puavo_partition(fs_conf['device'])
   end
 
@@ -848,11 +944,6 @@ module DiskHandler
   end
 
   def self.puavo_filesystems(fs_conf, vgname)
-    # this is needed again, because gdisk may activate kernel with the
-    # new partitions, with lvm activated as well (probably only in the case
-    # where the partitioning is the same)
-    cleanup_disk_environment(fs_conf['hosttype'], vgname, false)
-
     install_target_dev = fs_conf['install_target']
 
     # clean up possible confusing mess from the partition
@@ -913,6 +1004,7 @@ module QueryDiskInfo
   def self.list_disks_for_mirroring()
     # return a list of devices if there are multiple disks with the same size,
     # otherwise return nil
+    current_system_devices = get_current_system_devices()
 
     devices_by_size = {}
     IO.readlines('/proc/partitions').each do |line|
@@ -920,6 +1012,7 @@ module QueryDiskInfo
       next unless disk_size && disk_name
       next unless disk_name.match(disk_device_regexp)
       next if disk_name.match(/\Amd[0-9]+\z/)       # no raid devices
+      next if current_system_devices.include?(disk_name)
       (devices_by_size[disk_size.to_i] ||= []) << "#{ disk_name }"
     end
 
@@ -990,7 +1083,7 @@ module QueryDiskInfo
 
     puts %Q{\nYou are going to install to device "/dev/#{ device }":}
     UI::colormsg("IF YOU PROCEED, ALL DATA ON THAT DEVICE IS DESTROYED!\n",
-		 HighLine::RED)
+                 HighLine::RED)
 
     prompt = %q{Are you sure you want to proceed (write "yes" if this is okay?)}
 
@@ -1420,8 +1513,6 @@ end
 
 vgname = (hosttype == 'diskinstaller') ? 'puavoinstaller' : \
          (hosttype == 'exam')          ? 'puavoexam'      : 'puavo'
-
-DiskHandler::cleanup_disk_environment(hosttype, vgname, true)
 
 raid_setup_done = false
 if hosttype == 'bootserver' then
