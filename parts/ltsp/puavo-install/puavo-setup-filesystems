@@ -492,39 +492,33 @@ module DiskCleaner
 end
 
 module DiskHandler
+  bootserver_laptop_schema = {
+    '.EFI'                  => { 'size' => '3072M', 'type' => 'fat' },
+    'home'                  => { 'type' => 'btrfssv' },
+    'imageoverlays'         => { 'type' => 'btrfssv' },
+    'images'                => { 'type' => 'btrfssv' },
+    'images/puavo-pkg'      => { 'type' => 'btrfssv' },
+    'state'                 => { 'type' => 'btrfssv' },
+    'state/var/lib/docker'  => { 'type' => 'btrfssv' },
+    'state/var/lib/flatpak' => { 'type' => 'btrfssv' },
+    'state/var/log'         => { 'type' => 'btrfssv' },
+  }
+
   Filesystems = {
-    'bootserver' => {
-      '.EFI'                  => { 'size' => '3072M', 'type' => 'fat'     },
-      '.SWAP'                 => { 'size' => '16G',   'type' => 'swap'    },
-      'home'                  => {                    'type' => 'btrfssv' },
-      'imageoverlays'         => {                    'type' => 'btrfssv' },
-      'images'                => {                    'type' => 'btrfssv' },
-      'images/puavo-pkg'      => {                    'type' => 'btrfssv' },
-      'state'                 => {                    'type' => 'btrfssv' },
-      'state/var/lib/docker'  => {                    'type' => 'btrfssv' },
-      'state/var/lib/flatpak' => {                    'type' => 'btrfssv' },
-      'state/var/log'         => {                    'type' => 'btrfssv' },
-    },
+    'bootserver' => bootserver_laptop_schema.merge({
+      '.SWAP' => { 'size' => '16G', 'type' => 'swap' },
+    }),
     'diskinstaller' => {
-      '.EFI'                  => { 'size' => '768M',  'type' => 'fat'     },
-      'installimages'         => {                    'type' => 'btrfssv' },
+      '.EFI'          => { 'size' => '768M', 'type' => 'fat'     },
+      'installimages' => {                   'type' => 'btrfssv' },
     },
     'exam' => {
-      '.EFI'                  => { 'size' => '256M',  'type' => 'fat'     },
-      'examimages'            => {                    'type' => 'btrfssv' },
+      '.EFI'       => { 'size' => '256M', 'type' => 'fat'     },
+      'examimages' => {                   'type' => 'btrfssv' },
     },
-    'laptop' => {
-      '.EFI'                  => { 'size' => '3072M', 'type' => 'fat'     },
-      '.SWAP'                 => { 'size' => '4G',    'type' => 'swap'    },
-      'home'                  => {                    'type' => 'btrfssv' },
-      'imageoverlays'         => {                    'type' => 'btrfssv' },
-      'images'                => {                    'type' => 'btrfssv' },
-      'images/puavo-pkg'      => {                    'type' => 'btrfssv' },
-      'state'                 => {                    'type' => 'btrfssv' },
-      'state/var/lib/docker'  => {                    'type' => 'btrfssv' },
-      'state/var/lib/flatpak' => {                    'type' => 'btrfssv' },
-      'state/var/log'         => {                    'type' => 'btrfssv' },
-    },
+    'laptop' => bootserver_laptop_schema.merge({
+      '.SWAP' => { 'size' => '4G', 'type' => 'swap' },
+    }),
   }
 
   EncryptionPolicyPublicKeyPath = "/etc/puavo-conf/tpm2-pcr-public-key.pem"
