@@ -14,14 +14,13 @@ class bootserver_pxe {
   }
 
   ::bootserver_pxe::tftpexport {
-    [ 'grub-pxe-i386.0' ]:
+    'grub-pxe-i386.0':
       filedir => '/usr/lib/grub/pxe',
-      require => Package['grub-pc'];
+      require => Exec['generate-grub-pxe-bios'];
 
-    [ 'efi64/grub-pxe-x64.efi' ]:
+    'efi64/grub-pxe-x64.efi':
       filedir => '/usr/lib/grub/pxe',
-      require => Package['grub-efi-amd64-bin'];
-
+      require => Exec['generate-grub-pxe-efi64'];
   }
 
   file {
@@ -31,5 +30,4 @@ class bootserver_pxe {
     , '/var/lib/tftpboot/efi64' ]:
       ensure => directory;
   }
-
 }

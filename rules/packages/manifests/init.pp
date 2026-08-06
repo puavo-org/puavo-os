@@ -88,7 +88,6 @@ class packages {
     , 'openbsd-inetd'
     , 'pkexec'
     , 'polkitd'
-    , 'pxelinux'
     , 'python3-numpy'
     , 'python3-pyscard'
     , 'python3-redis'
