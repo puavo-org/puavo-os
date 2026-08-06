@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -eu
+
+read puavo_hosttype < /etc/puavo/hosttype
+
+if [ "$puavo_hosttype" != 'laptop' ]; then
+  return 0
+fi
+
+# currently the "puavo-exam"-partition is used only for Abitti 2 client,
+# so check this puavo-conf
+if [ "$(puavo-conf puavo.abitti2.mode)" != 'install-and-update' ]; then
+  return 0
+fi
+
+if ! exam_device=$(blkid --label puavo-exam 2>/dev/null); then
+  return 0
+fi
+
+if [ -e /images/forcefsck ]; then
+  # FORCE fsck if /images/forcefsck exists
+  if ! fsck -fpv "$exam_device"; then
+    fsck -fvy "$exam_device" || true
+  fi
+fi
+
+mkdir -p /run/puavo/exam
+if mount -o noatime,nodev,nosuid "$exam_device" /run/puavo/exam; then
+  return 0
+fi
+
+if ! fsck -fpv "$exam_device"; then
+  fsck -fvy "$exam_device" || true
+fi
+
+mount -o noatime,nodev,nosuid "$exam_device" /run/puavo/exam
