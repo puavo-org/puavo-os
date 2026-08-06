@@ -1,0 +1,59 @@
+Description: Buffer shell hook output and report tsize
+ GRUB's TFTP client determines the file size from the tsize
+ option and reads nothing when it is missing. Buffer the shell
+ hook output so its size is known before the transfer starts.
+Author: Puavo Org <dev@opinsys.fi>
+
+--- a/internal/hooks/shell_hook.go
++++ b/internal/hooks/shell_hook.go
+@@ -1,8 +1,10 @@
+ package hooks
+ 
+ import (
++	"bytes"
+ 	"errors"
+ 	"fmt"
++	"io"
+ 	"os"
+ 	"os/exec"
+ 	"regexp"
+@@ -30,24 +32,27 @@
+ 
+ 		cmd := exec.Command(split[0], split[1:]...)
+ 
+-		stdout, err := cmd.StdoutPipe()
+-		if err != nil {
+-			return nil, err
+-		}
+-
+-		stderr, err := cmd.StderrPipe()
+-		if err != nil {
+-			return nil, err
+-		}
++		var stderr bytes.Buffer
++		cmd.Stderr = &stderr
+ 
+ 		env := os.Environ()
+ 		env = append(env, fmt.Sprintf("CLIENT_ADDR=%s", (*request.Addr).String()))
+ 		cmd.Env = env
+ 
+-		err = cmd.Start()
++		// Buffer the whole output so that its size is known and can
++		// be sent to the client in the tsize option. TFTP clients
++		// such as GRUB rely on tsize and read nothing without it.
++		stdout, err := cmd.Output()
++		if err != nil {
++			return nil, err
++		}
+ 
+-		// cmd.Wait is used as Finalize to log the exit status.
+-		return newHookResult(stdout, stderr, -1, cmd.Wait), err
++		return newHookResult(
++			io.NopCloser(bytes.NewReader(stdout)),
++			io.NopCloser(bytes.NewReader(stderr.Bytes())),
++			len(stdout),
++			nil,
++		), nil
+ 	},
+ 	func(s string, _ config.HookExtraArgs) (string, error) {
+ 		return shellEscape.ReplaceAllStringFunc(s, func(s string) string {
