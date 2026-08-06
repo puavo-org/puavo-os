@@ -20,11 +20,13 @@ get_bootparams() {
         "${api_server}/v3/bootparams_by_mac/$1"
 }
 
-pxe_error() {
-  errorstring=$1
-  cat <<EOF
-menuentry "$errorstring" --id error {
+grub_error() {
+  error_message=$1
 
+  cat <<EOF
+menuentry "$error_message" --id error {
+  echo "$error_message"
+  sleep 10
 }
 EOF
   exit 1
@@ -66,7 +68,7 @@ show_image_menu() {
                         | sort)
 
   if [ -z "$available_images" ]; then
-    pxe_error 'No images on bootserver'
+    grub_error 'No images on bootserver'
   fi
 
   image="$preferred_boot_image"
@@ -109,7 +111,7 @@ pxegeturl=$1
 set -u
 
 if [ -z "$pxegeturl" ]; then
-  pxe_error 'PXE url missing'
+  grub_error 'PXE url missing'
 fi
 
 mac_address=$(printf %s "$pxegeturl" \
@@ -117,11 +119,11 @@ mac_address=$(printf %s "$pxegeturl" \
   | tr - :)
 
 if [ -z "$mac_address" ]; then
-  pxe_error 'PXEGETURL not valid'
+  grub_error 'PXEGETURL not valid'
 fi
 
 if ! host_bootparams=$(get_bootparams "$mac_address"); then
-  pxe_error "No configuration for $mac_address"
+  grub_error "No configuration for $mac_address"
 fi
 
 boot_mode=$(printf %s "$host_bootparams" | jq -r .boot_mode)
@@ -167,7 +169,7 @@ if [ "$hosttype" = "unregistered" ]; then
 fi
 
 if $tftpdir_missing; then
-  pxe_error "Missing ${preferred_boot_image}"
+  grub_error "Missing ${preferred_boot_image}"
 fi
 
 kernel_version_suffix=''
@@ -176,13 +178,14 @@ if [ -n "$kernel_version" ] \
   kernel_version_suffix="-$kernel_version"
 fi
 
+# Ensure the kernel file is present.
 if ! test -e "${tftpdir}/vmlinuz${kernel_version_suffix}"; then
-  pxe_error 'No kernel found'
+  grub_error 'No kernel found'
 fi
 
-# one more sanity test (also checks the corresponding initrd.img)
+# Ensure the corresponding initrd file is present.
 if ! test -e "${tftpdir}/initrd.img${kernel_version_suffix}"; then
-  # something is wrong, use the default kernel
+  # Something is wrong, use the default kernel.
   kernel_version_suffix=''
 fi
 
