@@ -4,33 +4,11 @@
 #
 # Usage: puavo-ltspboot-config [PXE GET URL]
 #
-# eg. puavo-ltspboot-config grub.cfg/01-78-e7-d1-d4-0f-5f
+# eg. puavo-ltspboot-config grub.cfg-01-78-e7-d1-d4-0f-5f
 
 set -eu
 
 tftpbase="/var/lib/tftpboot/ltsp"
-server_ip=$(hostname -i | awk '{print $1}')
-
-if [ -z "$server_ip" ]; then
-  pxe_error "Failed to determine server IP address"
-fi
-
-boot_label() {
-  arch=$1
-  preferred_boot_image=$2
-  kernel_version_suffix=$3
-  kernel_arguments=$4
-  hosttype=$5
-
-  # XXX "root=/dev/nbd0" could be dropped, but there is code in use that
-  # XXX greps /proc/cmdline for it and changes behaviour based on that.
-  cat <<EOF
-menuentry "LTSP, using NBD with ${arch}-kernel" --class os --id ltsp-NBD-${arch} {
-  linux ltsp/${preferred_boot_image}/vmlinuz${kernel_version_suffix}-${arch}
-  initrd ro initrd=ltsp/${preferred_boot_image}/initrd.img${kernel_version_suffix}-${arch} init=/sbin/init-puavo puavo.hosttype=${hosttype} root=/dev/nbd0 nbdroot=dhcp,${preferred_boot_image},nbd0 netroot="nbd:${server_ip}:${preferred_boot_image}" ${kernel_arguments}
-}
-EOF
-}
 
 get_bootparams() {
   # this is the same as
@@ -69,7 +47,7 @@ show_image_menu() {
 
   image="$preferred_boot_image"
   cat <<HEADER_EOF
-timeout 5
+set timeout=5
 
 HEADER_EOF
 
@@ -82,8 +60,8 @@ DEFAULT_IMAGE_EOF
   else
     cat <<DEFAULT_IMAGE_EOF
 menuentry "${image}" --class os --id ltsp-NBD-${image} {
-  linux ltsp/${image}/vmlinuz
-  initrd ro initrd=ltsp/${image}/initrd.img init=/sbin/init-puavo puavo.hosttype=unregistered root=/dev/nbd0 nbdroot=dhcp,${image},nbd0 netroot="nbd:${server_ip}:${image}" ${kernel_arguments} BOOTIF=\$net_default_mac
+  linux /ltsp/${image}/vmlinuz ro init=/sbin/init-puavo puavo.hosttype=unregistered root=/dev/nbd0 nbdroot=dhcp,${image},nbd0 netroot=nbd:\$net_default_server:${image} ${kernel_arguments} BOOTIF=01-\$net_default_mac
+  initrd /ltsp/${image}/initrd.img
 }
 DEFAULT_IMAGE_EOF
   fi
@@ -93,8 +71,8 @@ DEFAULT_IMAGE_EOF
 
     cat <<EOF
 menuentry "${image}" --class os --id ltsp-NBD-${image} {
-  linux ltsp/${image}/vmlinuz
-  initrd ro initrd=ltsp/${image}/initrd.img init=/sbin/init-puavo puavo.hosttype=unregistered root=/dev/nbd0 nbdroot=dhcp,${image},nbd0 netroot="nbd:${server_ip}:${image}" ${kernel_arguments} BOOTIF=\$net_default_mac
+  linux /ltsp/${image}/vmlinuz ro init=/sbin/init-puavo puavo.hosttype=unregistered root=/dev/nbd0 nbdroot=dhcp,${image},nbd0 netroot=nbd:\$net_default_server:${image} ${kernel_arguments} BOOTIF=01-\$net_default_mac
+  initrd /ltsp/${image}/initrd.img
 }
 EOF
   done
@@ -179,10 +157,27 @@ if $tftpdir_missing; then
   pxe_error "Missing ${preferred_boot_image}"
 fi
 
+kernel_version_suffix=''
+if [ -n "$kernel_version" ] \
+  && test -e "${tftpdir}/vmlinuz-${kernel_version}"; then
+  kernel_version_suffix="-$kernel_version"
+fi
+
+if ! test -e "${tftpdir}/vmlinuz${kernel_version_suffix}"; then
+  pxe_error 'No kernel found'
+fi
+
+# one more sanity test (also checks the corresponding initrd.img)
+if ! test -e "${tftpdir}/initrd.img${kernel_version_suffix}"; then
+  # something is wrong, use the default kernel
+  kernel_version_suffix=''
+fi
+
 boot_header=''
 if [ "$boot_mode" = "dualboot" ]; then
   boot_header=$(cat <<'HEADER_EOF'
-timeout 5
+set default=ltsp-NBD
+set timeout=5
 
 menuentry 'Local OS' --class os --id local {
   insmod chain
@@ -198,15 +193,15 @@ HEADER_EOF
 )
 else
   boot_header=$(cat <<'HEADER_EOF'
-default=ltsp-NBD
+set default=ltsp-NBD
 HEADER_EOF
 )
 fi
 
 boot_labels=$(cat <<EOF
-menuentry "${image}" --class os --id ltsp-NBD {
-  linux ltsp/${image}/vmlinuz
-  initrd ro initrd=ltsp/${preferred_boot_image}/initrd.img${kernel_version_suffix} init=/sbin/init-puavo puavo.hosttype=${hosttype} root=/dev/nbd0 nbdroot=dhcp,${preferred_boot_image},nbd0 netroot="nbd:${server_ip}:${preferred_boot_image}" ${kernel_arguments} BOOTIF=\$net_default_mac
+menuentry "${preferred_boot_image}" --class os --id ltsp-NBD {
+  linux /ltsp/${preferred_boot_image}/vmlinuz${kernel_version_suffix} ro init=/sbin/init-puavo puavo.hosttype=${hosttype} root=/dev/nbd0 nbdroot=dhcp,${preferred_boot_image},nbd0 netroot=nbd:\$net_default_server:${preferred_boot_image} ${kernel_arguments} BOOTIF=01-\$net_default_mac
+  initrd /ltsp/${preferred_boot_image}/initrd.img${kernel_version_suffix}
 }
 EOF
 )

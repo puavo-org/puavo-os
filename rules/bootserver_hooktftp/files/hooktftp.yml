@@ -2,7 +2,7 @@ port: 69
 user: puavo
 hooks:
   - type: shell
-    regexp: grub.cfg\/01-(([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2})
+    regexp: grub.cfg-01-(([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2})
     template: /usr/local/sbin/puavo-ltspboot-config $0
 
   - type: file
