@@ -385,6 +385,31 @@ update_grub_cfg() {
     "updated the Grub label for ${abitti2_image} (${abitti2_version})"
 }
 
+setup_abitti2_dir_from_exam_partition() {
+  if ! blkid --label puavo-exam 2>/dev/null; then
+    # exam partition does not exist, use $g_abitti_dir as is
+    return 0
+  fi
+
+  if ! mountpoint -q /run/puavo/exam; then
+    # it is "mount_exam_partition" puavo-conf script responsibility
+    # to handle this
+    error 'puavo-exam partition exists but is not mounted'
+    return 1
+  fi
+
+  if ! mkdir -p /run/puavo/exam/abitti2 "$g_abitti2_dir"; then
+    error 'mkdir Abitti 2 dirs failed'
+    return 1
+  fi
+  if ! mount --bind /run/puavo/exam/abitti2 "$g_abitti2_dir"; then
+    error 'bind mount for exam partition Abitti 2 failed'
+    return 1
+  fi
+
+  logmsg -p user.info 'using the exam partition for Abitti 2'
+}
+
 update_abitti2_image() {
   local abitti2_choice abitti2_choice_info abitti2_image \
         abitti2_grub_cfg_base64 abitti2_image abitti2_iso_fp abitti2_sha256 \
@@ -550,6 +575,11 @@ fi
 puavo_abitti2_version_list=$(puavo-conf puavo.abitti2.version)
 if [ -z "$puavo_abitti2_version_list" ]; then
   error 'puavo.abitti2.version is not set, doing nothing!'
+  exit 1
+fi
+
+if ! setup_abitti2_dir_from_exam_partition; then
+  error "error in setting up ${g_abitti2_dir} from the exam partition"
   exit 1
 fi
 
