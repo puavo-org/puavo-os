@@ -5,17 +5,17 @@ set -eu
 read puavo_hosttype < /etc/puavo/hosttype
 
 if [ "$puavo_hosttype" != 'laptop' ]; then
-  return 0
+  exit 0
 fi
 
 # currently the "puavo-exam"-partition is used only for Abitti 2 client,
 # so check this puavo-conf
 if [ "$(puavo-conf puavo.abitti2.mode)" != 'install-and-update' ]; then
-  return 0
+  exit 0
 fi
 
 if ! exam_device=$(blkid --label puavo-exam 2>/dev/null); then
-  return 0
+  exit 0
 fi
 
 if [ -e /images/forcefsck ]; then
@@ -25,13 +25,24 @@ if [ -e /images/forcefsck ]; then
   fi
 fi
 
-mkdir -p /run/puavo/exam
-if mount -o noatime,nodev,nosuid "$exam_device" /run/puavo/exam; then
-  return 0
+mkdir -p /run/puavo/exam || exit 1
+if ! mount -o noatime,nodev,nosuid "$exam_device" /run/puavo/exam; then
+  if ! fsck -fpv "$exam_device"; then
+    fsck -fvy "$exam_device" || true
+  fi
+  if ! mount -o noatime,nodev,nosuid "$exam_device" /run/puavo/exam; then
+    echo 'mounting /run/puavo/exam failed' >&2
+    exit 1
+  fi
 fi
 
-if ! fsck -fpv "$exam_device"; then
-  fsck -fvy "$exam_device" || true
+if ! mkdir -p /run/puavo/exam/abitti2 /images/abitti2; then
+  echo 'mkdir Abitti 2 dirs failed' >&2
+  exit 1
+fi
+if ! mount --bind /run/puavo/exam/abitti2 /images/abitti2; then
+  echo 'bind mount for exam partition Abitti 2 failed' >&2
+  exit 1
 fi
 
-mount -o noatime,nodev,nosuid "$exam_device" /run/puavo/exam
+exit 0

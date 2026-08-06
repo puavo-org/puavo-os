@@ -391,19 +391,10 @@ setup_abitti2_dir_from_exam_partition() {
     return 0
   fi
 
-  if ! mountpoint -q /run/puavo/exam; then
+  if ! mountpoint -q /images/abitti2; then
     # it is "mount_exam_partition" puavo-conf script responsibility
     # to handle this
-    error 'puavo-exam partition exists but is not mounted'
-    return 1
-  fi
-
-  if ! mkdir -p /run/puavo/exam/abitti2 "$g_abitti2_dir"; then
-    error 'mkdir Abitti 2 dirs failed'
-    return 1
-  fi
-  if ! mount --bind /run/puavo/exam/abitti2 "$g_abitti2_dir"; then
-    error 'bind mount for exam partition Abitti 2 failed'
+    error 'puavo-exam partition exists but /images/abitti2 is not mounted'
     return 1
   fi
 
