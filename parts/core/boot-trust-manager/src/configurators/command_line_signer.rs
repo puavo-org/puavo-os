@@ -60,9 +60,12 @@ impl CommandLineSignerConfigurator {
 
         if !output.status.success() {
             let standard_error = String::from_utf8_lossy(&output.stderr);
+            let reason = standard_error.trim();
+
             return Err(PuavoError::ShellError(format!(
-                "The kernel command-line signer initialization script failed: {}",
-                standard_error,
+                "The kernel command-line signer initialization script failed ({}): {}",
+                output.status,
+                if reason.is_empty() { "no output" } else { reason },
             )));
         }
 
