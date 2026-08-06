@@ -30,6 +30,30 @@ EOF
   exit 1
 }
 
+local_os_menuentry() {
+  # UKI and legacy installations have different bootloaders,
+  # boot the first one that exists.
+  cat <<'EOF'
+menuentry 'Local OS' --class os --id local {
+  insmod chain
+  if [ $grub_platform = "efi" ] ; then
+    for bootloader in /EFI/puavo/shimx64.efi \
+                      /EFI/puavo/grubx64.efi \
+                      /EFI/debian/shimx64.efi \
+                      /EFI/debian/grubx64.efi; do
+      if search --set=root --file $bootloader; then
+        chainloader $bootloader
+        break
+      fi
+    done
+  else
+    set root=(hd0)
+    chainloader +1
+  fi
+}
+EOF
+}
+
 show_image_menu() {
   local preferred_boot_image default_image_tftpdir_missing
 
@@ -77,18 +101,7 @@ menuentry "${image}" --class os --id ltsp-NBD-${image} {
 EOF
   done
 
-  cat <<'EOF'
-menuentry 'Local OS' --class os --id local {
-  insmod chain
-  if [ $grub_platform = "efi" ] ; then
-    search --set=root --file /EFI/debian/grubx64.efi
-    chainloader /EFI/debian/grubx64.efi
-  else
-    set root=(hd0)
-    chainloader +1
-  fi
-}
-EOF
+  local_os_menuentry
 }
 
 pxegeturl=$1
@@ -175,22 +188,14 @@ fi
 
 boot_header=''
 if [ "$boot_mode" = "dualboot" ]; then
-  boot_header=$(cat <<'HEADER_EOF'
+  boot_header=$(
+    cat <<'HEADER_EOF'
 set default=ltsp-NBD
 set timeout=5
 
-menuentry 'Local OS' --class os --id local {
-  insmod chain
-  if [ $grub_platform = "efi" ] ; then
-    search --set=root --file /EFI/debian/grubx64.efi
-    chainloader /EFI/debian/grubx64.efi
-  else
-    set root=(hd0)
-    chainloader +1
-  fi
-}
 HEADER_EOF
-)
+    local_os_menuentry
+  )
 else
   boot_header=$(cat <<'HEADER_EOF'
 set default=ltsp-NBD
