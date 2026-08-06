@@ -18,7 +18,8 @@ install() {
                   /usr/bin/efi-updatevar \
                   /usr/bin/sign-efi-sig-list \
                   /usr/bin/chattr \
-                  /usr/bin/loadkeys
+                  /usr/bin/loadkeys \
+                  /usr/bin/openssl
 
     # Install Secure Boot update scripts
     inst "${moddir}/scripts/update-secure-boot-db" \
