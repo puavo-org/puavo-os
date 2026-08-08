@@ -1,4 +1,5 @@
-if [ -n "${X2GO_SESSION:-}" ]; then
+if [ -n "${X2GO_SESSION:-}" ] \
+   && [ "${XDG_SESSION_TYPE:-}" != 'wayland' ]; then
     x2go_session_display_geometry=$(perl -F, -ane 'for (@F) { /^geometry=(.*)$/ && print $1 }' \
 	"$HOME/.x2go/C-${X2GO_SESSION}/options")
 
@@ -40,4 +41,6 @@ if [ "$MUTTER_ALLOW_CONFIGURATION" = 'auto' ]; then
 fi
 export MUTTER_ALLOW_CONFIGURATION
 
-/usr/lib/puavo-desktop/run-xrandr
+if [ "${XDG_SESSION_TYPE:-}" != 'wayland' ]; then
+  /usr/lib/puavo-desktop/run-xrandr
+fi
