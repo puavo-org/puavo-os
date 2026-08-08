@@ -1,0 +1,65 @@
+# This file is meant to be sourced by desktop-session, not executed: it
+# modifies the environment of the calling shell.
+
+[ "${PUAVO_SESSION_BOOTSTRAPPED:-}" != 'true' ] || return 0
+
+xsession_dir=/etc/X11/Xsession.d
+PUAVO_SESSION_PATH=${PUAVO_SESSION_PATH-}
+
+# Normalize the session identity to puavo-desktop, like the other puavo
+# sessions do (38puavo-setup-ers): 'puavo-desktop-wayland' exists only so
+# that GDM can distinguish this entry from the X11 session file.
+DESKTOP_SESSION=puavo-desktop
+GDMSESSION=puavo-desktop
+XDG_SESSION_DESKTOP=puavo-desktop
+export DESKTOP_SESSION GDMSESSION XDG_SESSION_DESKTOP
+
+# The Xsession.d scripts are written for the lenient environment of
+# /etc/X11/Xsession, so disable -e and -u while sourcing them: a failure
+# in one script must not abort the whole login.
+set +eu
+for session_file in $(run-parts --list "$xsession_dir"); do
+  case "${session_file##*/}" in
+    *puavo*) . "$session_file" ;;
+  esac
+done
+set -eu
+
+PUAVO_SESSION_BOOTSTRAPPED=true
+export PUAVO_SESSION_BOOTSTRAPPED
+
+vars=''
+for envvar in \
+    CUPS_SHOW_AVAHI_PRINTERS \
+    DCONF_PROFILE \
+    DESKTOP_SESSION \
+    EXAMMODE_SESSION \
+    GDMSESSION \
+    GNOME_KEYRING_CONTROL \
+    GUEST_SESSION \
+    GTK_SHOW_AVAHI_PRINTERS \
+    HOMEPAGE \
+    LANG \
+    LANGUAGE \
+    MUTTER_ALLOW_CONFIGURATION \
+    MUTTER_MONITOR_FILENAME \
+    PRINTER \
+    PUAVO_APISERVER \
+    PUAVO_MENU_IS_TEACHER_OR_ADMIN \
+    PUAVO_MENU_SHOW_MY_SCHOOL_USERS \
+    PUAVO_NEXTCLOUD_TOPDOMAIN \
+    PUAVO_PERSISTENT_DISPLAY_MANAGEMENT \
+    PUAVO_SESSION_BOOTSTRAPPED \
+    PUAVO_SESSION_PATH \
+    PUAVO_USER_REGISTRATION \
+    XDG_SESSION_DESKTOP; do
+  vars="${vars}${vars:+ }${envvar}"
+done
+
+# Make variables visible for applications activated by dbus:
+dbus-update-activation-environment $vars || true
+
+# Make variables visible for systemd user services:
+systemctl --user import-environment $vars || true
+
+unset xsession_dir envvar vars session_file
