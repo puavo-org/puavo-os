@@ -851,7 +851,7 @@ class packages {
   $nvidia_dkms_535_module            = 'nvidia-current/550.163.01'
   $puavo_command_line_signer_module  = 'puavo-command-line-signer/1.0'
   $r8168_module                      = 'r8168/8.051.02'
-  $virtualbox_module                 = 'virtualbox/7.2.6'
+  $virtualbox_module                 = 'virtualbox/7.2.14'
 
   $all_dkms_modules =
     $::puavoimage_class ? {
