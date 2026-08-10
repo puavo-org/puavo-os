@@ -28,8 +28,8 @@ class kernels {
     }
   }
 
-  $default_kernel = '6.1.0-51-amd64'
-  $crisp_kernel   = '6.12.95.2-amd64'
+  $default_kernel = '6.1.0-52-amd64'
+  $crisp_kernel   = '6.12.100+deb12.1-amd64'
 
   ::kernels::all_kernel_links {
     'default': kernel => $default_kernel;
