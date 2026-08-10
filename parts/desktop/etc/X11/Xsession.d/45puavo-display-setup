@@ -1,13 +1,3 @@
-if [ -n "${X2GO_SESSION:-}" ] \
-   && [ "${XDG_SESSION_TYPE:-}" != 'wayland' ]; then
-    x2go_session_display_geometry=$(perl -F, -ane 'for (@F) { /^geometry=(.*)$/ && print $1 }' \
-	"$HOME/.x2go/C-${X2GO_SESSION}/options")
-
-    if [ -n "${x2go_session_display_geometry}" ]; then
-        xrandr --output default --mode "${x2go_session_display_geometry}"
-    fi
-fi
-
 if jq -e '.user.user_roles | any(. == "admin")' \
   "$PUAVO_SESSION_PATH" >/dev/null; then
     export PUAVO_PERSISTENT_DISPLAY_MANAGEMENT=true
