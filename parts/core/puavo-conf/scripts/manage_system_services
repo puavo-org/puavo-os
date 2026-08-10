@@ -337,6 +337,11 @@ set services {
         -> /usr/lib/systemd/system/puavo-sharedir-manager.service
     }}
 
+  { puavo-trigger-abitti2-updates {
+      /etc/systemd/system/multi-user.target.wants/puavo-trigger-abitti2-updates.service
+        -> /etc/systemd/system/puavo-trigger-abitti2-updates.service
+    }}
+
   { puavo-veyon {
       /etc/systemd/system/multi-user.target.wants/puavo-veyon.service
         -> /usr/lib/systemd/system/puavo-veyon.service
