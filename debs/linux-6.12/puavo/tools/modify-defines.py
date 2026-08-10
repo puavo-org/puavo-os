@@ -17,6 +17,15 @@ def _main() -> int:
             defines_filepath = os.path.join(dirpath, filename)
             defines = toml.load(defines_filepath)
 
+            for release in defines.get("debianrelease", []):
+                if release.get("name_regex") == "bookworm(-security)?":
+                  release["revision_regex"] = (
+                      r"\d+(\.\d+)?"
+                      r"(\+deb13u\d+)?"
+                      r"~deb12u\d+"
+                      r"(\+puavo\d+(\+buildonce)?)?"
+                  )
+
             # We don't need any special feature sets.
             defines["featureset"] = [{"name": "none"}]
 

@@ -16,7 +16,7 @@ _pkgs_ports      := anki                   \
                     hooktftp               \
                     kde-spectacle          \
                     libpam-ccreds          \
-                    linux                  \
+                    linux-6.12             \
                     mutter                 \
                     nbd                    \
                     veyon                  \
