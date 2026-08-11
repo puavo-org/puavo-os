@@ -106,5 +106,15 @@ class packages::backports {
     , 'uno-libs-private'
     , 'ure'
     , 'ure-java'
+
+    # updates needed by VirtualBox
+    , 'libcurl3t64-gnutls'
+    , 'libcurl3t64-gnutls:i386'
+    , 'libnghttp3-9'
+    , 'libnghttp3-9:i386'
+    , 'libngtcp2-16'
+    , 'libngtcp2-16:i386'
+    , 'libngtcp2-crypto-gnutls8'
+    , 'libngtcp2-crypto-gnutls8:i386'
   ]
 }
