@@ -3,7 +3,7 @@
 //! the exact bytes it checked.
 
 use crate::pe;
-use crate::revocations::{self, NAME_LENGTH};
+use crate::revocations::{self, VERSION_SECTION_NAME};
 use alloc::vec::Vec;
 use core::mem::MaybeUninit;
 use uefi::boot::{self, LoadImageSource};
@@ -16,8 +16,6 @@ use uefi_raw::protocol::loaded_image::LoadedImageProtocol;
 
 /// The next stage slab hands control to.
 const NEXT_STAGE_PATH: &CStr16 = cstr16!("\\EFI\\puavo\\grub\\grubx64.efi");
-/// The PE section that carries the next stage component identity.
-const VERSION_SECTION_NAME: &[u8; 8] = b".version";
 /// Bytes reserved for building the next stage device path.
 const DEVICE_PATH_BUFFER_SIZE: usize = 128;
 
@@ -37,7 +35,7 @@ pub fn is_allowed(image: &[u8]) -> bool {
         security_violation!("next stage declares no version, refusing");
         return false;
     };
-    let Some((name, version)) = parse_identity(section) else {
+    let Some((name, version)) = revocations::parse_identity(section) else {
         error!("next stage identity malformed, refusing");
         return false;
     };
@@ -51,14 +49,6 @@ pub fn is_allowed(image: &[u8]) -> bool {
             true
         }
     }
-}
-
-/// Splits the `.version` section into the component name and its version.
-fn parse_identity(section: &[u8]) -> Option<(&[u8; NAME_LENGTH], u64)> {
-    let name = section.get(0..NAME_LENGTH)?.try_into().ok()?;
-    let version = section.get(NAME_LENGTH..NAME_LENGTH + 8)?;
-    let version = u64::from_be_bytes(version.try_into().ok()?);
-    Some((name, version))
 }
 
 /// Loads the exact buffer slab checked, so the bytes cannot change between the

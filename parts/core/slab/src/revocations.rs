@@ -5,8 +5,11 @@
 //! Bumping revocation means building a new slab with a higher `LIST_VERSION`
 //! and shipping it.
 
-/// Fixed width of a component name, matching the next stage version section.
+/// Fixed width of a component name, matching the version section.
 pub const NAME_LENGTH: usize = 128;
+
+/// The PE section that carries a component identity.
+pub const VERSION_SECTION_NAME: &[u8; 8] = b".version";
 
 /// The fleet wide logical revocation version this slab enforces. It is
 /// compared against the counter minus base floor.
@@ -22,6 +25,15 @@ pub struct Component {
 pub const COMPONENTS: &[Component] = &[
     Component { name: b"grub", minimum_version: 1 },
 ];
+
+/// Splits a version section into the component name and its version.
+/// Returns `None` when the section is too short to hold them.
+pub fn parse_identity(section: &[u8]) -> Option<(&[u8; NAME_LENGTH], u64)> {
+    let name = section.get(0..NAME_LENGTH)?.try_into().ok()?;
+    let version = section.get(NAME_LENGTH..NAME_LENGTH + 8)?;
+    let version = u64::from_be_bytes(version.try_into().ok()?);
+    Some((name, version))
+}
 
 /// The minimum allowed version for the component named by a padded name, if
 /// the list mentions it. A component the list does not name has no floor.
