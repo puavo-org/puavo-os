@@ -1,0 +1,58 @@
+#!/bin/sh
+set -eu
+
+panic() {
+  echo "error: $1" >&2
+  exit 1
+}
+
+usage() {
+  echo "Usage: $0 <input-file> <key-directory> [output-file]"
+  echo ""
+  echo "Signs one EFI file with Secure Boot keys. The file is signed in place"
+  echo "unless an output file is given, and a file that already carries the"
+  echo "signature of the same certificate is left alone."
+  exit 1
+}
+
+if [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; then
+  usage
+fi
+
+input_file=$1
+key_directory=$2
+output_file=${3:-$input_file}
+
+. "$(dirname "$0")/signing-backend"
+signing_validate || exit 2
+
+private_key=$(signing_secureboot_private_key "$key_directory")
+certificate=$(signing_secureboot_certificate "$key_directory")
+engine_arguments=$(signing_sbsign_engine_arguments)
+
+[ -f "$input_file" ]    || panic "input file '$input_file' does not exist"
+[ -d "$key_directory" ] || panic "key directory '$key_directory' does not exist"
+[ -f "$certificate" ]   || panic "certificate not found at '$certificate'"
+signing_require_private_key "$private_key" || exit 1
+
+# Signing a file that is already signed the same way would leave it carrying
+# both signatures, which only grows the file.
+if [ "$output_file" = "$input_file" ] &&
+   sbverify --cert "$certificate" "$input_file" > /dev/null 2>&1; then
+  echo "$(basename "$input_file") is already signed with this certificate"
+  exit 0
+fi
+
+temporary_output="${output_file}.tmp"
+echo "signing $(basename "$input_file")..."
+sbsign $engine_arguments \
+  --key "$private_key" \
+  --cert "$certificate" \
+  --output "$temporary_output" \
+  "$input_file"
+mv "$temporary_output" "$output_file"
+
+# Attach additional Secure Boot signatures if additional key pairs exist
+if signing_secureboot_has_additional_keys "$key_directory"; then
+  signing_secureboot_sign_additional "$output_file" "$key_directory"
+fi
