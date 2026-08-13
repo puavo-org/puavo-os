@@ -96,8 +96,13 @@ fn set_device(handle: Handle) {
         return;
     };
 
-    let Ok(loaded) = boot::open_protocol_exclusive::<LoadedImage>(handle) else {
+    let opened = boot::open_protocol_exclusive::<LoadedImage>(handle);
+    let Ok(mut loaded) = opened else {
         debug!("cannot open the next stage image to set its device");
+        return;
+    };
+    let Some(loaded) = loaded.get_mut() else {
+        debug!("next stage image interface is null");
         return;
     };
 
@@ -105,7 +110,7 @@ fn set_device(handle: Handle) {
     // LoadedImageProtocol, we have to cast using pointers.
     // LoadedImage and LoadedImageProtocol have identical
     // structure due to repr(transparent).
-    let raw = &*loaded as *const LoadedImage as *mut LoadedImageProtocol;
+    let raw = loaded as *mut LoadedImage as *mut LoadedImageProtocol;
     unsafe {
         (*raw).device_handle = device.as_ptr();
     }
