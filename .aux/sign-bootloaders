@@ -62,8 +62,11 @@ for architecture in i386-efi x86_64-efi; do
   create_grub_architecture_bootloader "$architecture"
 done
 
+slab_key_directory="${key_directory}/slab"
+[ -d "$slab_key_directory" ] || panic "key directory '$slab_key_directory' does not exist"
+
 slab_directory="${rootfs_directory}/usr/lib/slab"
 [ -d "$slab_directory" ] || panic "directory '$slab_directory' does not exist"
 
 echo "signing slab bootloader..."
-.aux/sign-efi-directory "$slab_directory" "$key_directory" "$slab_directory"
+.aux/sign-efi-directory "$slab_directory" "$slab_key_directory" "$slab_directory"
