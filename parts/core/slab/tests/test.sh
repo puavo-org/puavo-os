@@ -15,5 +15,8 @@ echo "==> refusals"
 echo "==> secure boot"
 "$TESTS_DIRECTORY/secure-boot.sh"
 
+echo "==> shim lock"
+"$TESTS_DIRECTORY/shim-lock.sh"
+
 echo "==> counter semantics"
 "$TESTS_DIRECTORY/counter-semantics.sh"
