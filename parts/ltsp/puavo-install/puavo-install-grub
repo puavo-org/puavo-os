@@ -954,7 +954,34 @@ place_uki_bootloaders_x86_64() {
   return 0
 }
 
-# Creates the NVRAM boot entry that loads slab and removes duplicate entries.
+# Removes duplicate boot entries with the same label.
+remove_boot_entries_with_label() {
+  local label entry entry_label number tab
+  label=$1
+  tab=$(printf '\t')
+
+  # Entry format: "BootNNNN* Label<TAB>DevicePath".
+  # The four hex digit test skips header lines such as "BootOrder:".
+  efibootmgr | while read -r entry entry_label; do
+    number=${entry#Boot}   # Strip the "Boot" prefix
+    number=${number%\*}    # Strip the active marker, if any
+
+    case "$number" in
+      [0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]) ;;
+      *) continue ;;
+    esac
+
+    entry_label=${entry_label%%"$tab"*}   # Drop the device path
+
+    [ "$entry_label" = "$label" ] || continue
+
+    log info "removing old boot entry ${number} (${label})"
+    efibootmgr --quiet --delete-bootnum --bootnum "$number" \
+      || log warn "failed to remove old boot entry ${number}"
+  done
+}
+
+# Creates the NVRAM boot entry that loads slab.
 create_slab_boot_entry() {
   local disk efi_devpath label partition
   disk=$1
@@ -968,12 +995,13 @@ create_slab_boot_entry() {
     return 1
   fi
 
+  remove_boot_entries_with_label "$label"
+
   efibootmgr --quiet --create \
     --disk "$disk" \
-    --part "$partition" \
+    --part "$partition" \
     --label "$label" \
     --loader '\EFI\puavo\slab.efi'
-  efibootmgr --quiet --remove-dups || true
 }
 
 # Installs the UKI-mode bootloaders, such as slab and GRUB, with NVRAM boot entry.
