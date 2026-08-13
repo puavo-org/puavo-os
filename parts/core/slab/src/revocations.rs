@@ -44,7 +44,8 @@ pub fn minimum_version(padded_name: &[u8; NAME_LENGTH]) -> Option<u64> {
         .map(|component| component.minimum_version)
 }
 
-/// Returns whether a fixed width padded name equals a component name zero padded to the same width.
+/// Returns whether a fixed width padded name equals a component name zero
+/// padded to the same width.
 fn name_matches(padded_name: &[u8; NAME_LENGTH], name: &[u8]) -> bool {
     if name.len() > NAME_LENGTH {
         return false;
