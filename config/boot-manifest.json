@@ -3,7 +3,7 @@
     "usr/lib/grub/x86_64-efi-signed/*.efi.signed",
     "usr/lib/grub/i386-efi-signed/*.efi.signed",
 
-    "usr/lib/shim/*.efi.signed",
+    "usr/lib/slab/*.efi.signed",
 
     "boot/kernel-*.uki.efi",
     "boot/kernel-*.uki.efi.bsdiff",
@@ -16,9 +16,7 @@
     "usr/lib/grub/x86_64-efi-signed/grubx64.efi.signed",
     "usr/lib/grub/i386-efi-signed/grubia32.efi.signed",
 
-    "usr/lib/shim/fbx64.efi.signed",
-    "usr/lib/shim/mmx64.efi.signed",
-    "usr/lib/shim/shimx64.efi.signed",
+    "usr/lib/slab/slabx64.efi.signed",
 
     "boot/kernel-6.12.101+deb13.1-amd64.uki.efi",
     "boot/kernel-6.12.101+deb13.1-amd64.uki.efi.bsdiff",
