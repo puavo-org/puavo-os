@@ -884,18 +884,48 @@ write_grub_version() {
   fi
 }
 
+# Returns whether a bootloader version may replace the recorded one.
+# A missing or empty record allows the install so the record gets
+# established. A downgrade is refused.
+update_allowed() {
+  local new_version record_file recorded_version
+  new_version=$1
+  record_file=$2
+
+  [ -f "$record_file" ] || return 0
+  recorded_version=$(cat "$record_file" 2>/dev/null)
+  [ -n "$recorded_version" ] || return 0
+  dpkg --compare-versions "$new_version" ge "$recorded_version"
+}
+
+# Records an installed bootloader version.
+write_version_record() {
+  local output_file version
+  output_file=$1
+  version=$2
+
+  printf '%s\n' "$version" > "${output_file}.tmp" || return 1
+  mv "${output_file}.tmp" "$output_file" || return 1
+}
+
 # Copies a file to one or more destinations safely, so a crash never
-# leaves a half written destination.
+# leaves a half written destination. A destination that already holds
+# the same bytes is left untouched.
 install_multiple_safely() {
   local source destination
   source=$1
   shift
 
+  # A stale temporary file from a crashed earlier run must never be
+  # moved into place, so it is removed first.
   for destination in "$@"; do
+    rm -f "${destination}.tmp"
+    cmp --quiet "$source" "$destination" && continue
     cp "$source" "${destination}.tmp" || return 1
   done
   sync
   for destination in "$@"; do
+    [ -f "${destination}.tmp" ] || continue
     mv "${destination}.tmp" "$destination" || return 1
   done
   sync
@@ -919,7 +949,7 @@ place_uki_bootloaders() {
 # Places the signed slab and GRUB binaries on the EFI partition for x86-64.
 place_uki_bootloaders_x86_64() {
   local efi_mountpoint grub_signed slab_signed puavo_directory
-  local grub_directory removable_directory
+  local grub_directory removable_directory grub_version slab_version
   efi_mountpoint=$1
   grub_signed='/usr/lib/grub/puavo/x86_64-efi/grubx64.efi.signed'
   slab_signed='/usr/lib/slab/slabx64.efi.signed'
@@ -938,12 +968,41 @@ place_uki_bootloaders_x86_64() {
   removable_directory="${efi_mountpoint}/EFI/BOOT"
   mkdir -p "$grub_directory" "$removable_directory"
 
+  grub_version=$(grub-install --version | awk '{ print $3 }')
+  if [ -z "$grub_version" ]; then
+    log err 'could not determine the GRUB version'
+    return 1
+  fi
+  slab_version=$(cat /usr/lib/slab/version 2>/dev/null)
+  if [ -z "$slab_version" ]; then
+    log err 'could not determine the slab version'
+    return 1
+  fi
+
   # GRUB goes inside its own directory so the directory it is loaded from,
   # which becomes its prefix, is the one holding its config and resources.
-  install_multiple_safely "$grub_signed" \
-    "${grub_directory}/grubx64.efi"
-  install_multiple_safely "$slab_signed" \
-    "${puavo_directory}/slab.efi" "${removable_directory}/BOOTX64.EFI"
+  if update_allowed "$grub_version" "${grub_directory}/version"; then
+    install_multiple_safely "$grub_signed" \
+      "${grub_directory}/grubx64.efi" \
+      || return 1
+    write_version_record "${grub_directory}/version" "$grub_version" \
+      || return 1
+    log notice "GRUB version ${grub_version} has been installed"
+  else
+    log notice "keeping the newer GRUB on the EFI partition"
+  fi
+
+  if update_allowed "$slab_version" "${puavo_directory}/slab.version"; then
+    install_multiple_safely "$slab_signed" \
+      "${puavo_directory}/slab.efi" \
+      "${removable_directory}/BOOTX64.EFI" \
+      || return 1
+    write_version_record "${puavo_directory}/slab.version" "$slab_version" \
+      || return 1
+    log notice "slab version ${slab_version} has been installed"
+  else
+    log notice "keeping the newer slab on the EFI partition"
+  fi
 
   return 0
 }
@@ -975,6 +1034,33 @@ remove_boot_entries_with_label() {
   done
 }
 
+# Returns whether the first entry in the boot order is an active entry
+# with the label pointing at the EFI partition and the slab loader.
+# Anything else, including a changed boot order, calls for recreating
+# the entry, which also makes it the first choice again.
+slab_boot_entry_is_first() {
+  local efi_devpath label first entry partuuid tab
+  efi_devpath=$1
+  label=$2
+  tab=$(printf '\t')
+
+  partuuid=$(lsblk --noheadings --output PARTUUID "$efi_devpath" \
+             2>/dev/null)
+  [ -n "$partuuid" ] || return 1
+
+  # Fetch the boot entry first in order.
+  first=$(efibootmgr | sed --quiet 's/^BootOrder: \([^,]*\).*$/\1/p')
+  [ -n "$first" ] || return 1
+
+  entry=$(efibootmgr --verbose \
+          | grep "^Boot${first}\* ${label}${tab}") || return 1
+
+  # Verify it points to correct binary and partition.
+  printf '%s\n' "$entry" \
+    | grep --ignore-case --fixed-strings "GPT,${partuuid}," \
+    | grep --quiet --fixed-strings '/File(\EFI\puavo\slab.efi)'
+}
+
 # Creates the NVRAM boot entry that loads slab.
 create_slab_boot_entry() {
   local disk efi_devpath label partition
@@ -987,6 +1073,11 @@ create_slab_boot_entry() {
   if [ -z "$partition" ]; then
     log err "failed to determine EFI partition number for ${efi_devpath}"
     return 1
+  fi
+
+  if slab_boot_entry_is_first "$efi_devpath" "$label"; then
+    log info "boot entry ${label} already first in the boot order, keeping it"
+    return 0
   fi
 
   remove_boot_entries_with_label "$label"
@@ -1020,8 +1111,7 @@ install_uki_bootloader() {
   fi
 
   install_puavo_grub_files_to_efi_partition "$boot_dir" && \
-  copy_grub_environment && \
-  write_grub_version "${boot_dir}/grub/version" || {
+  copy_grub_environment || {
     log err "failed to install UKI files to EFI partition"
     return 1
   }
