@@ -134,9 +134,8 @@ fn initialize_indices(tcg: &mut Tcg) -> Result<(), ()> {
     tpm::define_base(tcg, BASE_INDEX).map_err(|error| {
         error_with_tpm_code("could not define the base index", error)
     })?;
-    tpm::write_value(tcg, BASE_INDEX, initial).map_err(|error| {
-        error_with_tpm_code("could not write the base", error)
-    })
+    tpm::write_value(tcg, BASE_INDEX, initial)
+        .map_err(|error| error_with_tpm_code("could not write the base", error))
 }
 
 /// Raises the counter to the target. The counter only rises, so

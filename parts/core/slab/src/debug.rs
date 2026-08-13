@@ -2,7 +2,7 @@
 
 use core::sync::atomic::{AtomicBool, Ordering};
 use uefi::runtime::{self, VariableVendor};
-use uefi::{boot, cstr16, guid, CStr16};
+use uefi::{CStr16, boot, cstr16, guid};
 
 /// Prints only in debug mode, so a normal boot stays silent.
 macro_rules! debug {

@@ -44,8 +44,8 @@ pub fn read_section<'a>(
 
     // Walk the section table for a matching name and return its raw bytes.
     for index in 0..section_count {
-        let entry =
-            section_table.checked_add(index.checked_mul(SECTION_ENTRY_SIZE)?)?;
+        let entry = section_table
+            .checked_add(index.checked_mul(SECTION_ENTRY_SIZE)?)?;
         let name = image.get(entry..entry.checked_add(section_name.len())?)?;
         if name == section_name {
             let raw_size =

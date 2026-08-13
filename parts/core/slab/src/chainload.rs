@@ -142,8 +142,9 @@ fn open_network_protocol(
         controller: None,
     };
 
-    // SAFETY: The protocol is only read, and it is released when the
-    // returned value goes out of scope.
+    // SAFETY: Nothing is taken from the firmware, which keeps using the
+    // interface, and the interface stays usable for as long as the caller
+    // keeps what this returns.
     unsafe {
         boot::open_protocol::<pxe::BaseCode>(
             parameters,

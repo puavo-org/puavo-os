@@ -22,9 +22,8 @@ pub struct Component {
 }
 
 /// The per component minimum versions this slab enforces on the next stage.
-pub const COMPONENTS: &[Component] = &[
-    Component { name: b"grub", minimum_version: 1 },
-];
+pub const COMPONENTS: &[Component] =
+    &[Component { name: b"grub", minimum_version: 1 }];
 
 /// Splits a version section into the component name and its version.
 /// Returns `None` when the section is too short to hold them.

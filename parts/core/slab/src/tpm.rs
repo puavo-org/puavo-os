@@ -8,9 +8,9 @@
 //! <https://trustedcomputinggroup.org/resource/tpm-library-specification/>
 
 use core::mem::size_of;
+use uefi::Status;
 use uefi::proto::tcg::v2::{HashLogExtendEventFlags, PcrEventInputs, Tcg};
 use uefi::proto::tcg::{EventType, PcrIndex};
-use uefi::Status;
 use zerocopy::byteorder::network_endian::{U16, U32, U64};
 use zerocopy::{FromBytes, Immutable, IntoBytes, KnownLayout};
 

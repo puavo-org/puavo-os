@@ -10,14 +10,14 @@ extern crate alloc;
 #[macro_use]
 mod debug;
 mod chainload;
-mod revocations;
 mod pe;
+mod revocations;
 mod rollback;
 mod shim_lock;
 mod tpm;
 
 use uefi::runtime::{self, ResetType};
-use uefi::{entry, Status};
+use uefi::{Status, entry};
 
 #[entry]
 fn main() -> Status {

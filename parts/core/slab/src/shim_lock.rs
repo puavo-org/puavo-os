@@ -12,7 +12,7 @@ use core::sync::atomic::{AtomicPtr, Ordering};
 use uefi::boot::{self, OpenProtocolAttributes, OpenProtocolParams};
 use uefi::proto::unsafe_protocol;
 use uefi::runtime::{self, VariableVendor};
-use uefi::{cstr16, guid, Guid, Status};
+use uefi::{Guid, Status, cstr16, guid};
 
 /// The protocol identity the next stage looks up.
 const PROTOCOL_GUID: Guid = guid!("605dab50-e046-4300-abb6-3dd810dd8b23");
@@ -106,10 +106,8 @@ fn install() -> bool {
     // SAFETY: The static protocol table stays valid as long as this bootloader
     // is loaded in memory. The next stage, which the firmware authenticates, is
     // expected to be conformant and leave this bootloader in place.
-    unsafe {
-        boot::install_protocol_interface(None, &PROTOCOL_GUID, interface)
-    }
-    .is_ok()
+    unsafe { boot::install_protocol_interface(None, &PROTOCOL_GUID, interface) }
+        .is_ok()
 }
 
 /// Later stages might replace the verification implementation with their own.
