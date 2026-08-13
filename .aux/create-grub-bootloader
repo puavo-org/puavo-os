@@ -80,3 +80,5 @@ grub-mkstandalone \
   --sbat="$sbat_file" \
   --modules="$modules" \
   --output="$output"
+
+"$(dirname "$0")/add-bootloader-version-section" "$output" grub 1

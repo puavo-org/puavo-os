@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+"""Add a .version section that the first-stage bootloader reads to an EFI binary.
+
+The section is the component name padded with zeros, followed by the version.
+It is placed at the end of the loaded image, so it never overlaps with another section.
+"""
+
+import struct
+import subprocess
+import sys
+import tempfile
+
+import pefile
+
+NAME_LENGTH = 128
+
+
+def main():
+    if len(sys.argv) != 4:
+        raise SystemExit(f"usage: {sys.argv[0]} <efi-file> <name> <version>")
+    efi_file, name, version = sys.argv[1], sys.argv[2], int(sys.argv[3])
+
+    # Validate the length of the name
+    name_bytes = name.encode()
+    if len(name_bytes) > NAME_LENGTH:
+        raise SystemExit("the component name is too long to be embedded")
+    blob = name_bytes.ljust(NAME_LENGTH, b"\x00") + struct.pack(">Q", version)
+
+    # Place the component at the end of the loaded image
+    optional_header = pefile.PE(efi_file, fast_load=True).OPTIONAL_HEADER
+    virtual_memory_address = (
+        optional_header.ImageBase + optional_header.SizeOfImage
+    )
+
+    with tempfile.NamedTemporaryFile() as section:
+        section.write(blob)
+        section.flush()
+        subprocess.run([
+            "objcopy",
+            "--add-section", f".version={section.name}",
+            "--change-section-vma", f".version={virtual_memory_address:#x}",
+            "--set-section-flags", ".version=data,readonly",
+            efi_file, f"{efi_file}.tmp",
+        ], check=True)
+    subprocess.run(["mv", f"{efi_file}.tmp", efi_file], check=True)
+
+
+if __name__ == "__main__":
+    main()
