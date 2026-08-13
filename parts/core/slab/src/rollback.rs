@@ -163,11 +163,18 @@ fn raise_counter_to(tcg: &mut Tcg, current: u64, target: u64) {
     }
 }
 
-/// Prints the error message with the response code when there is one.
+/// Prints the error message with the cause of the failure.
 fn error_with_tpm_code(message: &str, error: CommandError) {
-    match error.response_code() {
-        Some(code) => error!("{message} (TPM code {code:#06x})"),
-        None => error!("{message}"),
+    match error {
+        CommandError::Rejected(code) => {
+            error!("{message} (TPM code {code:#06x})")
+        }
+        CommandError::Transport(status) => {
+            error!("{message} (EFI status {status:?})")
+        }
+        CommandError::MalformedResponse => {
+            error!("{message} (malformed TPM response)")
+        }
     }
 }
 
