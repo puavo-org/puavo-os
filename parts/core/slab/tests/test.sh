@@ -15,6 +15,9 @@ echo "==> refusals"
 echo "==> secure boot"
 "$TESTS_DIRECTORY/secure-boot.sh"
 
+echo "==> network next stage"
+"$TESTS_DIRECTORY/network-next-stage.sh"
+
 echo "==> shim lock"
 "$TESTS_DIRECTORY/shim-lock.sh"
 
