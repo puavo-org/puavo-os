@@ -24,18 +24,6 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-# The linux module is left out on purpose.
-#
-# This GRUB is configured for UKI installations.
-# It must only chainload, because a chainloaded image is loaded through
-# the firmware, which verifies its Secure Boot signature. Because slab
-# installs the shim lock protocol, GRUB's linux command would instead
-# take its legacy path and boot the kernel directly, without the
-# firmware, trusting the shim lock verifier for the signature. Slab's
-# verifier only enforces the revocation floor, not signatures, so a
-# linux command here would run unsigned kernels under GRUB's key.
-#
-# Legacy installs use a separate GRUB bootloader.
 modules="
   all_video
   boot
@@ -53,6 +41,7 @@ modules="
   halt
   jpeg
   keystatus
+  linux
   loadenv
   loopback
   ls
