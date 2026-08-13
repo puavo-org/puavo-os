@@ -13,6 +13,7 @@ mod chainload;
 mod revocations;
 mod pe;
 mod rollback;
+mod shim_lock;
 mod tpm;
 
 use uefi::runtime::{self, ResetType};
@@ -36,6 +37,12 @@ fn main() -> Status {
             debug!("no TPM present, continuing without enforcement")
         }
     };
+
+    // The next stage can verify the images it loads through this protocol.
+    if !shim_lock::install() {
+        error!("failed to install the image verification protocol, refusing");
+        shutdown();
+    }
 
     let next_stage = match chainload::read() {
         Some(bytes) => bytes,
