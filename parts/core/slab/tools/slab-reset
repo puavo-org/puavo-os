@@ -1,0 +1,22 @@
+#!/bin/sh
+set -eu
+
+# Undefines the slab counter and base NV indices when they are present, which
+# resets the anti-rollback state for re-enrollment. Does nothing without a TPM.
+
+COUNTER_INDEX=0x01514B00
+BASE_INDEX=0x01514B01
+
+[ -f /sys/class/tpm/tpm0/tpm_version_major ] || exit 0
+[ "$(cat /sys/class/tpm/tpm0/tpm_version_major)" = "2" ] || exit 0
+
+undefine_if_present() {
+  # Remove the NV index if it is present.
+  if tpm2_nvreadpublic "$1" >/dev/null 2>&1; then
+    tpm2_nvundefine "$1" -C o
+    echo "reset $1"
+  fi
+}
+
+undefine_if_present "$COUNTER_INDEX"
+undefine_if_present "$BASE_INDEX"
