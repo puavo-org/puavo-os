@@ -63,7 +63,8 @@ pub const BASE_PCR: u32 = 7;
 const BASE_EVENT_DATA: &[u8] = b"slab-base";
 const EVENT_BUFFER_SIZE: usize = 64;
 
-// Length of the TPMS_NV_PUBLIC body: index, name algorithm, attributes, empty auth policy, data size.
+// Length of the TPMS_NV_PUBLIC body: index, name algorithm, attributes,
+// empty auth policy, data size.
 const PUBLIC_AREA_LENGTH: u16 = 14;
 
 /// Command header shared by every command: tag (TPM_ST), command size, and
@@ -375,7 +376,7 @@ fn submit(tcg: &mut Tcg, command: &[u8]) -> CommandResult<Response> {
     // The response size is the four bytes after the two byte tag.
     let length =
         u32::from_be_bytes([bytes[2], bytes[3], bytes[4], bytes[5]]) as usize;
-    if length < size_of::<ResponseHeader>() {
+    if length < size_of::<ResponseHeader>() || length > bytes.len() {
         return Err(CommandError::MalformedResponse);
     }
     Ok(Response { bytes, length })
