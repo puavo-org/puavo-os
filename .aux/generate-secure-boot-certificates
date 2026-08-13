@@ -1,15 +1,39 @@
 #!/bin/sh
 set -eu
 
-echo "generating Secure Boot certificates..."
+usage() {
+  echo "Usage: $0 [common-name] [output-directory]"
+  echo ""
+  echo "Generates a Secure Boot DB key pair and its EFI signature list."
+  exit 1
+}
+
+case "${1:-}" in
+  -h|--help) usage ;;
+esac
+
+if [ "$#" -gt 2 ]; then
+  usage
+fi
+
+common_name="${1:-Puavo DB}"
+output_directory="${2:-.}"
+
 guid='7cb44677-9bb9-4504-bb8f-923def5fa3b1'
 
-# Generate the Secure Boot DB certificate
-openssl req -new -x509 -newkey rsa:4096 -nodes -days 36500 \
-  -subj "/CN=Puavo DB, O=Puavo/" \
-  -keyout db.key -out db.crt
+private_key="${output_directory}/secure-boot.priv"
+certificate="${output_directory}/secure-boot.pem"
+signature_list="${output_directory}/secure-boot.esl"
 
-# Convert the DB certificate to an EFI signature list
-cert-to-efi-sig-list -g "$guid" db.crt db.esl
+mkdir -p "$output_directory"
+
+echo "generating Secure Boot certificate '${common_name}'..."
+
+openssl req -new -x509 -newkey rsa:4096 -nodes -days 36500 \
+  -subj "/CN=${common_name}, O=Puavo/" \
+  -keyout "$private_key" -out "$certificate"
+
+# Convert the certificate to an EFI signature list
+cert-to-efi-sig-list -g "$guid" "$certificate" "$signature_list"
 
 echo "generated Secure Boot certificate successfully"
