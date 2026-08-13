@@ -1,8 +1,8 @@
 #!/bin/sh
 # Slab installs the image verification protocol the next stage calls for
-# every image it loads. Under Secure Boot the next stage must allow an
-# image with no version section and an image at its list minimum, and must
-# refuse an image below the minimum.
+# every image it loads. Under Secure Boot verify must refuse an image not
+# signed by a DB certificate, allow a signed image with no version section,
+# allow a signed image at its list minimum, and refuse one below the minimum.
 set -u
 
 . "$(dirname "$0")/helpers.sh"
@@ -15,7 +15,7 @@ cleanup() { swtpm_stop; rm -rf "$WORK" "$STATE"; }
 trap cleanup EXIT
 GUID="d4a2e1c0-1111-2222-3333-444455556666"
 
-# PK, KEK, and two db certificates, one for slab and one for the next stage.
+# PK, KEK, and two DB certificates, one for slab and one for the next stage.
 generate_key() {
   openssl req -x509 -newkey rsa:4096 -nodes -keyout "$WORK/$1.key" \
     -out "$WORK/$1.crt" -subj "/CN=$1/" -days 3650 2>/dev/null
@@ -59,6 +59,11 @@ make_test_image unversioned
 make_test_image at-minimum grub 1
 make_test_image below-minimum grub 0
 
+# An image not signed by any DB certificate. Verify must refuse it through the
+# firmware Secure Boot check. This is the only defense for a caller that
+# authenticates through the protocol without chainloading.
+cp "$BINARY_DIRECTORY/slab.efi" "$WORK/unsigned.efi"
+
 # The configuration chainloads each test image without booting it, so one
 # boot covers all three cases. The refusing case comes last, and nothing
 # is echoed for it because the chainload must fail.
@@ -74,18 +79,24 @@ fi
 if chainloader /EFI/puavo/below-minimum.efi; then
   echo "below-minimum image loaded"
 fi
+if chainloader /EFI/puavo/unsigned.efi; then
+  echo "unsigned image loaded"
+fi
 halt
 EOF
 
 disk=$(make_boot_disk "$WORK/slab.signed.efi" "$WORK/grub.signed.efi" \
   "$WORK" "$configuration" \
-  "$WORK/unversioned.efi" "$WORK/at-minimum.efi" "$WORK/below-minimum.efi")
+  "$WORK/unversioned.efi" "$WORK/at-minimum.efi" "$WORK/below-minimum.efi" \
+  "$WORK/unsigned.efi")
 
 swtpm_start "$STATE"
 output=$(boot_qemu "$STATE" "$disk" "$OVMF_CODE_SECURE_BOOT")
 swtpm_stop
 
 FAILED=0
+assert_contains "slab captured the firmware Secure Boot verifier" "$output" \
+  "captured firmware Secure Boot verifier"
 assert_contains "an image with no version was allowed" "$output" \
   "unversioned image loaded"
 assert_contains "an image at the minimum was allowed" "$output" \
@@ -94,4 +105,8 @@ assert_contains "an image below the minimum was refused by slab" "$output" \
   "image version 0 below minimum 1, refusing"
 assert_absent "an image below the minimum was not loaded" "$output" \
   "below-minimum image loaded"
+assert_contains "an unsigned image was refused by the firmware check" \
+  "$output" "image failed Secure Boot verification"
+assert_absent "an unsigned image was not loaded" "$output" \
+  "unsigned image loaded"
 exit "$FAILED"
