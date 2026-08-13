@@ -52,13 +52,7 @@ get_grub_efi_arguments() {
   local vgname
   vgname=$1
 
-  echo '--target=x86_64-efi --efi-directory=/boot/efi'
-
-  if [ "$UKI_MODE" = '1' ]; then
-    echo '--bootloader-id=puavo --uefi-secure-boot'
-  else
-    echo '--bootloader-id=debian --no-uefi-secure-boot'
-  fi
+  echo '--target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=debian --no-uefi-secure-boot'
 
   if [ "$vgname" = 'puavoinstaller' ]; then
     echo '--removable'
