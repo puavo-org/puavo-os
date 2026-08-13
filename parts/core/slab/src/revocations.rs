@@ -1,8 +1,8 @@
-//! The revocation list compiled into slab.
+//! The revocation list compiled in.
 //!
-//! Slab carries the list rather than reading a signed file, so the firmware
-//! Secure Boot check on slab vouches for it and slab needs no signature code.
-//! Bumping revocation means building a new slab with a higher `LIST_VERSION`
+//! The list is carried rather than read from a signed file, so the firmware
+//! Secure Boot check on this image vouches for it and no signature code is
+//! needed. Bumping revocation means a new build with a higher `LIST_VERSION`
 //! and shipping it.
 
 /// Fixed width of a component name, matching the version section.
@@ -11,8 +11,7 @@ pub const NAME_LENGTH: usize = 128;
 /// The PE section that carries a component identity.
 pub const VERSION_SECTION_NAME: &[u8; 8] = b".version";
 
-/// The fleet wide logical revocation version this slab enforces. It is
-/// compared against the counter minus base floor.
+/// The fleet wide logical revocation version this build enforces.
 pub const LIST_VERSION: u64 = 1;
 
 /// One component floor: the component name and its minimum allowed version.
@@ -21,9 +20,12 @@ pub struct Component {
     pub minimum_version: u64,
 }
 
-/// The per component minimum versions this slab enforces on the next stage.
-pub const COMPONENTS: &[Component] =
-    &[Component { name: b"grub", minimum_version: 1 }];
+/// The per component minimum versions enforced on the next stage.
+pub const COMPONENTS: &[Component] = &[
+    Component { name: b"grub", minimum_version: 1 },
+    Component { name: b"puavo", minimum_version: 1 },
+    Component { name: b"puavo-command-line", minimum_version: 1 },
+];
 
 /// Splits a version section into the component name and its version.
 /// Returns `None` when the section is too short to hold them.
