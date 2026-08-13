@@ -1,7 +1,6 @@
 //! Console output.
 
 use core::sync::atomic::{AtomicBool, Ordering};
-use core::time::Duration;
 use uefi::runtime::{self, VariableVendor};
 use uefi::{boot, cstr16, guid, CStr16};
 
@@ -39,7 +38,7 @@ const VENDORS: [VariableVendor; 2] = [
     VariableVendor::GLOBAL_VARIABLE,
 ];
 /// How long to pause before handing off control to the next stage.
-const PAUSE_DURATION: Duration = Duration::from_secs(5);
+const PAUSE_MICROSECONDS: usize = 5_000_000;
 
 /// Reads the debug variable once and remembers whether debug is on.
 pub fn initialize() {
@@ -55,7 +54,7 @@ pub fn is_enabled() -> bool {
 pub fn pause_before_handoff() {
     if is_enabled() {
         debug!("debug mode, pausing before the next stage");
-        boot::stall(PAUSE_DURATION);
+        boot::stall(PAUSE_MICROSECONDS);
     }
 }
 

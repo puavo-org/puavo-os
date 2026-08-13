@@ -4,6 +4,7 @@
 name = "slab"
 version = "0.0.0"
 edition = "2024"
+rust-version = "1.85.0"
 publish = false
 
 [[bin]]
@@ -12,9 +13,9 @@ path = "src/main.rs"
 
 [dependencies]
 # Raw UEFI protocol structs for writing the next stage loaded image device.
-uefi-raw = "0.15"
+uefi-raw = "0.11"
 # UEFI boot services and protocols.
-uefi = { version = "0.38", features = ["alloc", "global_allocator", "panic_handler", "logger"] }
+uefi = { version = "0.35", features = ["alloc", "global_allocator", "panic_handler", "logger"] }
 # Used for TPM commands and responses.
 zerocopy = { version = "0.8", default-features = false, features = ["derive"] }
 
