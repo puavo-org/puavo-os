@@ -1,5 +1,7 @@
 //! Console output.
 
+use alloc::string::String;
+use core::fmt::Write;
 use core::sync::atomic::{AtomicBool, Ordering};
 use uefi::runtime::{self, VariableVendor};
 use uefi::{CStr16, boot, cstr16, guid};
@@ -10,6 +12,15 @@ macro_rules! debug {
         if $crate::debug::is_enabled() {
             uefi::println!($($arg)*);
         }
+    };
+}
+
+/// Prints one step of deciding about an image. Steps are indented under the
+/// line that announces the decision, so what belongs to which decision can be
+/// told apart when several images are decided about in one boot.
+macro_rules! verification {
+    ($($arg:tt)*) => {
+        debug!("  {}", format_args!($($arg)*))
     };
 }
 
@@ -39,6 +50,15 @@ const VENDORS: [VariableVendor; 2] = [
 ];
 /// How long to pause before handing off control to the next stage.
 const PAUSE_MICROSECONDS: usize = 5_000_000;
+
+/// Formats bytes as lowercase hex.
+pub fn hex(bytes: &[u8]) -> String {
+    let mut text = String::new();
+    for byte in bytes {
+        let _ = write!(text, "{byte:02x}");
+    }
+    text
+}
 
 /// Reads the debug variable once and remembers whether debug is on.
 pub fn initialize() {

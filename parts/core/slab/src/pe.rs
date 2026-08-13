@@ -1,7 +1,4 @@
-//! A minimal read-only reader for one named section of a PE image, used to
-//! read the next stage component identity. Every access is bounds checked
-//! through `get`, so a malformed image yields `None` rather than a panic.
-//! PE header fields are little endian.
+//! A minimal PE image section parser.
 
 /// Offset in the DOS header of the pointer to the PE header.
 const PE_HEADER_POINTER: usize = 0x3C;

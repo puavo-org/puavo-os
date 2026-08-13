@@ -7,8 +7,6 @@ use crate::debug;
 use crate::revocations;
 use crate::shutdown;
 use crate::tpm::{self, CommandError};
-use alloc::string::String;
-use core::fmt::Write;
 use uefi::boot::{self, ScopedProtocol};
 use uefi::proto::tcg::v2::Tcg;
 
@@ -25,7 +23,7 @@ pub fn open_tcg() -> Option<ScopedProtocol<Tcg>> {
 }
 
 /// Enforces the rollback floor, then raises and locks the counter to this
-/// slab's list version. Any failure that cannot be proven safe shuts the
+/// the list version built in. Any failure that cannot be proven safe shuts the
 /// machine down rather than continuing the boot.
 pub fn enforce(tcg: &mut Tcg) {
     let (base, counter) = match ensure_indices(tcg) {
@@ -33,14 +31,14 @@ pub fn enforce(tcg: &mut Tcg) {
         None => shutdown(),
     };
 
-    // Pin the base and record slab presence in PCR 7.
+    // Pin the base and record this stage in PCR 7.
     if let Err(error) = tpm::extend_base(tcg, base) {
         error_with_tpm_code("failed to extend the base into PCR 7", error);
         shutdown();
     }
     if debug::is_enabled() {
-        if let Ok(pcr) = tpm::read_pcr(tcg, tpm::BASE_PCR) {
-            debug!("PCR 7 after extend: {}", hex(&pcr));
+        if let Ok(pcr) = tpm::read_pcr(tcg, tpm::PCR_7) {
+            debug!("PCR 7 after extend: {}", debug::hex(&pcr));
         }
     }
 
@@ -175,13 +173,4 @@ fn error_with_tpm_code(message: &str, error: CommandError) {
             error!("{message} (malformed TPM response)")
         }
     }
-}
-
-/// Formats a byte slice as lowercase hex, for printing a PCR digest.
-fn hex(bytes: &[u8]) -> String {
-    let mut text = String::new();
-    for byte in bytes {
-        let _ = write!(text, "{byte:02x}");
-    }
-    text
 }

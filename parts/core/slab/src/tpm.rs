@@ -33,8 +33,8 @@ const NV_READ_PUBLIC: u32 = 0x0000_0169;
 const PCR_READ: u32 = 0x0000_017E;
 
 // Part 2, counter index attributes (TPMA_NV). COUNTER makes the value only
-// ever increase, so the floor cannot be rolled back. WRITE_STCLEAR lets slab
-// lock writes until the next TPM reset, blocking further raises within a boot.
+// ever increase, so the floor cannot be rolled back. WRITE_STCLEAR allows
+// locking writes until the next TPM reset, blocking further raises in a boot.
 // NO_DA keeps failed access from tripping the dictionary attack lockout.
 // AUTHWRITE and AUTHREAD allow access with the empty index authorization.
 const COUNTER_ATTRIBUTES: u32 = 0x0204_4014;
@@ -57,12 +57,16 @@ const NAME_ALGORITHM_SHA256: u16 = 0x000B;
 // Both the counter and the base hold an eight byte value.
 const NV_DATA_SIZE: u16 = 8;
 
-// PCR that the disk binds and slab extends the base into.
-pub const BASE_PCR: u32 = 7;
+// PCR that the machine records the images it loads into. Only something that
+// decides about images has anything to record there.
+#[cfg(feature = "verifier")]
+pub const PCR_4: u32 = 4;
 
-// The base extension event: its log data and the buffer to build it in.
+// PCR that the disk binds and the base is extended into.
+pub const PCR_7: u32 = 7;
+
+// The log data of the base extension event.
 const BASE_EVENT_DATA: &[u8] = b"slab-base";
-const EVENT_BUFFER_SIZE: usize = 64;
 
 // Length of the TPMS_NV_PUBLIC body: index, name algorithm, attributes,
 // empty auth policy, data size.
@@ -321,7 +325,7 @@ struct NvReadPublicResponse {
     attributes: U32,
 }
 
-/// TPM2_PCR_Read response for the single SHA256 selection slab requests.
+/// TPM2_PCR_Read response for the single SHA256 selection requested.
 #[derive(FromBytes, KnownLayout, Immutable)]
 #[repr(C)]
 struct PcrReadResponse {
@@ -400,24 +404,44 @@ pub fn write_lock(tcg: &mut Tcg, index: u32) -> CommandResult<()> {
     submit(tcg, IndexCommand::new(NV_WRITE_LOCK, index).as_bytes())?.check()
 }
 
-/// Extends the base into PCR 7, hashing and logging it through the TCG2
-/// protocol so the event log stays replayable. This pins the base and records
-/// slab presence in the sealed state.
+/// One thing to add to the machine's account of the boot. What the log carries
+/// and what the register is extended with are separate, because they are not
+/// always the same bytes.
+pub struct Extension<'a> {
+    pub pcr: u32,
+    pub event_type: EventType,
+    pub logged: &'a [u8],
+    pub hashed: &'a [u8],
+    pub flags: HashLogExtendEventFlags,
+}
+
+/// Extends the base into PCR 7. This pins the base and records this stage in
+/// the sealed state.
 pub fn extend_base(tcg: &mut Tcg, base: u64) -> CommandResult<()> {
-    let mut buffer = [0u8; EVENT_BUFFER_SIZE];
-    let event = PcrEventInputs::new_in_buffer(
-        &mut buffer,
-        PcrIndex(BASE_PCR),
-        EventType::EVENT_TAG,
-        BASE_EVENT_DATA,
+    extend(
+        tcg,
+        Extension {
+            pcr: PCR_7,
+            event_type: EventType::EVENT_TAG,
+            logged: BASE_EVENT_DATA,
+            hashed: &base.to_be_bytes(),
+            flags: HashLogExtendEventFlags::empty(),
+        },
+    )
+}
+
+/// Hashes and logs one addition through the TCG2 protocol, so the event log
+/// stays replayable. See the TCG EFI Protocol specification,
+/// EFI_TCG2_PROTOCOL.HashLogExtendEvent, for what the flags ask for.
+pub fn extend(tcg: &mut Tcg, addition: Extension) -> CommandResult<()> {
+    let event = PcrEventInputs::new_in_box(
+        PcrIndex(addition.pcr),
+        addition.event_type,
+        addition.logged,
     )
     .map_err(|_| CommandError::MalformedResponse)?;
-    tcg.hash_log_extend_event(
-        HashLogExtendEventFlags::empty(),
-        &base.to_be_bytes(),
-        event,
-    )
-    .map_err(|error| CommandError::Transport(error.status()))
+    tcg.hash_log_extend_event(addition.flags, addition.hashed, &event)
+        .map_err(|error| CommandError::Transport(error.status()))
 }
 
 /// Reads the SHA256 bank value of the given PCR.

@@ -1,6 +1,6 @@
-//! Loading and handing off to the next stage. Slab reads the next stage,
-//! checks its version against the revocation list, then loads and starts
-//! the exact bytes it checked.
+//! Loading and handing off to the next stage. The next stage is read, its
+//! version checked against the revocation list, then the exact bytes that were
+//! checked are loaded and started.
 
 use crate::pe;
 use crate::revocations::{self, VERSION_SECTION_NAME};
@@ -23,13 +23,14 @@ use uefi_raw::protocol::network::pxe::{
     PxeBaseCodeProtocol, PxeBaseCodeTftpOpcode,
 };
 
-/// The next stage slab hands control to.
+/// The next stage control is handed to.
 const NEXT_STAGE_PATH: &CStr16 = cstr16!("\\EFI\\puavo\\grub\\grubx64.efi");
 /// The path of the next stage on the server.
 const NEXT_STAGE_SERVER_PATH: &CStr8 = cstr8!("EFI/puavo/grub/grubx64.efi");
+
 /// Bytes reserved for building the next stage device path.
 const DEVICE_PATH_BUFFER_SIZE: usize = 128;
-/// Largest next stage slab accepts, since the server decides the size.
+/// Largest next stage accepted, since the server decides the size.
 const NEXT_STAGE_SIZE_LIMIT: usize = 64 * 1024 * 1024;
 /// Block size asked for when reading from a server. Servers commonly answer
 /// the size of a file only to a client that also asks for a block size.
@@ -132,7 +133,7 @@ fn is_network(device: Handle) -> bool {
 }
 
 /// Opens the network protocol without taking it from the firmware, which
-/// keeps using it while slab reads.
+/// keeps using it while the read happens.
 fn open_network_protocol(
     device: Handle,
 ) -> Option<boot::ScopedProtocol<pxe::BaseCode>> {
@@ -154,11 +155,11 @@ fn open_network_protocol(
     .ok()
 }
 
-/// Returns the device slab was loaded from.
+/// Returns the device this image was loaded from.
 fn device() -> Option<Handle> {
     boot::open_protocol_exclusive::<LoadedImage>(boot::image_handle())
         .ok()
-        .and_then(|slab| slab.device())
+        .and_then(|loaded| loaded.device())
 }
 
 /// Returns the address of the server that served this bootloader.
@@ -199,7 +200,7 @@ pub fn is_allowed(image: &[u8]) -> bool {
     }
 }
 
-/// Loads the exact buffer slab checked, so the bytes cannot change between the
+/// Loads the exact buffer that was checked, so the bytes cannot change between
 /// check and the load, and starts it.
 pub fn start(image: &[u8]) -> Result<(), Status> {
     let mut path_buffer = [MaybeUninit::uninit(); DEVICE_PATH_BUFFER_SIZE];
@@ -216,20 +217,19 @@ pub fn start(image: &[u8]) -> Result<(), Status> {
     )
     .map_err(|error| error.status())?;
 
-    // Point the next stage at the device slab was loaded from.
+    // Point the next stage at the device this image was loaded from.
     set_device(handle);
 
     // Hand control to the next stage.
     boot::start_image(handle).map_err(|error| error.status())
 }
 
-/// Points the next stage at the device slab was loaded from. Firmware leaves
+/// Points the next stage at the device this image was loaded from. Firmware
 /// the device unset for a buffer load, so without this the next stage cannot
-/// find where it was loaded from. This is the one place slab writes a firmware
-/// structure directly.
+/// find where it was loaded from.
 fn set_device(handle: Handle) {
     let Some(device) = device() else {
-        debug!("slab has no device handle, next stage may not find its files");
+        debug!("no device handle, the next stage may not find its files");
         return;
     };
 

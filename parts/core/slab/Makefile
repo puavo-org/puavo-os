@@ -1,6 +1,7 @@
 TARGET = x86_64-unknown-uefi
 BIN = target/$(TARGET)/release/slab.efi
 SOURCE_FILES = $(shell find src -type f -name '*.rs')
+VERIFIER_KEYS = $(abspath authorities)
 INSTALL_DIR = $(DESTDIR)/usr/lib/slab
 SBIN_DIR = $(DESTDIR)/usr/sbin
 
@@ -15,10 +16,11 @@ build: $(BIN)
 # with the cargo package, which is required by other components.
 # UEFI requires lld-link as linker, which Debian ships in the lld package,
 # rather than bundled with rustc.
-$(BIN): Cargo.lock Cargo.toml $(SOURCE_FILES)
+$(BIN): Cargo.lock Cargo.toml build.rs $(SOURCE_FILES)
 	RUSTC_BOOTSTRAP=1 RUSTFLAGS='-C linker=lld-link' \
+	  SLAB_VERIFIER_KEYS='$(VERIFIER_KEYS)' \
 	  cargo build --release --target $(TARGET) \
-	  -Z build-std=core,alloc --bin slab
+	  -Z build-std=core,alloc --bin slab --features verifier
 
 # Installs the unsigned slab and utilities.
 .PHONY: install

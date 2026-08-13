@@ -1,7 +1,7 @@
-// Slab bootloader. Firmware loads it first. It enforces a TPM anti-rollback
-// floor and then chainloads the next stage. The revocation list is embedded,
-// so the firmware Secure Boot check on slab vouches for it and slab needs no
-// signature code.
+// First stage bootloader. Firmware loads it first. It enforces a TPM
+// anti-rollback floor and then chainloads the next stage. The revocation list
+// is embedded, so the firmware Secure Boot check on this image vouches for the
+// list and no signature code is needed for it.
 #![no_main]
 #![no_std]
 
@@ -15,6 +15,8 @@ mod revocations;
 mod rollback;
 mod shim_lock;
 mod tpm;
+#[cfg(feature = "verifier")]
+mod verifier;
 
 use uefi::runtime::{self, ResetType};
 use uefi::{Status, entry};
@@ -28,9 +30,17 @@ fn main() -> Status {
     debug::initialize();
     debug!("slab: starting");
 
+    // Prevent nested chainloading of this bootloader.
+    if shim_lock::installed_already() {
+        security_violation!(
+            "another image verification protocol is already in place, refusing in order to protect against undefined behavior"
+        );
+        shutdown();
+    }
+
     // A device without a TPM has no counter to enforce and no sealed disk to
-    // protect, so slab continues. A present but broken or tampered TPM still
-    // refuses, inside enforce.
+    // protect, so the boot continues. A present but broken or tampered TPM
+    // still refuses, inside enforce.
     match rollback::open_tcg() {
         Some(mut tcg) => rollback::enforce(&mut tcg),
         None => {
@@ -60,7 +70,7 @@ fn main() -> Status {
     debug::pause_before_handoff();
 
     match chainload::start(&next_stage) {
-        Ok(()) => error!("next stage returned to slab"),
+        Ok(()) => error!("next stage returned back"),
         Err(status) => error!("chainload failed: {status:?}"),
     }
 

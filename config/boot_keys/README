@@ -16,3 +16,11 @@ use these keys to create an actual Puavo OS system.
 However, you should know that in case you actually want to use SecureBoot
 and TPM to achieve some security, you should roll out your own keys and
 keep the private keys secret.
+
+The verifier directory holds the signing keys of the authorities the first stage
+bootloader decides with, for images the machine itself is not meant to trust.
+What the bootloader trusts lives with the bootloader, under its authorities
+directory: one subdirectory per authority, holding authority GUID,
+and the public keys it signs with as DER files. Rotating a key means adding
+another der file there, which leaves the recorded name of the authority
+unchanged.
