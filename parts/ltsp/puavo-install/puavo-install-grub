@@ -569,6 +569,7 @@ if test -e "${prefix}/puavo/${puavo_optional_grub_conf}.cfg"; then
 fi
 
 set gfxmode=auto
+loadfont (memdisk)/boot/grub/fonts/unicode.pf2
 set locale_dir=$prefix/locale
 terminal_output gfxterm
 
