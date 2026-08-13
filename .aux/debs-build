@@ -23,6 +23,10 @@ rm -rf "${pkgworkdir}"
 mkdir -p "${pkgworkdir}/${srcpkgname}"
 cp -aH "$srcpkgname"/* "${pkgworkdir}/${srcpkgname}/"
 
+if [ -x "${srcpkgname}/.puavo_prepare" ]; then
+  "${srcpkgname}/.puavo_prepare" "${pkgworkdir}/${srcpkgname}"
+fi
+
 if [ -e "${srcpkgname}/.puavo_build_dependencies" ]; then
   for dir in $(cat "${srcpkgname}/.puavo_build_dependencies"); do
     cp -a "$dir" "${pkgworkdir}/"
