@@ -863,7 +863,8 @@ copy_grub_environment() {
   # environment variables into /images/boot/grub/grubenv.
   # Here we sync this file to the boot directory in the EFI partition.
   if [ ! -f "${images_dir}/boot/grub/grubenv" ]; then
-    # Grub will create the default environment in the EFI partition
+    # Nothing to sync, so make the empty one the bootloader expects.
+    grub-editenv "${boot_dir}/grub/grubenv" create || return 1
     return 0
   fi
 
