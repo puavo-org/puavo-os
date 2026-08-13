@@ -927,7 +927,7 @@ place_uki_bootloaders_x86_64() {
   local efi_mountpoint grub_signed slab_signed puavo_directory
   local grub_directory removable_directory
   efi_mountpoint=$1
-  grub_signed='/usr/lib/grub/x86_64-efi-signed/grubx64.efi.signed'
+  grub_signed='/usr/lib/grub/puavo/x86_64-efi/grubx64.efi.signed'
   slab_signed='/usr/lib/slab/slabx64.efi.signed'
 
   [ -f "$grub_signed" ] || {

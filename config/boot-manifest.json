@@ -1,7 +1,7 @@
 {
   "patterns": [
-    "usr/lib/grub/x86_64-efi-signed/*.efi.signed",
-    "usr/lib/grub/i386-efi-signed/*.efi.signed",
+    "usr/lib/grub/puavo/x86_64-efi/*.efi.signed",
+    "usr/lib/grub/puavo/i386-efi/*.efi.signed",
 
     "usr/lib/slab/*.efi.signed",
 
@@ -13,8 +13,8 @@
     "etc/puavo-conf/secure-boot*.der"
   ],
   "expected_components": [
-    "usr/lib/grub/x86_64-efi-signed/grubx64.efi.signed",
-    "usr/lib/grub/i386-efi-signed/grubia32.efi.signed",
+    "usr/lib/grub/puavo/x86_64-efi/grubx64.efi.signed",
+    "usr/lib/grub/puavo/i386-efi/grubia32.efi.signed",
 
     "usr/lib/slab/slabx64.efi.signed",
 
