@@ -2,6 +2,7 @@
   "patterns": [
     "usr/lib/grub/puavo/x86_64-efi/*.efi.signed",
     "usr/lib/grub/puavo/i386-efi/*.efi.signed",
+    "usr/lib/grub/puavo-netboot/*.efi.signed",
 
     "usr/lib/slab/*.efi.signed",
 
@@ -10,11 +11,15 @@
     "boot/addons/*.efi",
 
     "etc/puavo-conf/tpm2-pcr-public-key*.pem",
-    "etc/puavo-conf/secure-boot*.der"
+    "etc/puavo-conf/secure-boot*.der",
+
+    "var/lib/tftpboot/slabx64.efi",
+    "var/lib/tftpboot/efi64/grubx64.efi"
   ],
   "expected_components": [
     "usr/lib/grub/puavo/x86_64-efi/grubx64.efi.signed",
     "usr/lib/grub/puavo/i386-efi/grubia32.efi.signed",
+    "usr/lib/grub/puavo-netboot/grubx64.efi.signed",
 
     "usr/lib/slab/slabx64.efi.signed",
 
@@ -30,7 +35,10 @@
 
     "etc/puavo-conf/tpm2-pcr-public-key.pem",
 
-    "etc/puavo-conf/secure-boot.der"
+    "etc/puavo-conf/secure-boot.der",
+
+    "var/lib/tftpboot/slabx64.efi",
+    "var/lib/tftpboot/efi64/grubx64.efi"
   ],
   "secure_boot_certificate_patterns": ["secure-boot.pem"],
   "tpm_pcr_public_key_patterns": ["tpm2-pcr-public-key*.pem"],

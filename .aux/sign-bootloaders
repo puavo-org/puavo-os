@@ -63,9 +63,37 @@ create_grub_architecture_bootloader() {
   .aux/sign-efi-directory "$grub_build_directory" "$uki_key_directory" "$grub_signed_directory"
 }
 
+create_grub_netboot_bootloader() {
+  netboot_build_directory="${shared_build_directory}/netboot-x86_64-efi"
+  mkdir -p "$netboot_build_directory"
+
+  echo "creating GRUB netboot bootloader..."
+  .aux/create-grub-netboot-bootloader x86_64-efi \
+    "${netboot_build_directory}/grubx64.efi"
+
+  netboot_signed_directory="${rootfs_directory}/usr/lib/grub/puavo-netboot"
+  mkdir -p "$netboot_signed_directory"
+
+  echo "signing GRUB netboot bootloader..."
+  .aux/sign-efi-directory "$netboot_build_directory" "$uki_key_directory" \
+    "$netboot_signed_directory"
+}
+
+place_netboot_bootloaders() {
+  tftp_directory="${rootfs_directory}/var/lib/tftpboot"
+
+  echo "placing netboot bootloaders under ${tftp_directory}..."
+  install -D -m644 "${slab_directory}/slabx64.efi.signed" \
+    "${tftp_directory}/slabx64.efi"
+  install -D -m644 "${netboot_signed_directory}/grubx64.efi.signed" \
+    "${tftp_directory}/efi64/grubx64.efi"
+}
+
 for architecture in i386-efi x86_64-efi; do
   create_grub_architecture_bootloader "$architecture"
 done
+
+create_grub_netboot_bootloader
 
 [ -d "$slab_key_directory" ] || panic "key directory '$slab_key_directory' does not exist"
 
@@ -74,3 +102,5 @@ slab_directory="${rootfs_directory}/usr/lib/slab"
 
 echo "signing slab bootloader..."
 .aux/sign-efi-directory "$slab_directory" "$slab_key_directory" "$slab_directory"
+
+place_netboot_bootloaders
