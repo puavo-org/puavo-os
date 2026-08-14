@@ -31,6 +31,7 @@ const-oid = { version = "0.9", default-features = false, features = ["db"], opti
 der = { version = "0.7", default-features = false, features = ["oid"], optional = true }
 rsa = { version = "0.9", default-features = false, features = ["sha2"], optional = true }
 sha2 = { version = "0.10", default-features = false, optional = true }
+x509-cert = { version = "0.2", default-features = false, optional = true }
 
 [features]
 default = ["allow-previous-revocation-list"]
@@ -48,6 +49,7 @@ verifier = [
   "dep:object",
   "dep:rsa",
   "dep:sha2",
+  "dep:x509-cert",
 ]
 
 # Used for internal Secure Boot verifier authorities and the floors table.
@@ -60,6 +62,10 @@ time = { version = "0.3", features = ["formatting", "macros", "parsing"] }
 
 [profile.dev]
 panic = "abort"
+
+# Without optimization, LLVM fails to compile sha2 for the UEFI target.
+[profile.dev.package.sha2]
+opt-level = 1
 
 # Optimized for size with link time optimization to keep the signed image small.
 [profile.release]

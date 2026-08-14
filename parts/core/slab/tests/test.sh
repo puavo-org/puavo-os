@@ -21,6 +21,9 @@ echo "==> network next stage"
 echo "==> shim lock"
 "$TESTS_DIRECTORY/shim-lock.sh"
 
+echo "==> issuers"
+"$TESTS_DIRECTORY/issuers.sh"
+
 echo "==> measurements"
 "$TESTS_DIRECTORY/measurements.sh"
 
