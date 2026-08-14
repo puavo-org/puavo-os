@@ -20,7 +20,7 @@ path = "src/bin/measurements.rs"
 # Raw UEFI protocol structs for writing the next stage loaded image device.
 uefi-raw = "0.11"
 # UEFI boot services and protocols.
-uefi = { version = "0.35", features = ["alloc", "global_allocator", "panic_handler", "logger"] }
+uefi = { version = "0.35", features = ["alloc", "logger"] }
 # Used for TPM commands and responses.
 zerocopy = { version = "0.8", default-features = false, features = ["derive"] }
 # Used for internal Secure Boot verifier:
@@ -32,6 +32,11 @@ der = { version = "0.7", default-features = false, features = ["oid"], optional 
 rsa = { version = "0.9", default-features = false, features = ["sha2"], optional = true }
 sha2 = { version = "0.10", default-features = false, optional = true }
 x509-cert = { version = "0.2", default-features = false, optional = true }
+
+# The unit tests run on the build machine, where the standard library brings
+# the allocator and the panic handler.
+[target.'cfg(target_os = "uefi")'.dependencies]
+uefi = { version = "0.35", features = ["global_allocator", "panic_handler"] }
 
 [features]
 default = ["allow-previous-revocation-list"]
