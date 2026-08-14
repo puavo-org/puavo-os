@@ -39,9 +39,8 @@ local_os_menuentry() {
 menuentry 'Local OS' --class os --id local {
   insmod chain
   if [ $grub_platform = "efi" ] ; then
-    for bootloader in /EFI/puavo/shimx64.efi \
+    for bootloader in /EFI/puavo/grub/grubx64.efi \
                       /EFI/puavo/grubx64.efi \
-                      /EFI/debian/shimx64.efi \
                       /EFI/debian/grubx64.efi; do
       if search --set=root --file $bootloader; then
         chainloader $bootloader
