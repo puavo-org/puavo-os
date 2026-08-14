@@ -3,6 +3,9 @@ set -eu
 
 TESTS_DIRECTORY="$(cd "$(dirname "$0")" && pwd)"
 
+echo "==> unit"
+"$TESTS_DIRECTORY/unit.sh"
+
 echo "==> happy path"
 "$TESTS_DIRECTORY/happy-path.sh"
 

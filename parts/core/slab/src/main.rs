@@ -2,8 +2,9 @@
 // anti-rollback floor and then chainloads the next stage. The revocation list
 // is embedded, so the firmware Secure Boot check on this image vouches for the
 // list and no signature code is needed for it.
-#![no_main]
-#![no_std]
+// The unit tests run on the build machine with the standard library.
+#![cfg_attr(not(test), no_main)]
+#![cfg_attr(not(test), no_std)]
 
 extern crate alloc;
 

@@ -154,3 +154,126 @@ fn read_certificates(signature: &[u8]) -> Option<Vec<CertificateChoices>> {
     };
     Some(certificates.0.into_vec())
 }
+
+#[cfg(test)]
+mod tests {
+    //! unit.sh generates the files these tests read.
+
+    use super::*;
+    use der::asn1::BitString;
+    use std::env;
+    use std::fs;
+    use std::path::Path;
+    use std::sync::LazyLock;
+
+    /// The variable naming the directory of the generated files.
+    const FIXTURES_VARIABLE: &str = "FIXTURES_DIRECTORY";
+
+    static SIGNATURE: LazyLock<Vec<u8>> =
+        LazyLock::new(|| read_fixture("signature.pkcs7"));
+    static ISSUER: LazyLock<Vec<u8>> =
+        LazyLock::new(|| read_fixture("issuer.der"));
+    static UNTRUSTED: LazyLock<Vec<u8>> =
+        LazyLock::new(|| read_fixture("untrusted.der"));
+    static ISSUER_CERTIFICATE: LazyLock<Vec<u8>> =
+        LazyLock::new(|| read_fixture("issuer-certificate.der"));
+
+    #[test]
+    fn the_certificate_of_the_signer_is_found() {
+        assert!(find_signer_certificate(&SIGNATURE, &read_signer()).is_some());
+    }
+
+    #[test]
+    fn a_padded_signature_is_read() {
+        let mut padded = SIGNATURE.clone();
+        padded.extend_from_slice(&[0; 7]);
+        assert!(find_signer_certificate(&padded, &read_signer()).is_some());
+    }
+
+    #[test]
+    fn the_certificate_of_the_signer_holds_a_key() {
+        let certificate = read_signer_certificate();
+        assert!(read_public_key(&certificate).is_some());
+    }
+
+    #[test]
+    fn a_certificate_is_issued_by_its_issuer() {
+        let certificate = read_signer_certificate();
+        assert!(is_issued_by(&certificate, &ISSUER));
+    }
+
+    #[test]
+    fn a_certificate_is_not_issued_by_an_untrusted_key() {
+        let certificate = read_signer_certificate();
+        assert!(!is_issued_by(&certificate, &UNTRUSTED));
+    }
+
+    #[test]
+    fn an_altered_certificate_is_not_issued_by_its_issuer() {
+        let altered = alter_signature(&read_signer_certificate());
+        assert!(!is_issued_by(&altered, &ISSUER));
+    }
+
+    #[test]
+    fn a_signing_certificate_allows_code_signing() {
+        let certificate = read_signer_certificate();
+        assert!(allows_code_signing(&certificate));
+    }
+
+    #[test]
+    fn an_issuer_certificate_does_not_allow_code_signing() {
+        let issuer = Certificate::from_der(&ISSUER_CERTIFICATE).unwrap();
+        assert!(!allows_code_signing(&issuer));
+    }
+
+    #[test]
+    fn a_signature_cut_short_is_refused() {
+        let signer = read_signer();
+        for length in (0..SIGNATURE.len()).step_by(7) {
+            let truncated = &SIGNATURE[..length];
+            assert!(find_signer_certificate(truncated, &signer).is_none());
+        }
+    }
+
+    #[test]
+    fn bytes_that_are_not_a_signature_are_refused() {
+        for filler in [0x00, 0x30, 0xff] {
+            let nonsense = [filler; 512];
+            assert!(
+                find_signer_certificate(&nonsense, &read_signer()).is_none()
+            );
+        }
+    }
+
+    /// Returns the signer of the signature, which identifies its certificate.
+    fn read_signer() -> SignerInfo {
+        let mut reader = SliceReader::new(&SIGNATURE).unwrap();
+        let content = ContentInfo::decode(&mut reader).unwrap();
+        let signed_data = content.content.decode_as::<SignedData>().unwrap();
+        signed_data.signer_infos.0.as_slice()[0].clone()
+    }
+
+    /// Returns the certificate of the signer, which the signature includes.
+    fn read_signer_certificate() -> Certificate {
+        find_signer_certificate(&SIGNATURE, &read_signer()).unwrap()
+    }
+
+    /// Returns a copy of the certificate with its signature altered.
+    fn alter_signature(certificate: &Certificate) -> Certificate {
+        let mut altered = certificate.clone();
+        let mut signature = certificate.signature.as_bytes().unwrap().to_vec();
+        signature[0] ^= 1;
+        altered.signature = BitString::from_bytes(&signature).unwrap();
+        altered
+    }
+
+    /// Reads a generated file.
+    fn read_fixture(name: &str) -> Vec<u8> {
+        let directory = env::var(FIXTURES_VARIABLE).unwrap_or_else(|_| {
+            panic!("{FIXTURES_VARIABLE} is not set, run unit.sh")
+        });
+        let file = Path::new(&directory).join(name);
+        fs::read(&file)
+            .unwrap_or_else(|error| panic!("failed to read {file:?}: {error}"))
+    }
+}
