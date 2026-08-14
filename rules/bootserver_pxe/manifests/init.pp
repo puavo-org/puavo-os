@@ -17,10 +17,6 @@ class bootserver_pxe {
     'grub-pxe-i386.0':
       filedir => '/usr/lib/grub/pxe',
       require => Exec['generate-grub-pxe-bios'];
-
-    'efi64/grub-pxe-x64.efi':
-      filedir => '/usr/lib/grub/pxe',
-      require => Exec['generate-grub-pxe-efi64'];
   }
 
   file {
