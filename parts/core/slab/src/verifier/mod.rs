@@ -37,7 +37,12 @@
 //! Read upwards: a key we hold signed the attributes, the attributes commit to
 //! the content, and the content commits to the file. Only checks 3 and 4 do any
 //! cryptography, the first two compare stored bytes.
+//!
+//! Alternatively, a built-in key may have issued the certificate that made S,
+//! which is included in the signature. Check 3 is then made with the key of
+//! that certificate, and the certificate is verified with the built-in key.
 
+mod certificates;
 mod records;
 
 use crate::debug;
@@ -64,10 +69,19 @@ use rsa::signature::Verifier;
 use sha2::{Digest, Sha256};
 use uefi::Guid;
 
-/// Someone whose signature is accepted here, and the keys they sign with.
+/// The identity of an authority, as the bytes of a GUID.
+type Identity = [u8; 16];
+
+/// A built-in public key, and a list of them.
+type PublicKey = &'static [u8];
+type PublicKeys = &'static [PublicKey];
+
+/// An authority whose signatures are accepted, the keys it signs with, and the
+/// keys it issues certificates with.
 struct Authority {
-    identity: [u8; 16],
-    keys: &'static [&'static [u8]],
+    identity: Identity,
+    keys: PublicKeys,
+    issuers: PublicKeys,
 }
 
 /// An authority that approved an image, and the bit that says whether it has
@@ -100,12 +114,16 @@ pub fn describe() {
     debug!("built in authorities: {}", AUTHORITIES.len());
     for authority in AUTHORITIES {
         debug!(
-            "  identity {}, keys: {}",
+            "  identity {}, keys: {}, issuers: {}",
             Guid::from_bytes(authority.identity),
-            authority.keys.len()
+            authority.keys.len(),
+            authority.issuers.len()
         );
         for key in authority.keys {
             debug!("    key {}", debug::hex(&Sha256::digest(key)));
+        }
+        for issuer in authority.issuers {
+            debug!("    issuer {}", debug::hex(&Sha256::digest(issuer)));
         }
     }
 }
@@ -151,7 +169,10 @@ pub fn trusts(image: &[u8], device_path: &[u8]) -> bool {
             }
         };
 
-        let Some(approval) = approving_authority(&view, &signature) else {
+        let approval =
+            approving_authority(&view, &signature, attribute_certificate.data);
+        let Some(approval) = approval else {
+            verification!("the signature is not approved, trying the next one");
             continue;
         };
         if !record(&approval, image, device_path) {
@@ -166,9 +187,11 @@ pub fn trusts(image: &[u8], device_path: &[u8]) -> bool {
 }
 
 /// Upon success returns which built-in authority approved the image.
+/// The stored signature is passed too, since it includes the certificates.
 fn approving_authority(
     view: &PeFile64,
     signature: &AuthenticodeSignature,
+    stored_signature: &[u8],
 ) -> Option<Approval> {
     let signer = signature.signer_info();
     if !uses_sha256_with_rsa(signer) {
@@ -242,13 +265,15 @@ fn approving_authority(
     };
 
     // Checks 3 and 4.
-    authority_that_signed(&approval, &signature)
+    authority_that_signed(&approval, &signature, signer, stored_signature)
 }
 
 /// The authority whose key made the approval, if one of them here did.
 fn authority_that_signed(
     approval: &[u8],
     signature: &Signature,
+    signer: &SignerInfo,
+    stored_signature: &[u8],
 ) -> Option<Approval> {
     for (index, authority) in AUTHORITIES.iter().enumerate() {
         for key in authority.keys {
@@ -269,10 +294,63 @@ fn authority_that_signed(
             }
         }
     }
+
+    verification!("no built-in key made the approval, checking certificates");
+    if let Some(approval) =
+        find_issuing_authority(approval, signature, signer, stored_signature)
+    {
+        return Some(approval);
+    }
+
     verification!(
         "none of the {} built-in authorities made this approval",
         AUTHORITIES.len()
     );
+    None
+}
+
+/// Returns the authority whose built-in key issued the certificate that made
+/// the approval, if any. The certificate must allow code signing, so a
+/// certificate issued for another purpose cannot approve an image.
+fn find_issuing_authority(
+    approval: &[u8],
+    signature: &Signature,
+    signer: &SignerInfo,
+    stored_signature: &[u8],
+) -> Option<Approval> {
+    // Reading the certificates is skipped when no authority has issuer keys.
+    if !AUTHORITIES.iter().any(|authority| !authority.issuers.is_empty()) {
+        verification!("no built-in authority has issuer keys");
+        return None;
+    }
+
+    let certificate =
+        certificates::find_signer_certificate(stored_signature, signer)?;
+    let public_key = certificates::read_public_key(&certificate)?;
+    if VerifyingKey::<Sha256>::new(public_key)
+        .verify(approval, signature)
+        .is_err()
+    {
+        verification!("the signer certificate does not verify the approval");
+        return None;
+    }
+    if !certificates::allows_code_signing(&certificate) {
+        verification!("the certificate does not allow code signing");
+        return None;
+    }
+
+    for (index, authority) in AUTHORITIES.iter().enumerate() {
+        for issuer in authority.issuers {
+            if certificates::is_issued_by(&certificate, issuer) {
+                verification!("a built-in issuer key issued the certificate");
+                // The shift stays in range because the assertion above
+                // keeps the table no longer than there are bits to shift by.
+                return Some(Approval { authority, bit: 1 << index });
+            }
+        }
+    }
+
+    verification!("no built-in issuer key issued the signer certificate");
     None
 }
 

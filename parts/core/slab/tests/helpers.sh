@@ -52,6 +52,16 @@ build_without_defaults() {
   echo "$1/x86_64-unknown-uefi/debug/slab.efi"
 }
 
+# Builds the debug binary with the verifier and prints its path.
+#   $1  authorities directory
+#   $2  target directory
+build_with_verifier() {
+  SLAB_VERIFIER_KEYS="$1" CARGO_TARGET_DIR="$2" cargo build \
+    --manifest-path "$SLAB_DIRECTORY/Cargo.toml" \
+    --target x86_64-unknown-uefi --bin slab --features verifier >&2 || return 1
+  echo "$2/x86_64-unknown-uefi/debug/slab.efi"
+}
+
 # Prints the revocation floor of a component from the floors file.
 #   $1  component name
 component_floor() {

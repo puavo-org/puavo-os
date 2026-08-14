@@ -6,8 +6,10 @@ set -eu
 # directories that hold them. An authority keeps its identity and its
 # certificates together, and a build needs the public keys of those.
 #
-# The certificates of an authority are kept under keys. It may hold several,
-# which is how a key is replaced without retiring the authority.
+# An authority keeps certificates in the directory of the role they serve.
+# Those under keys sign images themselves, those under issuers sign the
+# certificates that then sign images. Either may hold several, which is how a
+# key is replaced without retiring the authority.
 #
 # The output is replaced entirely, so an authority whose keys are gone does not
 # stay behind.
@@ -42,4 +44,5 @@ for authority in "$key_directory"/*; do
   cp "${authority}/identity" "${output_directory}/${name}/"
 
   public_keys "${authority}/keys" "${output_directory}/${name}/keys"
+  public_keys "${authority}/issuers" "${output_directory}/${name}/issuers"
 done

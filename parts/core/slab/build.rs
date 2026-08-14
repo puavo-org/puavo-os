@@ -25,10 +25,14 @@
 //!
 //!     authorities
 //!     |-- example
-//!         |-- identity             who this authority is
+//!         |-- identity        the identity of the authority
 //!         |-- keys
-//!             |-- first.der        a public key it signs with
-//!             |-- second.der       the key replacing it
+//!         |   |-- first.der   a public key the authority uses for signing
+//!         |   |-- second.der  a secondary public key the authority uses for
+//!         |   |               signing, for example during a key rotation
+//!         |-- issuers
+//!             |-- third.der   a public key the authority uses for issuing
+//!                             code signing certificates
 //!
 //! Adding another DER file is how a key is replaced, and leaves the authority
 //! unchanged. That directory generates:
@@ -40,6 +44,9 @@
 //!         keys: &[
 //!             include_bytes!("authorities/example/keys/first.der"),
 //!             include_bytes!("authorities/example/keys/second.der"),
+//!         ],
+//!         issuers: &[
+//!             include_bytes!("authorities/example/issuers/third.der"),
 //!         ],
 //!     }];
 
@@ -58,6 +65,7 @@ use time::{Date, OffsetDateTime};
 const DIRECTORY_VARIABLE: &str = "SLAB_VERIFIER_KEYS";
 const IDENTITY_FILE: &str = "identity";
 const KEYS_DIRECTORY: &str = "keys";
+const ISSUERS_DIRECTORY: &str = "issuers";
 const KEY_EXTENSION: &str = "der";
 
 /// The files the list version and the floors are read from, the date format
@@ -202,17 +210,13 @@ fn generate_authority(authority: &Path) -> TokenStream {
         identity_of(&identity_file).map(Literal::u8_unsuffixed).into_iter();
 
     let keys_directory = authority.join(KEYS_DIRECTORY);
+    let issuers_directory = authority.join(ISSUERS_DIRECTORY);
     watch(&keys_directory);
+    watch(&issuers_directory);
 
-    let keys: Vec<String> = find_keys(&keys_directory)
-        .iter()
-        .map(|key| {
-            watch(key);
-            test_key(key);
-            key.display().to_string()
-        })
-        .collect();
-    if keys.is_empty() {
+    let keys = list_keys(&keys_directory);
+    let issuers = list_keys(&issuers_directory);
+    if keys.is_empty() && issuers.is_empty() {
         panic!("{authority:?} holds no {KEY_EXTENSION} key");
     }
 
@@ -220,8 +224,22 @@ fn generate_authority(authority: &Path) -> TokenStream {
         Authority {
             identity: [#(#identity),*],
             keys: &[#(include_bytes!(#keys)),*],
+            issuers: &[#(include_bytes!(#issuers)),*],
         }
     }
+}
+
+/// Returns the keys in the specified directory as paths to include, after
+/// making sure each one can be read as a key.
+fn list_keys(directory: &Path) -> Vec<String> {
+    find_keys(directory)
+        .iter()
+        .map(|key| {
+            watch(key);
+            test_key(key);
+            key.display().to_string()
+        })
+        .collect()
 }
 
 /// Returns the GUID from the specified file as bytes.
@@ -252,8 +270,15 @@ fn directories_in(directory: &Path) -> Vec<PathBuf> {
     found
 }
 
-/// Returns the paths to the keys in the specified directory in sorted order.
+/// Returns the paths to the keys in the specified directory in sorted order,
+/// and nothing at all when the directory is not there.
 fn find_keys(directory: &Path) -> Vec<PathBuf> {
+    // An authority may lack its keys or its issuers directory, as one that only
+    // issues certificates has no keys. Lacking both is refused by the caller.
+    if !directory.exists() {
+        return Vec::new();
+    }
+
     let mut found: Vec<PathBuf> = entries_of(directory)
         .filter(|path| {
             path.extension().is_some_and(|name| name == KEY_EXTENSION)
