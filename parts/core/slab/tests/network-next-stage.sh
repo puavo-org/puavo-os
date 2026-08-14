@@ -48,9 +48,9 @@ sbsign --key "$WORK/db_grub.key" --cert "$WORK/db_grub.crt" \
 boot_from_server() {
   state=$(mktemp -d)
   root="$state/tftp"
-  mkdir -p "$root/EFI/puavo/grub"
+  mkdir -p "$root/efi64"
   cp "$WORK/slab.signed.efi" "$root/slabx64.efi"
-  cp "$1" "$root/EFI/puavo/grub/grubx64.efi"
+  cp "$1" "$root/efi64/grubx64.efi"
   cp "$WORK/vars.template.fd" "$state/vars.fd"
 
   acceleration=""

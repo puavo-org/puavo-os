@@ -1,0 +1,81 @@
+#!/bin/sh
+set -eu
+
+panic() {
+  echo "error: $1" >&2
+  exit 1
+}
+
+usage() {
+  echo "Usage: $0 <architecture> <output>"
+  exit 1
+}
+
+if [ $# -ne 2 ]; then
+  usage
+fi
+
+architecture="$1"
+output="$2"
+
+build_directory=$(mktemp -d)
+cleanup() {
+  rm -rf "${build_directory}"
+}
+trap cleanup EXIT INT TERM
+
+modules="
+  all_video
+  boot
+  chain
+  echo
+  efinet
+  fat
+  font
+  gettext
+  gfxmenu
+  gfxterm
+  gzio
+  halt
+  http
+  linux
+  loadenv
+  net
+  normal
+  part_gpt
+  part_msdos
+  png
+  probe
+  regexp
+  search
+  search_fs_uuid
+  search_fs_file
+  search_label
+  sleep
+  test
+  tftp
+  true
+  video
+  "
+
+sbat_file="${build_directory}/sbat"
+cat > "$sbat_file" <<EOF
+sbat,1,SBAT Version,sbat,1,https://github.com/rhboot/shim/blob/main/SBAT.md
+grub,5,Free Software Foundation,grub,2.12,https://www.gnu.org/software/grub/
+grub.puavo,1,Puavo,grub2,2.12,https://github.com/puavo-org/puavo-os
+EOF
+
+modules_directory="/usr/lib/grub/${architecture}/"
+[ -d "$modules_directory" ] || panic "'$modules_directory' does not exist"
+
+# The prefix is where the bootloader looks for its configuration, a
+# directory on the server rather than on a disk.
+grub-mkimage \
+  --directory "${modules_directory}" \
+  --format "${architecture}" \
+  --prefix '/efi64' \
+  --sbat "$sbat_file" \
+  --output "$output" \
+  $modules
+
+"$(dirname "$0")/add-bootloader-version-section" "$output" grub 1

@@ -26,7 +26,7 @@ use uefi_raw::protocol::network::pxe::{
 /// The next stage control is handed to.
 const NEXT_STAGE_PATH: &CStr16 = cstr16!("\\EFI\\puavo\\grub\\grubx64.efi");
 /// The path of the next stage on the server.
-const NEXT_STAGE_SERVER_PATH: &CStr8 = cstr8!("EFI/puavo/grub/grubx64.efi");
+const NEXT_STAGE_SERVER_PATH: &CStr8 = cstr8!("efi64/grubx64.efi");
 
 /// Bytes reserved for building the next stage device path.
 const DEVICE_PATH_BUFFER_SIZE: usize = 128;
@@ -203,6 +203,8 @@ pub fn is_allowed(image: &[u8]) -> bool {
 /// Loads the exact buffer that was checked, so the bytes cannot change between
 /// check and the load, and starts it.
 pub fn start(image: &[u8]) -> Result<(), Status> {
+    // TODO: Track where the next stage was read from and hand that over, so
+    // that the machine records where it came from instead of this one path.
     let mut path_buffer = [MaybeUninit::uninit(); DEVICE_PATH_BUFFER_SIZE];
     let file_path = DevicePathBuilder::with_buf(&mut path_buffer)
         .push(&FilePath { path_name: NEXT_STAGE_PATH })
