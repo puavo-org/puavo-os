@@ -35,6 +35,10 @@ pipeline {
       steps { sh 'make DEB_BUILD_OPTIONS=nocheck -C debs .dpkg-buildpackage-gtk+3.0' }
     }
 
+    stage('Build openldap') {
+      steps { sh 'make DEB_BUILD_OPTIONS=nocheck -C debs .dpkg-buildpackage-openldap' }
+    }
+
     stage('Build wine') {
       steps {
         sh '''
