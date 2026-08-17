@@ -25,6 +25,10 @@ class supplementary_groups {
       content => template('supplementary_groups/group.conf'),
       require => Package['libpam-modules'];
 
+    '/etc/security/limits.d/90-puavo-audio.conf':
+      require => Package['libpam-modules'],
+      source  => 'puppet:///modules/supplementary_groups/90-puavo-audio.conf';
+
     '/etc/systemd/system/user@.service.d':
       ensure  => directory,
       require => Package['systemd'];
