@@ -93,7 +93,7 @@ cat > /etc/gdm3/greeter.dconf-defaults.tmp <<EOF || status=1
 
 [org/gnome/login-screen]
 accepted-usernames-for-userlist='${accepted_usernames_for_userlist}'
-allowed-failures=1
+allowed-failures=0
 disable-user-list=${disable_user_list}
 enable-guestuser=${enable_guestuser}
 enable-smartcard-authentication=false
