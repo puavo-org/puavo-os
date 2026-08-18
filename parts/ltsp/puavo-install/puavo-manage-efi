@@ -5,9 +5,11 @@ set -o pipefail
 
 g_exitval=1
 g_no_efi_is_ok=false
+g_abitti_versions=
 g_cmd=
 g_esp_mount_path=
 g_esp_devpath=
+g_puavo_disk=
 g_win_c_partition_devpath=
 g_win_disk=
 PID_FILE=/run/puavo-manage-efi.pid # Locks this file to ensure only one puavo-manage-efi is running
@@ -159,7 +161,6 @@ efibootmgr_windows() {
     -a) enable_or_disable_msg='enabling'  ;;
      *) return 1;;
   esac
-
 
   for boot_entry in $(get_windows_boot_entries_to_change "$efibootmgr_flag"); do
     log notice "${enable_or_disable_msg} Windows boot entry ${boot_entry}"
@@ -321,6 +322,72 @@ efi_install_windows() {
   efibootmgr_windows_create
 }
 
+ensure_boot_entry() {
+  local disk part partuuid
+
+  local label=$1
+  local loader=$2
+
+  # XXX log more detailed errors
+  disk="/dev/$(lsblk -ndo PKNAME "$g_esp_devpath")"       || return 1
+  part="$(lsblk -ndo PARTN "$g_esp_devpath")"             || return 1
+  partuuid=$(blkid -s PARTUUID -o value "$g_esp_devpath") || return 1
+
+  # XXX this has a bad bug, "\E" handled like "E"
+  if efibootmgr -v | awk -v label="$label" -v uuid="${partuuid^^}" \
+                         -v loader="${loader^^}" '
+    BEGIN { found = 0 }
+
+    /^Boot[0-9A-Fa-f]{4}\*?[[:space:]]/ {
+      line = toupper($0)
+      print "checking", line, "against", label, uuid, loader
+
+      # Check exact label at the start of the description.
+      desc = $0
+      sub(/^Boot[0-9A-Fa-f]{4}\*?[[:space:]]*/, "", desc)
+
+      print "  checking", desc, "against", label
+      if (index(desc, label) != 1)
+          next
+      print "  checking", line, "against", uuid
+      if (index(line, uuid) == 0)
+          next
+      print "  checking", line, "against", loader
+      if (index(line, loader) == 0)
+          next
+
+      print "  FOUND!!!!"
+      found = 1
+    }
+
+    END {
+      print "returning", !found
+      exit(!found)
+    }
+  '; then
+    echo FOUND SO RETURNING
+    return 0
+  fi
+
+  efibootmgr -q --create --disk "$disk" --part "$part" --label "$label" \
+                --loader "$loader"
+}
+
+efi_update_abitti() {
+  local abitti_version abittistatus
+
+  abittistatus=0
+  for abitti_version in "${g_abitti_versions[@]}"; do
+    if ! ensure_boot_entry "Abitti ${abitti_version}" \
+                           '\EFI\Abitti2\BOOTX64.EFI'; then
+      # XXX log errors
+      abittistatus=1
+    fi
+  done
+
+  return $abittistatus
+}
+
 has_efi() {
   grep -q '^efivarfs ' /proc/mounts
 }
@@ -329,6 +396,7 @@ usage() {
   echo "Usage: $0 [OPTIONS] disable-windows WIN_DISK_DEVPATH"
   echo "       $0 [OPTIONS] enabled-windows WIN_DISK_DEVPATH"
   echo "       $0 [OPTIONS] install-windows WIN_C_PARTITION_DEVPATH"
+  echo "       $0 [OPTIONS] update-abitti"
   echo "       $0 --help"
 }
 
@@ -404,6 +472,10 @@ case "${g_cmd}" in
     g_win_disk=$1
     shift
     ;;
+  'update-abitti')
+    g_abitti_versions=("$@")
+    set --
+    ;;
   *)
     usage_error "invalid command '${g_cmd}'"
     ;;
@@ -454,6 +526,11 @@ case "${g_cmd}" in
     g_esp_devpath=$(get_one_esp_devpath "${g_win_disk}")
     g_esp_mount_path=$(esp_mount "${g_esp_devpath}")
     efi_install_windows
+    ;;
+  update-abitti)
+    g_puavo_disk=$(/usr/lib/puavo-core/puavo-get-boot-disks)
+    g_esp_devpath=$(get_one_esp_devpath "${g_puavo_disk}")
+    efi_update_abitti
     ;;
   *)
     usage_error "invalid command '${g_cmd}'"
