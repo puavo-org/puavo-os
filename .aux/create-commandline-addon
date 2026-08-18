@@ -22,7 +22,15 @@ secure_boot_private_key=$(signing_secureboot_private_key "$key_directory")
 secure_boot_certificate=$(signing_secureboot_certificate "$key_directory")
 engine_arguments=$(signing_ukify_engine_arguments)
 
-# Todo: Check SBAT
+scratch=$(mktemp -d)
+trap 'rm -rf "$scratch"' 0 INT TERM
+version_section="${scratch}/version.section"
+
+# Add version for revocation purposes.
+"$(dirname "$0")/add-bootloader-version-section" \
+  --write-section "$version_section" puavo-command-line 1
+
+# TODO: Check SBAT
 ukify build \
   $engine_arguments \
   --secureboot-private-key="${secure_boot_private_key}" \
@@ -30,6 +38,7 @@ ukify build \
   --cmdline="$commandline" \
   --sbat="sbat,1,SBAT Version,sbat,1,https://github.com/rhboot/shim/blob/main/SBAT.md
   $output_basename.puavo-os,1,kernel-command-line-addon,$output_basename.puavo-os,1,https://github.com/puavo-org/puavo-os" \
+  --section ".version:@${version_section}" \
   --output="$output"
 
 # Attach additional Secure Boot signatures if additional key pairs exist

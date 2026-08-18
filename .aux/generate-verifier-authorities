@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -eu
+
+# Generates the authorities a bootloader is built to accept, from the key
+# directories that hold them. An authority keeps its identity and its
+# certificate together, and a build needs the public key of that certificate.
+#
+# The output is replaced entirely, so an authority whose keys are gone does not
+# stay behind.
+#
+#   $1  directory of authorities, one subdirectory each
+#   $2  directory to generate them into
+
+usage="usage: $(basename "$0") <key-directory> <output-directory>"
+key_directory=${1:?$usage}
+output_directory=${2:?$usage}
+
+rm -rf "$output_directory"
+
+for authority in "$key_directory"/*; do
+  [ -d "$authority" ] || continue
+
+  name=$(basename "$authority")
+  mkdir -p "${output_directory}/${name}"
+
+  cp "${authority}/authority.guid" "${output_directory}/${name}/"
+  openssl x509 -in "${authority}/secure-boot.pem" -pubkey -noout \
+    | openssl rsa -pubin -RSAPublicKey_out -outform DER \
+      -out "${output_directory}/${name}/${name}.der" 2> /dev/null
+done

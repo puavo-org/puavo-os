@@ -52,13 +52,7 @@ get_grub_efi_arguments() {
   local vgname
   vgname=$1
 
-  echo '--target=x86_64-efi --efi-directory=/boot/efi'
-
-  if [ "$UKI_MODE" = '1' ]; then
-    echo '--bootloader-id=puavo --uefi-secure-boot'
-  else
-    echo '--bootloader-id=debian --no-uefi-secure-boot'
-  fi
+  echo '--target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=debian --no-uefi-secure-boot'
 
   if [ "$vgname" = 'puavoinstaller' ]; then
     echo '--removable'
@@ -551,12 +545,9 @@ uki_grub_m4_template() {
 
   cat <<'EOF'
 set default="0"
-
-# Make sure the prefix is set correctly
-if test -e "${prefix}/grub/grubenv"; then
-  set prefix="${prefix}/grub"
-fi
-
+# Switch the root immediately to the boot device from the memory disk
+search --no-floppy --fs-uuid --set=root __PUAVO_EFI_PARTITION_UUID__
+set prefix=($root)/EFI/puavo/grub
 load_env
 
 # Load the Puavo configuration
@@ -572,6 +563,7 @@ if test -e "${prefix}/puavo/${puavo_optional_grub_conf}.cfg"; then
 fi
 
 set gfxmode=auto
+loadfont (memdisk)/boot/grub/fonts/unicode.pf2
 set locale_dir=$prefix/locale
 terminal_output gfxterm
 
@@ -871,7 +863,8 @@ copy_grub_environment() {
   # environment variables into /images/boot/grub/grubenv.
   # Here we sync this file to the boot directory in the EFI partition.
   if [ ! -f "${images_dir}/boot/grub/grubenv" ]; then
-    # Grub will create the default environment in the EFI partition
+    # Nothing to sync, so make the empty one the bootloader expects.
+    grub-editenv "${boot_dir}/grub/grubenv" create || return 1
     return 0
   fi
 
@@ -892,8 +885,243 @@ write_grub_version() {
   fi
 }
 
+# Returns whether a bootloader version may replace the recorded one.
+# A missing or empty record allows the install so the record gets
+# established. A downgrade is refused.
+update_allowed() {
+  local new_version record_file recorded_version
+  new_version=$1
+  record_file=$2
+
+  [ -f "$record_file" ] || return 0
+  recorded_version=$(cat "$record_file" 2>/dev/null)
+  [ -n "$recorded_version" ] || return 0
+  dpkg --compare-versions "$new_version" ge "$recorded_version"
+}
+
+# Records an installed bootloader version.
+write_version_record() {
+  local output_file version
+  output_file=$1
+  version=$2
+
+  printf '%s\n' "$version" > "${output_file}.tmp" || return 1
+  mv "${output_file}.tmp" "$output_file" || return 1
+}
+
+# Copies a file to one or more destinations safely, so a crash never
+# leaves a half written destination. A destination that already holds
+# the same bytes is left untouched.
+install_multiple_safely() {
+  local source destination
+  source=$1
+  shift
+
+  # A stale temporary file from a crashed earlier run must never be
+  # moved into place, so it is removed first.
+  for destination in "$@"; do
+    rm -f "${destination}.tmp"
+    cmp --quiet "$source" "$destination" && continue
+    cp "$source" "${destination}.tmp" || return 1
+  done
+  sync
+  for destination in "$@"; do
+    [ -f "${destination}.tmp" ] || continue
+    mv "${destination}.tmp" "$destination" || return 1
+  done
+  sync
+}
+
+# Places the signed slab and GRUB binaries on the EFI partition.
+place_uki_bootloaders() {
+  local efi_mountpoint architecture
+  efi_mountpoint=$1
+  architecture=$(uname --machine)
+
+  case "$architecture" in
+    x86_64) place_uki_bootloaders_x86_64 "$efi_mountpoint" ;;
+    *)
+      log err "no UKI bootloaders known for architecture ${architecture}"
+      return 1
+      ;;
+  esac
+}
+
+# Places the signed slab and GRUB binaries on the EFI partition for x86-64.
+place_uki_bootloaders_x86_64() {
+  local efi_mountpoint grub_signed slab_signed puavo_directory
+  local grub_directory removable_directory grub_version slab_version
+  efi_mountpoint=$1
+  grub_signed='/usr/lib/grub/puavo/x86_64-efi/grubx64.efi.signed'
+  slab_signed='/usr/lib/slab/slabx64.efi.signed'
+
+  [ -f "$grub_signed" ] || {
+    log err "signed GRUB binary not found at ${grub_signed}"
+    return 1
+  }
+  [ -f "$slab_signed" ] || {
+    log err "signed slab binary not found at ${slab_signed}"
+    return 1
+  }
+
+  puavo_directory="${efi_mountpoint}/EFI/puavo"
+  grub_directory="${puavo_directory}/grub"
+  removable_directory="${efi_mountpoint}/EFI/BOOT"
+  mkdir -p "$grub_directory" "$removable_directory"
+
+  grub_version=$(grub-install --version | awk '{ print $3 }')
+  if [ -z "$grub_version" ]; then
+    log err 'could not determine the GRUB version'
+    return 1
+  fi
+  slab_version=$(cat /usr/lib/slab/version 2>/dev/null)
+  if [ -z "$slab_version" ]; then
+    log err 'could not determine the slab version'
+    return 1
+  fi
+
+  # GRUB goes inside its own directory so the directory it is loaded from,
+  # which becomes its prefix, is the one holding its config and resources.
+  if update_allowed "$grub_version" "${grub_directory}/version"; then
+    install_multiple_safely "$grub_signed" \
+      "${grub_directory}/grubx64.efi" \
+      || return 1
+    write_version_record "${grub_directory}/version" "$grub_version" \
+      || return 1
+    log notice "GRUB version ${grub_version} has been installed"
+  else
+    log notice "keeping the newer GRUB on the EFI partition"
+  fi
+
+  if update_allowed "$slab_version" "${puavo_directory}/slab.version"; then
+    install_multiple_safely "$slab_signed" \
+      "${puavo_directory}/slab.efi" \
+      "${removable_directory}/BOOTX64.EFI" \
+      || return 1
+    write_version_record "${puavo_directory}/slab.version" "$slab_version" \
+      || return 1
+    log notice "slab version ${slab_version} has been installed"
+  else
+    log notice "keeping the newer slab on the EFI partition"
+  fi
+
+  return 0
+}
+
+# Removes duplicate boot entries with the same label.
+remove_boot_entries_with_label() {
+  local label entry entry_label number tab
+  label=$1
+  tab=$(printf '\t')
+
+  # Entry format: "BootNNNN* Label<TAB>DevicePath".
+  # The four hex digit test skips header lines such as "BootOrder:".
+  efibootmgr | while read -r entry entry_label; do
+    number=${entry#Boot}   # Strip the "Boot" prefix
+    number=${number%\*}    # Strip the active marker, if any
+
+    case "$number" in
+      [0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]) ;;
+      *) continue ;;
+    esac
+
+    entry_label=${entry_label%%"$tab"*}   # Drop the device path
+
+    [ "$entry_label" = "$label" ] || continue
+
+    log info "removing old boot entry ${number} (${label})"
+    efibootmgr --quiet --delete-bootnum --bootnum "$number" \
+      || log warn "failed to remove old boot entry ${number}"
+  done
+}
+
+# Returns whether the first entry in the boot order is an active entry
+# with the label pointing at the EFI partition and the slab loader.
+# Anything else, including a changed boot order, calls for recreating
+# the entry, which also makes it the first choice again.
+slab_boot_entry_is_first() {
+  local efi_devpath label first entry partuuid tab
+  efi_devpath=$1
+  label=$2
+  tab=$(printf '\t')
+
+  partuuid=$(lsblk --noheadings --output PARTUUID "$efi_devpath" \
+             2>/dev/null)
+  [ -n "$partuuid" ] || return 1
+
+  # Fetch the boot entry first in order.
+  first=$(efibootmgr | sed --quiet 's/^BootOrder: \([^,]*\).*$/\1/p')
+  [ -n "$first" ] || return 1
+
+  entry=$(efibootmgr --verbose \
+          | grep "^Boot${first}\* ${label}${tab}") || return 1
+
+  # Verify it points to correct binary and partition.
+  printf '%s\n' "$entry" \
+    | grep --ignore-case --fixed-strings "GPT,${partuuid}," \
+    | grep --quiet --fixed-strings '/File(\EFI\puavo\slab.efi)'
+}
+
+# Creates the NVRAM boot entry that loads slab.
+create_slab_boot_entry() {
+  local disk efi_devpath label partition
+  disk=$1
+  efi_devpath=$2
+  label=$3
+
+  partition=$(cat "/sys/class/block/$(basename "$efi_devpath")/partition" \
+	      2>/dev/null)
+  if [ -z "$partition" ]; then
+    log err "failed to determine EFI partition number for ${efi_devpath}"
+    return 1
+  fi
+
+  if slab_boot_entry_is_first "$efi_devpath" "$label"; then
+    log info "boot entry ${label} already first in the boot order, keeping it"
+    return 0
+  fi
+
+  remove_boot_entries_with_label "$label"
+
+  efibootmgr --quiet --create \
+    --disk "$disk" \
+    --part "$partition" \
+    --label "$label" \
+    --loader '\EFI\puavo\slab.efi'
+}
+
+# Installs the UKI-mode bootloaders, such as slab and GRUB, with NVRAM boot entry.
+install_uki_bootloader() {
+  local boot_dir efi_devpath grubdev vgname
+
+  boot_dir=$1
+  efi_devpath=$2
+  grubdev=$3
+  vgname=$4
+
+  if ! place_uki_bootloaders /boot/efi; then
+    log err "failed to place UKI EFI bootloaders for ${grubdev}"
+    return 1
+  fi
+
+  if [ "$vgname" != 'puavoinstaller' ]; then
+    if ! create_slab_boot_entry "$grubdev" "$efi_devpath" 'puavo'; then
+      log err "failed to create slab boot entry for ${grubdev}"
+      return 1
+    fi
+  fi
+
+  install_puavo_grub_files_to_efi_partition "$boot_dir" && \
+  copy_grub_environment || {
+    log err "failed to install UKI files to EFI partition"
+    return 1
+  }
+
+  return 0
+}
+
 install_efi_grub() {
-  local boot_dir efi_devpath grubdev grub_efi_arguments vgname
+  local boot_dir efi_devpath grubdev grub_efi_arguments vgname status
 
   boot_dir=$1
   efi_devpath=$2
@@ -909,30 +1137,27 @@ install_efi_grub() {
   # that prevent a successful bootloader installation. Clean them up first.
   rm -f /sys/firmware/efi/efivars/dump-*
 
-  grub_efi_arguments=$(get_grub_efi_arguments "$vgname")
-  if ! grub_msg=$(grub-install --boot-directory="$boot_dir" \
-                    $grub_efi_arguments "$grubdev" \
-                    3>&- 4>&- 5>&- 2>&1); then
-    log err "Grub (UEFI) installation to ${grubdev} failed: ${grub_msg}"
-    umount /boot/efi || true
-    return 1
-  fi
-
+  status=0
   if [ "${UKI_MODE:-}" = "1" ]; then
-    install_puavo_grub_files_to_efi_partition "$boot_dir" && \
-    copy_grub_environment && \
-    write_grub_version "${boot_dir}/grub/version" || {
-      log err "failed to install UKI files to EFI partition"
-      umount /boot/efi || true
-      return 1
-    }
+    install_uki_bootloader \
+       "$boot_dir" \
+       "$efi_devpath" \
+       "$grubdev" \
+       "$vgname" || status=1
+  else
+    grub_efi_arguments=$(get_grub_efi_arguments "$vgname")
+    if ! grub_msg=$(grub-install --boot-directory="$boot_dir" \
+                      $grub_efi_arguments "$grubdev" \
+                      3>&- 4>&- 5>&- 2>&1); then
+      log err "Grub (UEFI) installation to ${grubdev} failed: ${grub_msg}"
+      status=1
+    fi
   fi
 
   umount /boot/efi || true
 
-  log info "Grub (UEFI) installation to ${grubdev} was OK."
-
-  return 0
+  [ "$status" -eq 0 ] && log info "Grub (UEFI) installation to ${grubdev} was OK."
+  return $status
 }
 
 usage() {

@@ -9,7 +9,7 @@ panic() {
 usage() {
   echo "Usage: $0 <rootfs-directory> <key-directory>"
   echo ""
-  echo "Signs GRUB and SHIM bootloaders with Secure Boot keys."
+  echo "Signs GRUB and slab bootloaders with Secure Boot keys."
   exit 1
 }
 
@@ -18,10 +18,15 @@ if [ "$#" -ne 2 ]; then
 fi
 
 rootfs_directory=$1
-key_directory=$2
+boot_key_directory=$2
 
 [ -d "$rootfs_directory" ] || panic "rootfs directory '$rootfs_directory' does not exist"
-[ -d "$key_directory" ]    || panic "key directory '$key_directory' does not exist"
+[ -d "$boot_key_directory" ] || panic "key directory '$boot_key_directory' does not exist"
+
+uki_key_directory="${boot_key_directory}/slab/verifier/uki"
+slab_key_directory="${boot_key_directory}/slab"
+
+[ -d "$uki_key_directory" ] || panic "key directory '$uki_key_directory' does not exist"
 
 if ! command -v grub-mkstandalone >/dev/null 2>&1; then
   panic "grub-mkstandalone not found"
@@ -51,23 +56,21 @@ create_grub_architecture_bootloader() {
   .aux/create-grub-bootloader "$architecture" "$grub_output"
 
   # Create a directory for the signed bootloader
-  grub_signed_directory="${rootfs_directory}/usr/lib/grub/${architecture}-signed"
+  grub_signed_directory="${rootfs_directory}/usr/lib/grub/puavo/${architecture}"
   mkdir -p "$grub_signed_directory"
 
   echo "signing GRUB bootloader for ${architecture}..."
-  .aux/sign-efi-directory "$grub_build_directory" "$key_directory" "$grub_signed_directory"
+  .aux/sign-efi-directory "$grub_build_directory" "$uki_key_directory" "$grub_signed_directory"
 }
 
 for architecture in i386-efi x86_64-efi; do
   create_grub_architecture_bootloader "$architecture"
 done
 
-shim_source_directory="${rootfs_directory}/usr/lib/shim"
-shim_output_directory="${rootfs_directory}/usr/lib/shim"
-mkdir -p "$shim_output_directory"
+[ -d "$slab_key_directory" ] || panic "key directory '$slab_key_directory' does not exist"
 
-[ -d "$shim_source_directory" ] || panic "directory '$shim_source_directory' does not exist"
-[ -d "$shim_output_directory" ] || panic "directory '$shim_output_directory' does not exist"
+slab_directory="${rootfs_directory}/usr/lib/slab"
+[ -d "$slab_directory" ] || panic "directory '$slab_directory' does not exist"
 
-echo "signing SHIM binaries..."
-.aux/sign-efi-directory "$shim_source_directory" "$key_directory" "$shim_output_directory"
+echo "signing slab bootloader..."
+.aux/sign-efi-directory "$slab_directory" "$slab_key_directory" "$slab_directory"

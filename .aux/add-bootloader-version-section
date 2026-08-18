@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+"""Add a .version section that the first-stage bootloader reads to an EFI binary.
+
+The section is the component name padded with zeros, followed by the version.
+It is placed at the end of the loaded image, so it never overlaps with another section.
+"""
+
+import argparse
+import struct
+import subprocess
+import tempfile
+
+import pefile
+
+NAME_LENGTH = 128
+SECTION_NAME = ".version"
+
+
+def build_section(name, version):
+    """The section contents for a component name and a version."""
+    name_bytes = name.encode()
+    if len(name_bytes) > NAME_LENGTH:
+        raise SystemExit("the component name is too long to be embedded")
+    return name_bytes.ljust(NAME_LENGTH, b"\x00") + struct.pack(">Q", version)
+
+
+def add_section(efi_file, section_contents):
+    """Attach the section to an EFI binary that is not signed yet."""
+    # Place the component at the end of the loaded image
+    optional_header = pefile.PE(efi_file, fast_load=True).OPTIONAL_HEADER
+    virtual_memory_address = (
+        optional_header.ImageBase + optional_header.SizeOfImage
+    )
+
+    with tempfile.NamedTemporaryFile() as section:
+        section.write(section_contents)
+        section.flush()
+        subprocess.run([
+            "objcopy",
+            "--add-section", f"{SECTION_NAME}={section.name}",
+            "--change-section-vma",
+            f"{SECTION_NAME}={virtual_memory_address:#x}",
+            "--set-section-flags", f"{SECTION_NAME}=data,readonly",
+            efi_file, f"{efi_file}.tmp",
+        ], check=True)
+    subprocess.run(["mv", f"{efi_file}.tmp", efi_file], check=True)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--write-section",
+        metavar="FILE",
+        help="write the section contents here instead of into an EFI binary",
+    )
+    parser.add_argument("efi_file", nargs="?")
+    parser.add_argument("name")
+    parser.add_argument("version", type=int)
+    arguments = parser.parse_args()
+
+    section_contents = build_section(arguments.name, arguments.version)
+
+    if arguments.write_section:
+        with open(arguments.write_section, "wb") as section_file:
+            section_file.write(section_contents)
+        return
+
+    if not arguments.efi_file:
+        parser.error("an EFI binary is required without --write-section")
+    add_section(arguments.efi_file, section_contents)
+
+
+if __name__ == "__main__":
+    main()

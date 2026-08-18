@@ -256,7 +256,7 @@ rootfs-image: check-buildhost $(rootfs_dir) $(image_dir)
 .PHONY: verify-boot-components
 verify-boot-components: $(rootfs_dir)
 	$(_sudo) .aux/verify-boot-components --rootfs '$(rootfs_dir)' \
-	    --key-directory '$(rootfs_dir)/puavo-os/config/boot_keys' \
+	    --key-directory '$(rootfs_dir)/puavo-os/config/boot_keys/slab/verifier/uki' \
 	    --manifest '$(rootfs_dir)/puavo-os/config/boot-manifest.json'
 
 .PHONY: prepare-for-squashfs
@@ -336,12 +336,12 @@ secure-boot-config:
 .PHONY: install-pcr-public-keys
 install-pcr-public-keys:
 	$(_sudo) install -D -o root -g root -m 644 -t /etc/puavo-conf/ \
-	    config/boot_keys/tpm2-pcr-public-key*.pem
+	    config/boot_keys/slab/verifier/uki/tpm2-pcr-public-key*.pem \
 
 .PHONY: install-secure-boot-certificates
 install-secure-boot-certificates:
 	$(_sudo) install -D -o root -g root -m 644 -t /etc/puavo-conf/ \
-	    config/boot_keys/secure-boot*.der
+	    config/boot_keys/slab/verifier/uki/secure-boot*.der
 
 .PHONY: update
 update: prepare install-pcr-public-keys install-secure-boot-certificates /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem

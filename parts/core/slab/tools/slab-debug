@@ -1,0 +1,48 @@
+#!/bin/sh
+set -eu
+
+# Toggles the SlabDebug EFI variable that makes slab print its progress and
+# pause before the next stage.
+
+GUID=7cb44677-9bb9-4504-bb8f-923def5fa3b1
+NAME=SlabDebug
+VARIABLE="/sys/firmware/efi/efivars/${NAME}-${GUID}"
+
+usage() {
+  echo "Usage: $0 {on|off|status}"
+  exit 1
+}
+
+[ "$#" -eq 1 ] || usage
+
+case "$1" in
+  on)
+    if [ -e "$VARIABLE" ]; then
+      echo "already on"
+    else
+      data_file=$(mktemp)
+      trap 'rm -f "$data_file"' EXIT
+      printf '\001' > "$data_file"
+      efivar --write \
+        --name "${GUID}-${NAME}" \
+        --attributes 7 \
+        --datafile "$data_file"
+      echo on
+    fi
+    ;;
+  off)
+    if [ -e "$VARIABLE" ]; then
+      chattr -i "$VARIABLE"
+      rm -f "$VARIABLE"
+      echo off
+    else
+      echo "already off"
+    fi
+    ;;
+  status)
+    [ -e "$VARIABLE" ] && echo on || echo off
+    ;;
+  *)
+    usage
+    ;;
+esac

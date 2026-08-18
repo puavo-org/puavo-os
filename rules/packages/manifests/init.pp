@@ -233,7 +233,6 @@ class packages {
     , 'pm-utils'
     , 'rng-tools-debian'
     , 'sbsigntool'
-    , 'shim-unsigned'
     , 'systemd'
     , 'systemd-ukify'
     # , 'tomoyo-tools'  # XXX missing from Trixie

@@ -1,4 +1,4 @@
-subdirs = add_entropy boot-trust-manager kernel-command-line-signer
+subdirs = add_entropy boot-trust-manager kernel-command-line-signer slab
 install-subdirs = $(subdirs:%=install-%)
 clean-subdirs = $(subdirs:%=clean-%)
 

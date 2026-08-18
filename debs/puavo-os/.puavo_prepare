@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -eu
+
+usage="usage: $(basename "$0") <source-tree>"
+source_tree=${1:?$usage}
+
+here=$(cd "$(dirname "$0")" && pwd)
+repository=$(cd "${here}/../.." && pwd)
+
+"${repository}/.aux/generate-verifier-authorities" \
+  "${repository}/config/boot_keys/slab/verifier" \
+  "${source_tree}/core/slab/authorities"

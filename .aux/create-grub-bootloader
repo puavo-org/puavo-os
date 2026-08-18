@@ -38,11 +38,12 @@ modules="
   gfxmenu
   gfxterm
   gzio
+  halt
   jpeg
   keystatus
+  linux
   loadenv
   loopback
-  linux
   ls
   lvm
   normal
@@ -79,4 +80,7 @@ grub-mkstandalone \
   --fonts="unicode" \
   --sbat="$sbat_file" \
   --modules="$modules" \
+  --install-modules="$modules" \
   --output="$output"
+
+"$(dirname "$0")/add-bootloader-version-section" "$output" grub 1

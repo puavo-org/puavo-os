@@ -137,6 +137,11 @@ fi
 
 bootsplash_image="${art_directory}/bootsplash.bmp"
 
+# Add version for revocation purposes.
+version_section="${tmpdir}/version.section"
+"$(dirname "$0")/add-bootloader-version-section" \
+  --write-section "$version_section" puavo 1
+
 # NOTE: By default, power off on emergency instead of dropping to shell
 # NOTE: for security.
 ukify build \
@@ -152,6 +157,7 @@ ukify build \
   --secureboot-private-key="${secure_boot_private_key}" \
   --secureboot-certificate="${secure_boot_certificate}" \
   --splash="${bootsplash_image}" \
+  --section ".version:@${version_section}" \
   --output "$uki_file_path" \
   --measure
 

@@ -1,7 +1,10 @@
-Here is an example TPM key pair and also a Secure Boot key pair.
+Here is an example TPM key pair and also Secure Boot key pairs.
 
 The TPM key pair is generated with .aux/generate-tpm-keys and the Secure Boot
-key pair is generated with .aux/generate-secure-boot-certificates.
+key pairs are generated with .aux/generate-secure-boot-certificates.
+
+The certificates of all of these keys must be present in the Secure Boot DB
+on the devices, see rules/secure_boot.
 
 It is not normal to have the private keys made public as is done here.
 Thus, systems built with these keys do not provide much actual security.
@@ -13,3 +16,11 @@ use these keys to create an actual Puavo OS system.
 However, you should know that in case you actually want to use SecureBoot
 and TPM to achieve some security, you should roll out your own keys and
 keep the private keys secret.
+
+The verifier directory holds the signing keys of the authorities the first stage
+bootloader decides with, for images the machine itself is not meant to trust.
+What the bootloader trusts lives with the bootloader, under its authorities
+directory: one subdirectory per authority, holding authority GUID,
+and the public keys it signs with as DER files. Rotating a key means adding
+another der file there, which leaves the recorded name of the authority
+unchanged.

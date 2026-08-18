@@ -15,7 +15,8 @@ config_directory=$2
 image_class=$3
 image_file=$4
 
-key_directory="${config_directory}/boot_keys/"
+uki_key_directory="${config_directory}/boot_keys/slab/verifier/uki"
+kernel_key_directory="${config_directory}/boot_keys/slab/verifier/kernel"
 
 # Find the art directory based on the image class, otherwise use the default
 art_directory="${config_directory}/art/allinone/"
@@ -28,16 +29,19 @@ fi
 for kernel_image in "$boot_directory"/vmlinuz-*; do
   test -h "$kernel_image" && continue
   kernel_version=$(basename "$kernel_image" | sed 's/vmlinuz-//')
+
+  .aux/sign-efi-file "$kernel_image" "$kernel_key_directory"
+
   output_path="${boot_directory}/kernel-${kernel_version}.uki.efi"
-  .aux/create-uki "$boot_directory" "$art_directory" "$key_directory" "$kernel_version" "$output_path"
+  .aux/create-uki "$boot_directory" "$art_directory" "$uki_key_directory" "$kernel_version" "$output_path"
 done
 
 addon_directory="$boot_directory/addons"
 mkdir -p "$addon_directory"
 
 common_arguments='ro init=/sbin/init-puavo'
-.aux/create-commandline-addon "$key_directory" "nosplash ${common_arguments} puavo.hosttype=bootserver puavo.image.path=/images/${image_file}"                                                        "${addon_directory}/bootserver.addon.efi"
-.aux/create-commandline-addon "$key_directory" "nosplash ${common_arguments} puavo.hosttype=diskinstaller puavo.image.path=/installimages/${image_file}"                                              "${addon_directory}/diskinstaller.addon.efi"
-.aux/create-commandline-addon "$key_directory" "quiet loglevel=3 splash ${common_arguments} puavo.hosttype=exam puavo.image.path=/examimages/${image_file} puavo.image.load_to_ram=true preempt=full" "${addon_directory}/exam.addon.efi"
-.aux/create-commandline-addon "$key_directory" "quiet loglevel=3 splash ${common_arguments} puavo.hosttype=laptop puavo.image.path=/images/${image_file} preempt=full"                                "${addon_directory}/laptop.addon.efi"
-.aux/create-commandline-addon "$key_directory" "nosplash ${common_arguments} puavo.hosttype=preinstalled puavo.image.path=/images/${image_file}"                                                      "${addon_directory}/preinstalled.addon.efi"
+.aux/create-commandline-addon "$uki_key_directory" "nosplash ${common_arguments} puavo.hosttype=bootserver puavo.image.path=/images/${image_file}"                                                        "${addon_directory}/bootserver.addon.efi"
+.aux/create-commandline-addon "$uki_key_directory" "nosplash ${common_arguments} puavo.hosttype=diskinstaller puavo.image.path=/installimages/${image_file}"                                              "${addon_directory}/diskinstaller.addon.efi"
+.aux/create-commandline-addon "$uki_key_directory" "quiet loglevel=3 splash ${common_arguments} puavo.hosttype=exam puavo.image.path=/examimages/${image_file} puavo.image.load_to_ram=true preempt=full" "${addon_directory}/exam.addon.efi"
+.aux/create-commandline-addon "$uki_key_directory" "quiet loglevel=3 splash ${common_arguments} puavo.hosttype=laptop puavo.image.path=/images/${image_file} preempt=full"                                "${addon_directory}/laptop.addon.efi"
+.aux/create-commandline-addon "$uki_key_directory" "nosplash ${common_arguments} puavo.hosttype=preinstalled puavo.image.path=/images/${image_file}"                                                      "${addon_directory}/preinstalled.addon.efi"

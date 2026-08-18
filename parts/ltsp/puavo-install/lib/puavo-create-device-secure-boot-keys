@@ -52,11 +52,20 @@ cleanup() { rm -rf "$scratch"; }
 trap cleanup EXIT INT TERM
 guid='7cb44677-9bb9-4504-bb8f-923def5fa3b1'
 
-# Combine Puavo DB and device DB
+# The device DB and the DB signature list fragments combine into the
+# enrolled DB
 db_esl="${scratch}/db.esl"
 cert-to-efi-sig-list -g "$guid" "$db_pem" "$db_esl"
-puavo_db_esl="${secure_boot_directory}/db/db.esl"
-cat "$puavo_db_esl" >> "$db_esl"
+db_esl_fragment_found=false
+for db_esl_fragment in "${secure_boot_directory}"/db/*.esl; do
+  [ -f "$db_esl_fragment" ] || continue
+  cat "$db_esl_fragment" >> "$db_esl"
+  db_esl_fragment_found=true
+done
+if [ "$db_esl_fragment_found" != true ]; then
+  echo "error: no DB signature list fragments in ${secure_boot_directory}/db" >&2
+  exit 1
+fi
 
 # Build signature list for the device KEK
 kek_esl="${scratch}/KEK.esl"
