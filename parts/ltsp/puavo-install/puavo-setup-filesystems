@@ -1168,11 +1168,6 @@ module QueryDiskInfo
   end
 
   def self.ask_encryption_setup()
-    unless tpm2_available? then
-      warn 'TPM 2.x is not available, disk encryption is disabled'
-      return DiskHandler::EncryptionPresets['none'].clone
-    end
-
     prompt = %q{Select the encryption preset:}
     choices = DiskHandler::EncryptionPresets.map {
       |key, preset| [key, preset['label']] }
@@ -1185,6 +1180,13 @@ module QueryDiskInfo
 
     # Use a clone so we can safely mutate
     encryption = DiskHandler::EncryptionPresets[preset_key].clone
+
+    if encryption['policy'] && !tpm2_available? then
+      warn 'TPM 2.x is not available, disk encryption is not supported'
+      # If a caller chose the preset on the command line, stop right here.
+      exit(1) if UI::forced?(UI::EncryptionPresetPrompt)
+      return DiskHandler::EncryptionPresets['none'].clone
+    end
 
     if encryption['policy']
       add_key_answer = UI::ask_with_default(
