@@ -108,6 +108,18 @@ kernel_image="${boot_directory}/vmlinuz-${kernel_version}"
 initrd_image="${boot_directory}/initrd.img-${kernel_version}"
 os_release=$(basename "$uki_file_path")
 
+# The kernel goes in stripped, so that starting it leaves no second record in
+# PCR 7. The signature on the UKI covers these bytes anyway, while the copy on
+# disk keeps its own for the times the kernel is booted by itself.
+uki_kernel_image="${tmpdir}/vmlinuz-${kernel_version}"
+cp "$kernel_image" "$uki_kernel_image"
+sbattach --remove "$uki_kernel_image" > /dev/null 2>&1 || true
+if ! sbverify --list "$uki_kernel_image" 2>&1 \
+     | grep -q '^No signature table present$'; then
+  echo "Kernel ${kernel_version} still carries a signature" >&2
+  exit 1
+fi
+
 secure_boot_private_key=$(signing_secureboot_private_key "$key_directory")
 secure_boot_certificate=$(signing_secureboot_certificate "$key_directory")
 engine_arguments=$(signing_ukify_engine_arguments)
@@ -145,7 +157,7 @@ version_section="${tmpdir}/version.section"
 # NOTE: By default, power off on emergency instead of dropping to shell
 # NOTE: for security.
 ukify build \
-  --linux="$kernel_image" \
+  --linux="$uki_kernel_image" \
   --initrd="$initrd_image" \
   --uname="${kernel_version}" \
   --os-release="$os_release" \
