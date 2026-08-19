@@ -256,7 +256,7 @@ rootfs-image: check-buildhost $(rootfs_dir) $(image_dir)
 .PHONY: verify-boot-components
 verify-boot-components: $(rootfs_dir)
 	$(_sudo) .aux/verify-boot-components --rootfs '$(rootfs_dir)' \
-	    --key-directory '$(rootfs_dir)/puavo-os/config/boot_keys/slab/verifier/uki' \
+	    --key-directory '$(rootfs_dir)/puavo-os/config/boot_keys' \
 	    --manifest '$(rootfs_dir)/puavo-os/config/boot-manifest.json'
 
 .PHONY: prepare-for-squashfs
