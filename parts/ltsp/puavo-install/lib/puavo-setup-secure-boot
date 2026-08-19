@@ -4,11 +4,9 @@ set -eu
 # Verify Secure Boot prerequisites
 /usr/lib/puavo-ltsp-install/puavo-prepare-secure-boot
 
-secure_boot_directory="/etc/puavo-secure-boot"
 images_directory="/images"
 addons_directory="${images_directory}/boot/addons"
 
-dbx_bin="${secure_boot_directory}/dbx/dbx.bin"
 db_auth="${addons_directory}/db.auth"
 kek_auth="${addons_directory}/kek.auth"
 pk_auth="${addons_directory}/pk.auth"
@@ -26,7 +24,6 @@ remove_immutability() {
   done
 }
 
-[ -f "$dbx_bin" ]  || panic "dbx.bin not found"
 [ -f "$db_auth" ]  || panic "db.auth not found"
 [ -f "$kek_auth" ] || panic "kek.auth not found"
 [ -f "$pk_auth" ]  || panic "pk.auth not found"
@@ -35,12 +32,12 @@ echo "enrolling Secure Boot keys..."
 
 # Remove immutability from Secure Boot variables to allow writing.
 # They become immutable after each write.
-remove_immutability /sys/firmware/efi/efivars/dbx-* \
-                    /sys/firmware/efi/efivars/db-*  \
+remove_immutability /sys/firmware/efi/efivars/db-*  \
                     /sys/firmware/efi/efivars/KEK-* \
                     /sys/firmware/efi/efivars/PK-*
 
-efi-updatevar -a -f "$dbx_bin" dbx || panic "failed to append dbx"
+# No dbx is enrolled due to limited firmware variable storage.
+# Setup Mode is reached by clearing the keys, which leaves it empty.
 efi-updatevar -f "$db_auth" db || panic "failed to enroll db"
 efi-updatevar -f "$kek_auth" KEK || panic "failed to enroll KEK"
 # Writing PK exits Setup Mode and activates Secure Boot
