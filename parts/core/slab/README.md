@@ -21,7 +21,7 @@ On each boot slab does the following.
 1. Reads a monotonic counter and a base from the TPM,
    and extends the base into PCR 7.
 2. Computes the logical version as counter minus base,
-   and refuses a slab below it.
+   and terminates if the built-in revocation list is too old.
 3. Raises the counter to its own revocation list version and write-locks it.
 4. Checks the next stage version against a revocation list compiled into slab.
 5. Chainloads the next stage, or powers the machine off on any failure.
