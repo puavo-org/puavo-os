@@ -608,10 +608,13 @@ erase_and_mkfs_ntfs()
     logerr "Failed to run wipefs to '${partition_devpath}'"
     return 1
   }
-  blkdiscard "${partition_devpath}" || {
-    logerr "Failed to run blkdiscard to '${partition_devpath}'"
-    return 1
-  }
+  if ! blkdiscard "${partition_devpath}" 2>/dev/null; then
+    loginfo "blkdiscard (TRIM) unsupported on '${partition_devpath}', falling back to zero-fill."
+    blkdiscard --zeroout "${partition_devpath}" || {
+      logerr "Failed to run blkdiscard --zeroout to '${partition_devpath}'"
+      return 1
+    }
+  fi
   loginfo "Secure erase done."
 
   loginfo "Creating NTFS filesystem on '${partition_devpath}'..."
