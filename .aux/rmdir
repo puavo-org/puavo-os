@@ -1,0 +1,38 @@
+#!/bin/sh
+
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Copyright (C) Opinsys Oy 2026
+
+# rmdir wrapper for Rosetta-translated amd64 chroots.
+#
+# Apple's translator writes $HOME/.cache/rosetta on every amd64 exec.
+# Debian maintainer scripts that do
+#
+#   tmpdir=$(mktemp -d)
+#   cleanup() { rmdir "$tmpdir"; }
+#   trap cleanup EXIT
+#   HOME="$tmpdir" some-command
+#
+# then fail with "Directory not empty".  Strip that leftover and retry.
+# Bind-mounted over /usr/bin/rmdir only for the duration of
+# exec-in-container, so it never leaks into the squashfs.
+
+set -eu
+
+real=/run/rmdir.real
+if [ ! -x "${real}" ]; then
+  echo "rmdir: real binary ${real} is missing" >&2
+  exit 127
+fi
+
+"${real}" "$@" && exit 0
+
+for arg in "$@"; do
+  case "${arg}" in
+    -*) continue ;;
+  esac
+  rm -rf -- "${arg}/.cache/rosetta"
+  "${real}" "${arg}/.cache" 2>/dev/null || true
+done
+
+exec "${real}" "$@"

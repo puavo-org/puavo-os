@@ -63,12 +63,19 @@ build directories and images live in the `puavo-os-build` and
 `puavo-os-output` volumes.  Built images can be copied out of the output
 volume with:
 
-    docker run --rm --volume puavo-os-output:/output         --volume "$PWD/images":/copy         debian:trixie-slim cp -a /output/. /copy/
+    docker run --rm --volume puavo-os-output:/output \
+        --volume "$PWD/images":/copy \
+        debian:trixie-slim cp -a /output/. /copy/
 
 By default the build targets amd64 images.  On Apple Silicon machines
 Docker Desktop and Apple's `container` tool run the amd64 container
 through Rosetta 2, which must be enabled.  Override the platform or
 architecture with `PLATFORM` and `TARGET_ARCH` if desired.
+
+Rosetta writes `$HOME/.cache/rosetta` on every translated exec.  The
+builder bind-mounts a small `rmdir` wrapper inside the rootfs so Debian
+maintainer scripts that `mktemp` a HOME and `rmdir` it on EXIT (notably
+`ghc-doc`) still succeed.  The wrapper is not part of the image.
 
 UKI PCR signing (`ukify --measure`) needs `systemd-measure` plus the
 `libtss2-*` libraries that systemd only Suggests.  Private keys are
