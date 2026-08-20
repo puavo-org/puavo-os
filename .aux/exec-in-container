@@ -7,9 +7,12 @@ machine=$2
 user=$3
 shift 3
 
-mount -m -t sysfs    /sys     /sys
-mount -m -t proc     /proc    /proc
-mount -m -t devpts   /dev/pts /dev/pts
+# Accept already-mounted mountpoints (e.g. /proc bind-mounted for
+# Rosetta-translated chroots on Apple's container runtime).
+mount -m -t sysfs    /sys     /sys     || mountpoint -q /sys
+mount -m -t proc     /proc    /proc    || mountpoint -q /proc
+mount -m -t devpts   /dev/pts /dev/pts || mountpoint -q /dev/pts
+
 hostname "$machine"
 sudo -u "$user" env -u LANGUAGE \
     LANG=C.UTF-8 LC_ALL=C.UTF-8 \

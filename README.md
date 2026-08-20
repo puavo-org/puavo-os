@@ -37,6 +37,61 @@ fresh Debian Bookworm virtual machine works with the steps listed
 above. Due to build process using a ramdisk /tmp, the virtual
 machine should have at least 16 GB of RAM for successful build.
 
+## Container build
+
+Images can also be built inside an OCI container, which avoids having to
+set up a dedicated Debian build host.  This is the recommended way to
+build on Apple hardware with e.g. Docker Desktop (which uses BuildKit by
+default) or Podman.  Clone with `--recursive` (or run
+`git submodule update --init --recursive`) first, then:
+
+    CONTAINER=docker ./scripts/build.sh
+
+The script builds the `puavo-os-builder` image and starts the build in the
+background.  Follow the build with Docker:
+
+    docker logs -f "$(docker ps -lq)"
+
+or with Apple's `container` tool:
+
+    container logs -f "$(container list -q)"
+
+Run the build in the foreground with `FOREGROUND=1` instead.
+
+The workspace (this repository) is bind-mounted into the container and the
+build directories and images live in the `puavo-os-build` and
+`puavo-os-output` volumes.  Built images can be copied out of the output
+volume with:
+
+    docker run --rm --volume puavo-os-output:/output         --volume "$PWD/images":/copy         debian:trixie-slim cp -a /output/. /copy/
+
+By default the build targets amd64 images.  On Apple Silicon machines
+Docker Desktop and Apple's `container` tool run the amd64 container
+through Rosetta 2, which must be enabled.  Override the platform or
+architecture with `PLATFORM` and `TARGET_ARCH` if desired.
+
+UKI PCR signing (`ukify --measure`) needs `systemd-measure` plus the
+`libtss2-*` libraries that systemd only Suggests.  Private keys are
+chmod'd to 0600 before signing because `rootfs-sync-repo` otherwise
+leaves them group-writable.  `verify-boot-components` needs `python3-pydantic`.
+
+Build-time variables:
+
+- `CONTAINER`: container tool (`docker`, `podman`, `container`)
+- `CONTAINER_CPUS` / `CONTAINER_MEMORY`: resources for the build
+  (default 8 CPUs / 16G)
+- `PLATFORM`: platform for the builder image (default `linux/amd64`)
+- `IMAGE_CLASSES`: comma-separated image classes (default `allinone`)
+- `TARGETS`: make targets to run
+  (default `rootfs-debootstrap rootfs-update rootfs-image`)
+- `TARGET_ARCH`: target architecture (default `amd64`)
+- `RELEASE_NAME`: image release name (default derived from git)
+- `REUSE_ROOTFS=1`: skip `rootfs-debootstrap` when the rootfs exists
+- `DEBOOTSTRAP_MIRROR`: override the debootstrap mirror
+- `FOREGROUND=1`: run the build container attached with `--rm`
+- `OUTPUT_DIR`: directory inside the container for built images
+  (default `/output`, the `puavo-os-output` volume)
+
 ## Using Puavo OS images
 
 Puavo OS image is not very useful in itself.
