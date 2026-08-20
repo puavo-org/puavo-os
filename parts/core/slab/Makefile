@@ -30,8 +30,8 @@ install: build
 	sed -n 's/^version = "\(.*\)"$$/\1/p' Cargo.toml \
 	  > $(INSTALL_DIR)/version
 	mkdir -p $(SBIN_DIR)
-	install -m 755 tools/slab-info tools/slab-debug tools/slab-reset \
-	  $(SBIN_DIR)/
+	install -m 755 tools/slab-info tools/slab-debug $(SBIN_DIR)/
+	install -m 755 tools/slab-reset $(INSTALL_DIR)/
 
 # Debug slab binary for the QEMU test harnesses.
 .PHONY: test-binary
