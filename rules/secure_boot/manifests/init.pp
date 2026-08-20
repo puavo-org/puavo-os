@@ -9,10 +9,5 @@ class secure_boot {
       ensure  => directory,
       recurse => true,
       source  => 'puppet:///modules/secure_boot/db';
-
-    "${base_directory}/dbx":
-      ensure  => absent,
-      force   => true,
-      recurse => true;
   }
 }
