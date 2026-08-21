@@ -42,6 +42,9 @@ class packages::purged {
     , 'libgtk-3-doc'
     , 'nodejs-doc'
 
+    # PAM / Gnome Keyring integration not useful for us
+    , 'libpam-gnome-keyring'
+
     , 'lilypond-doc'
     , 'lilypond-doc-html'
     , 'lilypond-doc-pdf'

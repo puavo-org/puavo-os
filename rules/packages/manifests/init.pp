@@ -685,7 +685,6 @@ class packages {
     , 'libnss-extrausers'
     , 'libnss-mdns'
     , 'libnss-myhostname'
-    , 'libpam-gnome-keyring'
     , 'libpam-systemd'
     , 'libproxy1-plugin-gsettings'
     , 'libproxy1-plugin-networkmanager'

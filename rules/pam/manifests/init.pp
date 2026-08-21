@@ -2,7 +2,6 @@ class pam {
   include ::packages
 
   $pam_packages = [ 'libpam-ccreds'
-                  , 'libpam-gnome-keyring'
                   , 'libpam-krb5'
                   , 'libpam-ldapd'
                   , 'libpam-modules'
