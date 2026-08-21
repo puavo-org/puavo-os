@@ -20,7 +20,6 @@ installdirs:
 	mkdir -p $(DESTDIR)$(datarootdir)/xsessions
 	mkdir -p $(DESTDIR)$(libdir)/puavo-desktop
 	mkdir -p $(DESTDIR)$(sysconfdir)/X11/Xsession.d
-	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/user
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/shared
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/users
@@ -44,11 +43,6 @@ install: installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-desktop \
 		lib/*
-
-	ln -sfn /dev/null \
-		$(DESTDIR)$(sysconfdir)/systemd/user/gnome-keyring-daemon.service
-	ln -sfn /dev/null \
-		$(DESTDIR)$(sysconfdir)/systemd/user/gnome-keyring-daemon.socket
 
 .PHONY: clean
 clean:
