@@ -40,16 +40,6 @@
     "description": "The subnet of the administrative vpn connection",
     "typehint": "string"
   },
-  "puavo.audio.pa.alsa.sink": {
-    "default": "",
-    "description": "The ALSA playback output for Pulseaudio",
-    "typehint": "string"
-  },
-  "puavo.audio.pa.alsa.source": {
-    "default": "",
-    "description": "The ALSA recording input for Pulseaudio",
-    "typehint": "string"
-  },
   "puavo.audio.pa.default_sink": {
     "default": "",
     "description": "The default Pulseaudio playback device",

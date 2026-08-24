@@ -6,9 +6,6 @@ class hwquirks {
       ensure  => directory,
       require => Package['puavo-conf'];
 
-    '/usr/share/puavo-conf/hwquirk-overwrites/40-intel-audio.json':
-      source => 'puppet:///modules/hwquirks/40-intel-audio.json';
-
     '/usr/share/puavo-conf/hwquirk-overwrites/41-hp-3gmodem.json':
       source => 'puppet:///modules/hwquirks/41-hp-3gmodem.json';
 
