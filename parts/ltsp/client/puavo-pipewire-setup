@@ -98,7 +98,7 @@ audio_setup()
             # changed in Pulseaudio and now first setting up the card profile is
             # required, so now we just report error.
             echo "Unsupported format in '${devname}'," \
-                 "try /usr/bin/puavo-pulseaudio-get-puavoconf" >&2
+                 "try /usr/bin/puavo-pipewire-get-puavoconf" >&2
             return 1
         fi
 

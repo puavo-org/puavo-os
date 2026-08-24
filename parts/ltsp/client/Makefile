@@ -58,9 +58,9 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		puavo-change-host-state \
-		puavo-pulseaudio-get-puavoconf \
-		puavo-pulseaudio-list \
-		puavo-pulseaudio-setup \
+		puavo-pipewire-setup \
+		puavo-pipewire-get-puavoconf \
+		puavo-pipewire-list \
 		puavo-rest-request \
 		puavo-send-monitors-xml \
 		puavo-tv-display

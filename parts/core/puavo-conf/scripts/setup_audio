@@ -2,6 +2,9 @@
 
 set -eu
 
+# XXX not ready for Alsa/Pipewire configuration yet
+exit 1
+
 {
   if [ -z "$(puavo-conf puavo.audio.pa.default_sink)" -a \
        -z "$(puavo-conf puavo.audio.pa.default_source)" ]; then
