@@ -40,16 +40,6 @@
     "description": "The subnet of the administrative vpn connection",
     "typehint": "string"
   },
-  "puavo.audio.pa.default_sink": {
-    "default": "",
-    "description": "The default Pulseaudio playback device",
-    "typehint": "string"
-  },
-  "puavo.audio.pa.default_source": {
-    "default": "",
-    "description": "The default Pulseaudio recording device",
-    "typehint": "string"
-  },
   "puavo.displays.forced": {
     "default": "true",
     "description": "If true, force the monitors.xml display settings received from Puavo",
