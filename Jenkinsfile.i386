@@ -32,14 +32,6 @@ EOF
       }
     }
 
-    stage('Build cups') {
-      steps { sh 'make DEB_BUILD_OPTIONS=nocheck -C debs .dpkg-buildpackage-cups' }
-    }
-
-    stage('Build gtk+3.0') {
-      steps { sh 'make DEB_BUILD_OPTIONS=nocheck -C debs .dpkg-buildpackage-gtk+3.0' }
-    }
-
     stage('Build pulseaudio') {
       steps { sh 'make DEB_BUILD_OPTIONS=nocheck -C debs .dpkg-buildpackage-pulseaudio' }
     }
