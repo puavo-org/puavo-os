@@ -29,18 +29,46 @@ check_hash() {
   calculatedhash=$(sha384sum "$hp_select_bios" | awk '{print $1}')
 
   if [ -n "$providedhash" ]; then
-    echo "Cryptographic hash for the binary was found in the list. Comparing it now."
+    printf "Cryptographic hash for the binary was found in the list. Comparing it now.\n"
     if [ "$(printf "%s" "$calculatedhash" | grep -iP "^${providedhash}$")" ] ; then
-      printf "${GREEN}The hash is a match, continuing.${NC}"
+      printf "${GREEN}The hash is a match, continuing.${NC}\n"
     else
       printf "${RED}The hash does NOT match, aborting.${NC}\n"
       printf "Calculated hash: %s\nProvided hash: %s\n" "$calculatedhash" "$providedhash"
       return 1
     fi
   else
-    printf "${YELLOW}WARNING: No cryptographic hash found for the binary. Proceed with caution.${NC}"
+    printf "${YELLOW}WARNING: No cryptographic hash found for the binary. Proceed with caution.${NC}\n"
   fi
 }
+
+flash_fwupd() {
+  param=""
+  version=""
+  mainboard_sysid=$(dmidecode -s baseboard-product-name)
+  hp_ftp_url="https://ftp.ext.hp.com/pub/pcbios"
+
+  (wget "$hp_ftp_url/$mainboard_sysid/$mainboard_sysid.xml" -O "$mainboard_sysid.xml" && \
+    if [ $# -le 2 ]; then
+      for i in "${@}"; do
+        if [ "$i" = "-y" ]; then
+          param="$i"
+        elif [ "$i" = "latest" ]; then
+          version="$(xmllint --xpath "string(/BIOS/Rel/@Bin)" "$mainboard_sysid.xml")"
+        elif [ "$i" != "-y" -a "$i" != "latest" ]; then
+          echo "Invalid parameters!"
+          echo "Accepted parameters are: '-y' and 'latest'"
+          return 1
+        fi
+      done
+    fi
+
+    hp_select_bios="$(xmllint --xpath "(/BIOS/Rel/@Bin)" "$mainboard_sysid.xml" | cut -d '"' -f 2 \
+     | fzf --query "$version" --select-1 --height=9 --layout=reverse-list --color=bg+:#FFFFFF,fg+:#000000
+    )" && wget "$hp_ftp_url/$mainboard_sysid/$hp_select_bios" -O "$hp_select_bios" && \
+    check_hash && fwupdtool install-blob "$hp_select_bios")
+}
+
 
 flash() {
   prepare_hp_utils
@@ -103,8 +131,10 @@ import_config() {
 
 ask_choice() {
   choices=$(cat <<'EOF'
-Flash latest BIOS version (HP)
-Flash select BIOS version (HP)
+Flash latest HP BIOS version (hp-flash)
+Flash select HP BIOS version (hp-flash)
+Flash latest HP BIOS version (fwupd)
+Flash select HP BIOS version (fwupd)
 Import Student laptop BIOS Config
 Import Student laptop BIOS Config (UEFI)
 Import USB Stick factory BIOS Config
@@ -113,7 +143,7 @@ use HP BIOS utilities
 exit
 EOF
 )
-  printf "%s" "$choices" | fzf --height=10 --layout=reverse-list --color=bg+:#FFFFFF,fg+:#000000
+  printf "%s" "$choices" | fzf --height=12 --layout=reverse-list --color=bg+:#FFFFFF,fg+:#000000
 }
 
 printf "\n"
@@ -133,12 +163,20 @@ else
       exit)
         exit 0
         ;;
-      'Flash latest BIOS version (HP)')
+      'Flash latest HP BIOS version (hp-flash)')
         flash latest
         sleep 3
         ;;
-      'Flash select BIOS version (HP)')
+      'Flash select HP BIOS version (hp-flash)')
         flash
+        sleep 3
+        ;;
+      'Flash latest HP BIOS version (fwupd)')
+        flash_fwupd latest
+        sleep 3
+        ;;
+      'Flash select HP BIOS version (fwupd)')
+        flash_fwupd
         sleep 3
         ;;
       'Import Student laptop BIOS Config')
