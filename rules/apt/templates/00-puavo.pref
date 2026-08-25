@@ -6,6 +6,6 @@ Package: *
 Pin: release o=puavo-os-remote
 Pin-Priority: 400
 
-Package: libcups2t64:i386
+Package: libcups2t64:i386 libpulse0:i386
 Pin: release o=puavo-os-remote
 Pin-Priority: 1001
