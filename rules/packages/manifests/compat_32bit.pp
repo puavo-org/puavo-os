@@ -41,7 +41,6 @@ class packages::compat_32bit {
       , 'libnss3:i386'                  # needed by RobboScratch2
       # , 'libpango1.0-0:i386'          # XXX missing from Trixie
       , 'libpangomm-1.4-1v5:i386'
-      , 'libpulse0:i386'
       , 'libselinux1:i386'
       , 'libsm6:i386'
       , 'libssl3t64:i386'

@@ -40,10 +40,6 @@ EOF
       steps { sh 'make DEB_BUILD_OPTIONS=nocheck -C debs .dpkg-buildpackage-gtk+3.0' }
     }
 
-    stage('Build pulseaudio') {
-      steps { sh 'make DEB_BUILD_OPTIONS=nocheck -C debs .dpkg-buildpackage-pulseaudio' }
-    }
-
     stage('Upload deb-packages') {
       steps {
         sh '''
