@@ -1,0 +1,36 @@
+#!/bin/sh
+
+set -eu
+
+if [ -z "${SUDO_USER:-}" ]; then
+  exec sudo -n "$0" "$@"
+fi
+
+user=$(puavo-conf puavo.admin.primary_user)
+
+if [ -z "$user" ]; then
+  user=${1:-}
+fi
+
+if [ -z "$user" ]; then
+  echo 'no primary user and no username given' >&2
+  exit 1
+fi
+
+user_homedir=$(getent passwd "$user" | awk -F: '{ print $6 }')
+
+if [ -z "$user_homedir" ]; then
+  echo 'could not determine user home directory' >&2
+  exit 1
+fi
+
+for file in default-nodes default-profile default-routes stream-properties; do
+  file_fp="${user_homedir}/.local/state/wireplumber/${file}"
+  if [ ! -e "$file_fp" ]; then
+    echo ">>> ${file} does not exist"
+    continue
+  else
+    cat "$file_fp"
+  fi
+  echo
+done

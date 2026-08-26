@@ -17,6 +17,10 @@ class pipewire {
     , '/etc/systemd/user/wireplumber.service.d/no-pipewire-for-admins-or-gdm.conf' ]:
       require => Package['systemd'],
       source  => 'puppet:///modules/pipewire/no-pipewire-for-admins-or-gdm.conf';
+
+    '/usr/local/sbin/puavo-pipewire-show-user-configuration':
+      mode   => '0755',
+      source => 'puppet:///modules/pipewire/puavo-pipewire-show-user-configuration';
   }
 
   Package <| title == systemd |>
