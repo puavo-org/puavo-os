@@ -28,6 +28,7 @@ for file in default-nodes default-profile default-routes stream-properties; do
   file_fp="${user_homedir}/.local/state/wireplumber/${file}"
   if [ ! -e "$file_fp" ]; then
     echo ">>> ${file} does not exist"
+    echo
     continue
   else
     cat "$file_fp"
