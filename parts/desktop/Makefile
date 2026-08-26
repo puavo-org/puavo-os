@@ -20,7 +20,6 @@ installdirs:
 	mkdir -p $(DESTDIR)$(datarootdir)/xsessions
 	mkdir -p $(DESTDIR)$(libdir)/puavo-desktop
 	mkdir -p $(DESTDIR)$(sysconfdir)/X11/Xsession.d
-	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/shared
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/users
 
@@ -37,9 +36,6 @@ install: installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/X11/Xsession.d \
 		etc/X11/Xsession.d/*
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
-		etc/xdg/autostart/*
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-desktop \
 		lib/*
