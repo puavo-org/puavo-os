@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -eu
+
+user_id=$(ps -C pipewire -o uid= | awk '$1 >= 10000' | sort | uniq)
+if ! printf %s "$user_id" | grep -qE '^[0-9]+$'; then
+  echo 'pipewire is running by multiple users' >&2
+  exit 1
+fi
+
+sudo -n -u "#${user_id}" env "XDG_RUNTIME_DIR=/run/user/${user_id}" wpctl "$@"

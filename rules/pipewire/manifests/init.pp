@@ -18,6 +18,10 @@ class pipewire {
       require => Package['systemd'],
       source  => 'puppet:///modules/pipewire/no-pipewire-for-admins-or-gdm.conf';
 
+    '/usr/local/sbin/puavo-pipewire-ctl':
+      mode   => '0755',
+      source => 'puppet:///modules/pipewire/puavo-pipewire-ctl';
+
     '/usr/local/sbin/puavo-pipewire-show-user-configuration':
       mode   => '0755',
       source => 'puppet:///modules/pipewire/puavo-pipewire-show-user-configuration';
