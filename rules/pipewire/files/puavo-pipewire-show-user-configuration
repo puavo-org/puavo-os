@@ -24,8 +24,10 @@ if [ -z "$user_homedir" ]; then
   exit 1
 fi
 
+hostname=$(hostname -s)
+
 for file in default-nodes default-profile default-routes stream-properties; do
-  file_fp="${user_homedir}/.local/state/wireplumber/${file}"
+  file_fp="${user_homedir}/.local/state/wp/${hostname}/wireplumber/${file}"
   if [ ! -e "$file_fp" ]; then
     echo ">>> ${file} does not exist"
     echo

@@ -10,13 +10,13 @@ class pipewire {
     , '/etc/systemd/user/wireplumber.service.d' ]:
       ensure => directory;
 
-    [ '/etc/systemd/user/pipewire.service.d/no-pipewire-for-admins-or-gdm.conf'
-    , '/etc/systemd/user/pipewire.socket.d/no-pipewire-for-admins-or-gdm.conf'
-    , '/etc/systemd/user/pipewire-pulse.service.d/no-pipewire-for-admins-or-gdm.conf'
-    , '/etc/systemd/user/pipewire-pulse.socket.d/no-pipewire-for-admins-or-gdm.conf'
-    , '/etc/systemd/user/wireplumber.service.d/no-pipewire-for-admins-or-gdm.conf' ]:
+    [ '/etc/systemd/user/pipewire.service.d/puavo-pipewire-systemd-service-tweaks.conf'
+    , '/etc/systemd/user/pipewire.socket.d/puavo-pipewire-systemd-service-tweaks.conf'
+    , '/etc/systemd/user/pipewire-pulse.service.d/puavo-pipewire-systemd-service-tweaks.conf'
+    , '/etc/systemd/user/pipewire-pulse.socket.d/puavo-pipewire-systemd-service-tweaks.conf'
+    , '/etc/systemd/user/wireplumber.service.d/puavo-pipewire-systemd-service-tweaks.conf' ]:
       require => Package['systemd'],
-      source  => 'puppet:///modules/pipewire/no-pipewire-for-admins-or-gdm.conf';
+      source  => 'puppet:///modules/pipewire/puavo-pipewire-systemd-service-tweaks.conf';
 
     '/usr/local/sbin/puavo-pipewire-ctl':
       mode   => '0755',
