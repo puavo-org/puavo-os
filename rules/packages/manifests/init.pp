@@ -694,6 +694,7 @@ class packages {
     , 'libreoffice-math'
     , 'libreoffice-writer'
     , 'libsasl2-modules'
+    , 'libspa-0.2-bluetooth'
     , 'libttspico-utils' #German and English TTS
     , 'libxcb-xtest0' #dependency for Zoom
     , 'lightdm' # For all autologin sessions, such as InfoTV, ERS, USB Factory etc.
