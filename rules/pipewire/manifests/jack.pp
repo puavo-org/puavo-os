@@ -1,4 +1,4 @@
-class pipewire_jack {
+class pipewire::jack {
   include ::packages
 
   exec {
@@ -11,6 +11,6 @@ class pipewire_jack {
     '/etc/ld.so.conf.d/pipewire-jack.conf':
       before  => Exec['/sbin/ldconfig for pipewire-jack.conf'],
       require => Package['pipewire-jack'],
-      source  => 'puppet:///modules/pipewire_jack/pipewire-jack.conf';
+      source  => 'puppet:///modules/pipewire/pipewire-jack.conf';
   }
 }

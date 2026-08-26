@@ -104,9 +104,10 @@ packages
 picaxe_udev_rules
     Some udev rules for making Picaxe microcontrollers work.
 
-pipewire_jack
-    pipewire-jack is drop-in replacement for libjack, which bridges
-    the legacy JACK applications to Pipewire.
+pipewire
+    Pipewire related configurations.  Contains piperwire::jack
+    that handles pipewire-jack, which is a drop-in replacement for
+    libjack, which bridges the legacy JACK applications to Pipewire.
 
 puavo_bash_completions
     Install bash completion files for some puavo tools.
