@@ -3,9 +3,44 @@
 set -eu
 
 user_id=$(ps -C pipewire -o uid= | awk '$1 >= 10000' | sort | uniq)
+if [ -z "$user_id" ]; then
+  echo 'pipewire is not running' >&2
+  exit 1
+fi
+
 if ! printf %s "$user_id" | grep -qE '^[0-9]+$'; then
   echo 'pipewire is running by multiple users' >&2
   exit 1
 fi
 
-sudo -n -u "#${user_id}" env "XDG_RUNTIME_DIR=/run/user/${user_id}" wpctl "$@"
+run_cmd() {
+  sudo -n -u "#${user_id}" env "XDG_RUNTIME_DIR=/run/user/${user_id}" "$@"
+}
+
+case "${1:-}" in
+  pw-dump)
+    run_cmd "$@"
+    ;;
+  priorities)
+    run_cmd pw-dump | jq -r '
+      [
+        .[] | select(.info.props."media.class" | IN("Audio/Sink", "Audio/Source"))
+      ]
+      | sort_by(
+          if .info.props."media.class" == "Audio/Sink" then 0 else 1 end,
+          -(.info.props."priority.session" | tonumber)
+        )
+      | .[]
+      | {
+          id,
+          class: .info.props."media.class",
+          name: .info.props."node.name",
+          priority_session: .info.props."priority.session",
+        }
+      | "\(.class)\t\(.id)\t\(.priority_session)\t\(.name)"
+      '
+    ;;
+  *)
+    run_cmd wpctl "$@"
+    ;;
+esac
