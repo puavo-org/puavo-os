@@ -38,6 +38,7 @@ case "${1:-}" in
     run_cmd "$@"
     ;;
   priorities)
+    echo "CLASS\t\tID\tPRIORITY\tNAME"
     run_cmd pw-dump | jq -r '
       [
         .[] | select(.info.props."media.class" | IN("Audio/Sink", "Audio/Source"))
@@ -53,7 +54,7 @@ case "${1:-}" in
           name: .info.props."node.name",
           priority_session: .info.props."priority.session",
         }
-      | "\(.class)\t\(.id)\t\(.priority_session)\t\(.name)"
+      | "\(.class)\t\(.id)\t\(.priority_session)\t\t\(.name)"
       '
     ;;
   show-user-configuration)
