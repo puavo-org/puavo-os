@@ -19,13 +19,13 @@ class pipewire {
       require => Package['systemd'],
       source  => 'puppet:///modules/pipewire/puavo-pipewire-systemd-service-tweaks.conf';
 
+    '/usr/lib/puavo-desktop/puavo-pipewire-show-user-configuration':
+      mode   => '0755',
+      source => 'puppet:///modules/pipewire/puavo-pipewire-show-user-configuration';
+
     '/usr/local/sbin/puavo-pipewire-ctl':
       mode   => '0755',
       source => 'puppet:///modules/pipewire/puavo-pipewire-ctl';
-
-    '/usr/local/sbin/puavo-pipewire-show-user-configuration':
-      mode   => '0755',
-      source => 'puppet:///modules/pipewire/puavo-pipewire-show-user-configuration';
   }
 
   ::puavo_conf::definition {
@@ -39,5 +39,8 @@ class pipewire {
       source  => 'puppet:///modules/pipewire/setup_pipewire';
   }
 
-  Package <| title == systemd |>
+  Package <|
+       title == puavo-desktop
+    or title == systemd
+  |>
 }

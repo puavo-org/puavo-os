@@ -2,10 +2,6 @@
 
 set -eu
 
-if [ -z "${SUDO_USER:-}" ]; then
-  exec sudo -n "$0" "$@"
-fi
-
 user=$(puavo-conf puavo.admin.primary_user)
 
 if [ -z "$user" ]; then

@@ -17,8 +17,24 @@ run_cmd() {
   sudo -n -u "#${user_id}" env "XDG_RUNTIME_DIR=/run/user/${user_id}" "$@"
 }
 
+usage() {
+  local progname
+  progname=$(basename "$0")
+  cat <<EOF
+Usage:
+  ${progname} help
+  ${progname} pw-dump ...
+  ${progname} priorities
+  ${progname} show-user-configuration
+  ${progname} wpctl ...
+EOF
+}
+
 case "${1:-}" in
-  pw-dump)
+  help)
+    usage
+    ;;
+  pw-dump|wpctl)
     run_cmd "$@"
     ;;
   priorities)
@@ -40,7 +56,12 @@ case "${1:-}" in
       | "\(.class)\t\(.id)\t\(.priority_session)\t\(.name)"
       '
     ;;
+  show-user-configuration)
+    shift
+    sudo -n /usr/lib/puavo-desktop/puavo-pipewire-show-user-configuration "$@"
+    ;;
   *)
-    run_cmd wpctl "$@"
+    usage
+    exit 1
     ;;
 esac
