@@ -2,4 +2,72 @@
 
 set -eu
 
+force_defaults=$(puavo-conf puavo.audio.pipewire.force_defaults)
+sink_priorities=$(puavo-conf puavo.audio.pipewire.sink.default)
+source_priorities=$(puavo-conf puavo.audio.pipewire.source.default)
 
+wireplumber_dir='/etc/wireplumber/wireplumber.conf.d'
+settings_path="${wireplumber_dir}/50-puavo-audio.conf"
+
+mkdir -p "$wireplumber_dir"
+
+jq --null-input -r --arg force_defaults    "$force_defaults" \
+                   --arg sink_priorities   "$sink_priorities"   \
+                   --arg source_priorities "$source_priorities" '
+  def device_match($id):
+    if $id | test("^[A-Za-z_]+$") then
+      "~.*" + $id + ".*"
+    else
+      $id
+    end;
+
+  def rules($spec; $class; $start; $step):
+    reduce ($spec | split(" ")[] | select(length > 0)) as $item
+      (
+        { next: $start, rules: [] };
+
+        ($item | split(":")) as $parts
+        | ($parts[0]) as $id
+        | (
+            if ($parts | length) > 1
+            then ($parts[1] | tonumber)
+            else .next
+            end
+          ) as $priority
+
+        | .rules += [
+            {
+              matches: [
+                {
+                  "media.class": $class,
+                  "node.name": device_match($id)
+                }
+              ],
+              actions: {
+                "update-props": {
+                  "priority.session": $priority
+                }
+              }
+            }
+          ]
+
+        | .next = ($priority - $step)
+      )
+    | .rules
+    | sort_by(.actions["update-props"]["priority.session"]);
+
+  {
+    "monitor.alsa.rules":
+      (
+        rules($sink_priorities; "Audio/Sink"; 1400; 100)
+          + rules($source_priorities; "Audio/Source"; 2400; 100)
+      ),
+    "wireplumber.settings": {
+      "node.restore-default-targets": ($force_defaults != "true")
+    }
+  }
+  | to_entries[]
+  | (.key | @json) + " = ", .value
+' > "${settings_path}.tmp"
+
+mv "${settings_path}.tmp" "$settings_path"
