@@ -1,0 +1,12 @@
+{
+  "puavo.audio.pipewire.sink.default": {
+    "default": "",
+    "description": "Set Pipewire output default priorities, whitespace-separated list of device[:priority]",
+    "typehint": "string"
+  },
+  "puavo.audio.pipewire.source.default": {
+    "default": "",
+    "description": "Set Pipewire input default priorities, whitespace-separated list of device[:priority]",
+    "typehint": "string"
+  }
+}

@@ -1,6 +1,7 @@
 class pipewire {
   include ::packages
   include ::pipewire::jack
+  include ::puavo_conf
 
   file {
     [ '/etc/systemd/user/pipewire.service.d'
@@ -25,6 +26,17 @@ class pipewire {
     '/usr/local/sbin/puavo-pipewire-show-user-configuration':
       mode   => '0755',
       source => 'puppet:///modules/pipewire/puavo-pipewire-show-user-configuration';
+  }
+
+  ::puavo_conf::definition {
+    'puavo-pipewire.json':
+      source => 'puppet:///modules/pipewire/puavo-pipewire.json';
+  }
+
+  ::puavo_conf::script {
+    'setup_pipewire':
+      require => Puavo_conf::Definition['puavo-pipewire.json'],
+      source  => 'puppet:///modules/pipewire/setup_pipewire';
   }
 
   Package <| title == systemd |>
