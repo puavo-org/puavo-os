@@ -4,9 +4,19 @@
     "description": "Set Pipewire output default priorities, whitespace-separated list of device[:priority]",
     "typehint": "string"
   },
+  "puavo.audio.pipewire.sink.force_defaults": {
+    "default": "false",
+    "description": "If set to true, ignore user configurations when considering default outputs",
+    "typehint": "bool"
+  },
   "puavo.audio.pipewire.source.default": {
     "default": "",
     "description": "Set Pipewire input default priorities, whitespace-separated list of device[:priority]",
     "typehint": "string"
+  },
+  "puavo.audio.pipewire.source.force_defaults": {
+    "default": "false",
+    "description": "If set to true, ignore user configurations when considering default inputs",
+    "typehint": "bool"
   }
 }
