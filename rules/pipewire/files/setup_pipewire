@@ -14,9 +14,20 @@ mkdir -p "$wireplumber_dir"
 jq --null-input -r --arg force_defaults    "$force_defaults" \
                    --arg sink_priorities   "$sink_priorities"   \
                    --arg source_priorities "$source_priorities" '
+  def case_insensitive($s):
+    $s
+    | split("")
+    | map(
+        if test("[A-Za-z]")
+        then "[" + ascii_upcase + ascii_downcase + "]"
+        else .
+        end
+      )
+    | join("");
+
   def device_match($id):
     if $id | test("^[A-Za-z_]+$") then
-      "~.*" + $id + ".*"
+      "~.*" + case_insensitive($id) + ".*"
     else
       $id
     end;
