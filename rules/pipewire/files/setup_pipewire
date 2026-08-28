@@ -79,33 +79,37 @@ jq --null-input -r --arg force_defaults    "$force_defaults"    \
       )
     | .rules;
 
-  def volume($s):
+  def volume($id; $s):
     if ($s | test("^[0-9]+$")) then
       ($s | tonumber) as $v
       | if 0 <= $v and $v <= 100 then
           pow($v / 100; 3)
         else
-          error("volume out of range: \($s)")
+          "warning: volume out of range for \($id): \($s)\n" | stderr,
+          null
         end
     else
-      error("invalid volume: \($s)")
+      "warning: invalid volume for \($id): \($s)\n" | stderr,
+      null
     end;
 
   def volume_rules($spec; $property):
     $spec
     | split(" ")
-    | map(select(length > 0))
     | map(
-        split(":")
+        select(length > 0)
+        | split(":") as $parts
+        | volume($parts[0]; $parts[1]) as $volume
+        | select($volume != null)
         | {
             matches: [
               {
-                "device.name": device_match(.[0])
+                "device.name": device_match($parts[0])
               }
             ],
             actions: {
               "update-props": {
-                ($property): volume(.[1]),
+                ($property): $volume
               }
             }
           }
