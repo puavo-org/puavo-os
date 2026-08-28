@@ -45,6 +45,14 @@ jq --null-input -r --arg force_defaults    "$force_defaults"    \
       $id
     end;
 
+  def priority($id; $s):
+    (try ($s | tonumber) catch null) as $v
+    | if $v != null and ($v | floor) == $v and $v >= 0 then
+        $v
+      else
+        "warning: invalid priority for \($id): \($s)\n" | stderr | null
+      end;
+
   def priority_rules($spec; $class; $start; $step):
     reduce ($spec | split(" ")[] | select(length > 0)) as $item
       (
@@ -53,12 +61,13 @@ jq --null-input -r --arg force_defaults    "$force_defaults"    \
         ($item | split(":")) as $parts
         | ($parts[0]) as $id
         | (
-            if ($parts | length) > 1
-            then ($parts[1] | tonumber)
-            else .next
+            if ($parts | length) > 1 then
+              priority($id; $parts[1])
+            else
+              .next
             end
           ) as $priority
-
+        | select($priority != null)
         | .rules += [
             {
               matches: [
@@ -74,7 +83,6 @@ jq --null-input -r --arg force_defaults    "$force_defaults"    \
               }
             }
           ]
-
         | .next = ($priority - $step)
       )
     | .rules;
@@ -85,12 +93,10 @@ jq --null-input -r --arg force_defaults    "$force_defaults"    \
       | if 0 <= $v and $v <= 100 then
           pow($v / 100; 3)
         else
-          "warning: volume out of range for \($id): \($s)\n" | stderr,
-          null
+          "warning: volume out of range for \($id): \($s)\n" | stderr | null
         end
     else
-      "warning: invalid volume for \($id): \($s)\n" | stderr,
-      null
+      "warning: invalid volume for \($id): \($s)\n" | stderr | null
     end;
 
   def volume_rules($spec; $property):
