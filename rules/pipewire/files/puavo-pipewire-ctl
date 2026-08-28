@@ -5,7 +5,9 @@ set -eu
 run_cmd() {
   local user_id
 
-  user_id=$(ps -C pipewire -o uid= | awk '$1 >= 10000' | sort | uniq)
+  user_id=$(ps -C pipewire -o uid= \
+              | awk '(951 <= $1 && $1 <= 999) || 10000 <= $1 { print $1 }' \
+              | sort | uniq)
   if [ -z "$user_id" ]; then
     echo 'pipewire is not running' >&2
     exit 1
