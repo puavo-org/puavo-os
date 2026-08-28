@@ -3,8 +3,17 @@
 set -eu
 
 force_defaults=$(puavo-conf puavo.audio.pipewire.force_defaults)
+default_priorities=$(puavo-conf puavo.audio.pipewire.defaults)
 sink_priorities=$(puavo-conf puavo.audio.pipewire.sink.default)
 source_priorities=$(puavo-conf puavo.audio.pipewire.source.default)
+
+if [ -z "$sink_priorities" ]; then
+  sink_priorities="$default_priorities"
+fi
+
+if [ -z "$source_priorities" ]; then
+  source_priorities="$default_priorities"
+fi
 
 wireplumber_dir='/etc/wireplumber/wireplumber.conf.d'
 settings_path="${wireplumber_dir}/50-puavo-audio.conf"

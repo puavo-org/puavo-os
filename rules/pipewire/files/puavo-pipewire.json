@@ -4,6 +4,11 @@
     "description": "If set to true, ignore user configurations when considering device defaults",
     "typehint": "bool"
   },
+  "puavo.audio.pipewire.defaults": {
+    "default": "",
+    "description": "Defaults for both sinks and sources, and is ignored if specific sink or source setting is set",
+    "typehint": "string"
+  },
   "puavo.audio.pipewire.sink.default": {
     "default": "",
     "description": "Set Pipewire output default priorities, whitespace-separated list of device[:priority]",
