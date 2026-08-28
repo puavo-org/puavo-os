@@ -577,7 +577,7 @@ choose_wim_image_to_use()
        --arg key "$jq_key" \
        --arg language "$win_language" \
        --arg version "$win_version" \
-       '.[$key] | map_values(select(.language == $language and .version == $version)) | to_entries | map(.key) | .[]' \
+       '.[$key] | map_values(select(.language == $language and .version == $version)) | to_entries | sort_by(.value.subversion) | map(.key) | .[]' \
        "${G_WIM_CATALOGUE_PATH}") || {
     logerr "Failed to parse version and language information from '${G_WIM_CATALOGUE_PATH}'"
     return 1
@@ -586,8 +586,9 @@ choose_wim_image_to_use()
   preferred_version_count="$(printf "%s\n" "$preferred_versions" | wc -l)"
 
   if [ "$preferred_version_count" -gt 1 ]; then
-    logerr "Multiple image options with ${win_version} and ${win_language}"
-    return 1
+    logwarning "Multiple image options with ${win_version} and ${win_language}, choosing the latest"
+    printf "%s\n" "$preferred_versions" | tail -n1
+    return $?
   elif [ "$preferred_version_count" -lt 1 ]; then
     logerr "No image available with ${win_version} and ${win_language}"
     return 1
