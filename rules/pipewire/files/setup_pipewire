@@ -114,11 +114,11 @@ jq --null-input -r --arg force_defaults    "$force_defaults"    \
   {
     "monitor.alsa.rules":
       (
-        priority_rules($sink_priorities; "Audio/Sink"; 1400; 100)
-        + priority_rules($source_priorities; "Audio/Source"; 2400; 100)
-        + volume_rules($sink_volumes; "device.routes.default-sink-volume")
-        + volume_rules($source_volumes; "device.routes.default-source-volume")
-      ) | sort_by(.actions["update-props"]["priority.session"] // 0),
+        (priority_rules($sink_priorities; "Audio/Sink"; 1400; 100) | reverse)
+        + (priority_rules($source_priorities; "Audio/Source"; 2400; 100) | reverse)
+        + (volume_rules($sink_volumes; "device.routes.default-sink-volume") | reverse)
+        + (volume_rules($source_volumes; "device.routes.default-source-volume") | reverse)
+      ),
 
     "wireplumber.settings": {
       "node.restore-default-targets": ($force_defaults != "true")
