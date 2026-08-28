@@ -18,6 +18,12 @@ image_file=$4
 uki_key_directory="${config_directory}/boot_keys/slab/verifier/uki"
 kernel_key_directory="${config_directory}/boot_keys/slab/verifier/kernel"
 
+# systemd-measure refuses group/world-accessible private keys.
+# git checkouts are 0644 and rootfs-sync-repo adds group-write (0664).
+chmod 0600 "${key_directory}"/tpm2-pcr-private-key*.pem \
+           "${key_directory}"/secure-boot.priv \
+           2>/dev/null || true
+
 # Find the art directory based on the image class, otherwise use the default
 art_directory="${config_directory}/art/allinone/"
 image_class_art_directory="${config_directory}/art/${image_class}/"
