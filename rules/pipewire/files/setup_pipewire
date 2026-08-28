@@ -45,6 +45,22 @@ jq --null-input -r --arg force_defaults    "$force_defaults"    \
       $id
     end;
 
+  def parse_volume_spec($spec):
+    reduce ($spec | split(" ")[] | select(length > 0)) as $item
+      (
+        { global: null, devices: [] };
+
+        if $item | test("^[0-9]+$") then
+          if .global == null then
+            .global = $item
+          else
+            .
+          end
+        else
+          .devices += [$item]
+        end
+      );
+
   def priority($id; $s):
     (try ($s | tonumber) catch null) as $v
     | if $v != null and ($v | floor) == $v and $v >= 0 then
@@ -99,19 +115,15 @@ jq --null-input -r --arg force_defaults    "$force_defaults"    \
       "warning: invalid volume for \($id): \($s)\n" | stderr | null
     end;
 
-  def volume_rules($spec; $property):
-    $spec
-    | split(" ")
+  def volume_rules($devices; $property):
+    $devices
     | map(
-        select(length > 0)
-        | split(":") as $parts
+        split(":") as $parts
         | volume($parts[0]; $parts[1]) as $volume
         | select($volume != null)
         | {
             matches: [
-              {
-                "device.name": device_match($parts[0])
-              }
+              { "device.name": device_match($parts[0]) }
             ],
             actions: {
               "update-props": {
@@ -121,18 +133,37 @@ jq --null-input -r --arg force_defaults    "$force_defaults"    \
           }
       );
 
-  {
+  parse_volume_spec($sink_volumes) as $sink_volume_spec
+  | parse_volume_spec($source_volumes) as $source_volume_spec
+  | {
     "monitor.alsa.rules":
       (
         (priority_rules($sink_priorities; "Audio/Sink"; 1400; 100) | reverse)
         + (priority_rules($source_priorities; "Audio/Source"; 2400; 100) | reverse)
-        + (volume_rules($sink_volumes; "device.routes.default-sink-volume") | reverse)
-        + (volume_rules($source_volumes; "device.routes.default-source-volume") | reverse)
+        + (volume_rules($sink_volume_spec.devices; "device.routes.default-sink-volume") | reverse)
+        + (volume_rules($source_volume_spec.devices; "device.routes.default-source-volume") | reverse)
       ),
 
-    "wireplumber.settings": {
-      "node.restore-default-targets": ($force_defaults != "true")
-    }
+    "wireplumber.settings":
+      (
+        { "node.restore-default-targets": ($force_defaults != "true") }
+        +
+        (
+          if $sink_volume_spec.global != null then
+            { "device.routes.default-sink-volume": volume("sink"; $sink_volume_spec.global) }
+          else
+            {}
+          end
+        )
+        +
+        (
+          if $source_volume_spec.global != null then
+            { "device.routes.default-source-volume": volume("source"; $source_volume_spec.global) }
+          else
+            {}
+          end
+        )
+      )
   }
   | to_entries[]
   | (.key | @json) + " = ", .value
