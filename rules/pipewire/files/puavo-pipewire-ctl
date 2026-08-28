@@ -27,8 +27,8 @@ usage() {
   cat <<EOF
 Usage:
   ${progname} help
+  ${progname} info
   ${progname} pw-dump ...
-  ${progname} priorities
   ${progname} show-user-configuration
   ${progname} wpctl ...
 EOF
@@ -38,30 +38,78 @@ case "${1:-}" in
   help)
     usage
     ;;
-  pw-dump|wpctl)
-    run_cmd "$@"
-    ;;
-  priorities)
+  info)
     run_cmd pw-dump | jq -r '
-      "CLASS\t\tID\tPRIORITY\tNAME",
+      def lpad($n):
+        tostring as $s
+        | ($n - ($s | length)) as $pad
+        | (" " * (if $pad > 0 then $pad else 0 end)) + $s;
+
+      def rpad($n):
+        tostring as $s
+        | ($n - ($s | length)) as $pad
+        | $s + (" " * (if $pad > 0 then $pad else 0 end));
+
+      def volume_percent:
+        if . == null then null
+        else (pow(.; 1 / 3) * 100 | round)
+        end;
+
+      # Build a lookup table: device ID -> device object
+      (
+        . as $objects
+        | reduce (
+            $objects[]
+            | select(.type == "PipeWire:Interface:Device")
+          ) as $device
+          (
+            {};
+            .[$device.id | tostring] = $device
+          )
+      ) as $devices
+      |
+      "CLASS             ID  PRIORITY  DEFVOLUME  DEVICE                                                                    NODE",
       (
         [
-          .[] | select(.info.props."media.class" | IN("Audio/Sink", "Audio/Source"))
+          .[]
+          | select(.info.props."media.class" | IN("Audio/Sink", "Audio/Source"))
         ]
         | sort_by(
             if .info.props."media.class" == "Audio/Sink" then 0 else 1 end,
             -(.info.props."priority.session" | tonumber)
           )
         | .[]
+        | . as $node
+        | ($devices[$node.info.props."device.id" | tostring]) as $device
         | {
             id,
             class: .info.props."media.class",
-            name: .info.props."node.name",
+            node_name: .info.props."node.name",
+            device_name: $device.info.props."device.name",
             priority_session: .info.props."priority.session",
+            default_volume:
+              (
+                if .info.props."media.class" == "Audio/Sink"
+                then $device.info.props."device.routes.default-sink-volume"
+                else $device.info.props."device.routes.default-source-volume"
+                end
+                | volume_percent
+              )
           }
-        | "\(.class)\t\(.id)\t\(.priority_session)\t\t\(.name)"
+        | [
+            (.class | rpad(12)),
+            (.id | tostring | lpad(6)),
+            (.priority_session | tostring | lpad(8)),
+            ((.default_volume // "-") | tostring | lpad(9)),
+            ((.device_name // "-") | rpad(72)),
+            (.node_name // "-")
+          ]
+        | join("  ")
       )
       '
+    ;;
+  pw-dump|wpctl)
+    run_cmd "$@"
     ;;
   show-user-configuration)
     shift
