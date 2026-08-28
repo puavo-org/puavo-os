@@ -1,13 +1,13 @@
 {
-  "puavo.audio.pipewire.force_defaults": {
+  "puavo.audio.pipewire.default": {
+    "default": "",
+    "description": "Default priorities for both inputs and outputs, and is ignored if specific input or output setting is set",
+    "typehint": "string"
+  },
+  "puavo.audio.pipewire.force_default": {
     "default": "false",
     "description": "If set to true, ignore user configurations when considering device defaults",
     "typehint": "bool"
-  },
-  "puavo.audio.pipewire.defaults": {
-    "default": "",
-    "description": "Defaults for both sinks and sources, and is ignored if specific sink or source setting is set",
-    "typehint": "string"
   },
   "puavo.audio.pipewire.sink.default": {
     "default": "",
@@ -17,6 +17,21 @@
   "puavo.audio.pipewire.source.default": {
     "default": "",
     "description": "Set Pipewire input default priorities, whitespace-separated list of device[:priority]",
+    "typehint": "string"
+  },
+  "puavo.audio.pipewire.sink.volume": {
+    "default": "",
+    "description": "Set Pipewire output volume priorities, whitespace-separated list of device[:volume], can also use plain volume to match all sinks",
+    "typehint": "string"
+  },
+  "puavo.audio.pipewire.source.volume": {
+    "default": "",
+    "description": "Set Pipewire input volume priorities, whitespace-separated list of device[:volume], can also use plain volume to match all source",
+    "typehint": "string"
+  },
+  "puavo.audio.pipewire.volume": {
+    "default": "",
+    "description": "Default volume for devices, whitespace-separated list of device[:volume], can also use plain volume to match all devices",
     "typehint": "string"
   }
 }

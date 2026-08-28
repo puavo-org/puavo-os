@@ -2,27 +2,31 @@
 
 set -eu
 
-force_defaults=$(puavo-conf puavo.audio.pipewire.force_defaults)
-default_priorities=$(puavo-conf puavo.audio.pipewire.defaults)
+force_defaults=$(puavo-conf puavo.audio.pipewire.force_default)
+default_priorities=$(puavo-conf puavo.audio.pipewire.default)
+default_volumes=$(puavo-conf puavo.audio.pipewire.volume)
+
 sink_priorities=$(puavo-conf puavo.audio.pipewire.sink.default)
 source_priorities=$(puavo-conf puavo.audio.pipewire.source.default)
 
-if [ -z "$sink_priorities" ]; then
-  sink_priorities="$default_priorities"
-fi
+sink_volumes=$(puavo-conf puavo.audio.pipewire.sink.volume)
+source_volumes=$(puavo-conf puavo.audio.pipewire.source.volume)
 
-if [ -z "$source_priorities" ]; then
-  source_priorities="$default_priorities"
-fi
+[ -z "$sink_priorities"   ] && sink_priorities="$default_priorities"
+[ -z "$sink_volumes"      ] && sink_volumes="$default_volumes"
+[ -z "$source_priorities" ] && source_priorities="$default_priorities"
+[ -z "$source_volumes"    ] && source_volumes="$default_volumes"
 
 wireplumber_dir='/etc/wireplumber/wireplumber.conf.d'
 settings_path="${wireplumber_dir}/50-puavo-audio.conf"
 
 mkdir -p "$wireplumber_dir"
 
-jq --null-input -r --arg force_defaults    "$force_defaults" \
+jq --null-input -r --arg force_defaults    "$force_defaults"    \
                    --arg sink_priorities   "$sink_priorities"   \
-                   --arg source_priorities "$source_priorities" '
+                   --arg sink_volumes      "$sink_volumes"      \
+                   --arg source_priorities "$source_priorities" \
+                   --arg source_volumes    "$source_volumes" '
   def case_insensitive($s):
     $s
     | split("")
@@ -41,7 +45,7 @@ jq --null-input -r --arg force_defaults    "$force_defaults" \
       $id
     end;
 
-  def rules($spec; $class; $start; $step):
+  def priority_rules($spec; $class; $start; $step):
     reduce ($spec | split(" ")[] | select(length > 0)) as $item
       (
         { next: $start, rules: [] };
@@ -73,15 +77,49 @@ jq --null-input -r --arg force_defaults    "$force_defaults" \
 
         | .next = ($priority - $step)
       )
-    | .rules
-    | sort_by(.actions["update-props"]["priority.session"]);
+    | .rules;
+
+  def volume($s):
+    if ($s | test("^[0-9]+$")) then
+      ($s | tonumber) as $v
+      | if 0 <= $v and $v <= 100 then
+          pow($v / 100; 3)
+        else
+          error("volume out of range: \($s)")
+        end
+    else
+      error("invalid volume: \($s)")
+    end;
+
+  def volume_rules($spec; $class; $property):
+    $spec
+    | split(" ")
+    | map(select(length > 0))
+    | map(
+        split(":")
+        | {
+            matches: [
+              {
+                "device.name": device_match(.[0])
+              }
+            ],
+            actions: {
+              "update-props": {
+                ($property): volume(.[1]),
+              }
+            }
+          }
+      );
 
   {
     "monitor.alsa.rules":
       (
-        rules($sink_priorities; "Audio/Sink"; 1400; 100)
-          + rules($source_priorities; "Audio/Source"; 2400; 100)
-      ),
+        priority_rules($sink_priorities; "Audio/Sink"; 1400; 100)
+        + priority_rules($source_priorities; "Audio/Source"; 2400; 100)
+        + volume_rules($sink_volumes; "Audio/Sink"; "device.routes.default-sink-volume")
+        + volume_rules($source_volumes; "Audio/Source"; "device.routes.default-source-volume")
+      ) | sort_by(.actions["update-props"]["priority.session"] // 0),
+
     "wireplumber.settings": {
       "node.restore-default-targets": ($force_defaults != "true")
     }
