@@ -55,10 +55,11 @@ case "${1:-}" in
         else (pow(.; 1 / 3) * 100 | round)
         end;
 
+      . as $objects
+
       # Build a lookup table: device ID -> device object
-      (
-        . as $objects
-        | reduce (
+      | (
+          reduce (
             $objects[]
             | select(.type == "PipeWire:Interface:Device")
           ) as $device
@@ -66,13 +67,24 @@ case "${1:-}" in
             {};
             .[$device.id | tostring] = $device
           )
-      ) as $devices
+        ) as $devices
+
+      # Build a lookup table of effective WirePlumber settings
+      | (
+          $objects[]
+          | select(
+              .type == "PipeWire:Interface:Metadata"
+                and .props."metadata.name" == "sm-settings"
+            )
+          | reduce .metadata[] as $item ({}; .[$item.key] = $item.value)
+        ) as $settings
+
       |
       "CLASS             ID  PRIORITY  DEFVOLUME  DEVICE                                                                    NODE",
       (
         [
-          .[]
-          | select(.info.props."media.class" | IN("Audio/Sink", "Audio/Source"))
+          $objects[]
+            | select(.info.props."media.class" | IN("Audio/Sink", "Audio/Source"))
         ]
         | sort_by(
             if .info.props."media.class" == "Audio/Sink" then 0 else 1 end,
@@ -89,9 +101,16 @@ case "${1:-}" in
             priority_session: .info.props."priority.session",
             default_volume:
               (
-                if .info.props."media.class" == "Audio/Sink"
-                then $device.info.props."device.routes.default-sink-volume"
-                else $device.info.props."device.routes.default-source-volume"
+                if .info.props."media.class" == "Audio/Sink" then
+                  (
+                    $device.info.props."device.routes.default-sink-volume"
+                      // $settings["device.routes.default-sink-volume"]
+                  )
+                else
+                  (
+                    $device.info.props."device.routes.default-source-volume"
+                      // $settings["device.routes.default-source-volume"]
+                  )
                 end
                 | volume_percent
               )
