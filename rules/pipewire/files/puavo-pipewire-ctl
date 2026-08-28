@@ -5,9 +5,12 @@ set -eu
 run_cmd() {
   local user_id
 
-  user_id=$(ps -C pipewire -o uid= \
-              | awk '(951 <= $1 && $1 <= 999) || 10000 <= $1 { print $1 }' \
-              | sort | uniq)
+  # Restrict interesting pipewire instance to once run by real Puavo
+  # users and "system" Puavo users.  989 is puavo-examuser, skip that one.
+  user_id=$(
+    ps -C pipewire -o uid= \
+      | awk '(951 <= $1 && $1 != 989 && $1 <= 999) || 10000 <= $1 { print $1 }' \
+      | sort | uniq)
   if [ -z "$user_id" ]; then
     echo 'pipewire is not running' >&2
     exit 1
