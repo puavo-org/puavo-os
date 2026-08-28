@@ -39,7 +39,7 @@ jq --null-input -r --arg force_defaults    "$force_defaults"    \
     | join("");
 
   def device_match($id):
-    if $id | test("^[A-Za-z_]+$") then
+    if $id | test("^[A-Za-z0-9_]+$") then
       "~.*" + case_insensitive($id) + ".*"
     else
       $id
@@ -91,7 +91,7 @@ jq --null-input -r --arg force_defaults    "$force_defaults"    \
       error("invalid volume: \($s)")
     end;
 
-  def volume_rules($spec; $class; $property):
+  def volume_rules($spec; $property):
     $spec
     | split(" ")
     | map(select(length > 0))
@@ -116,8 +116,8 @@ jq --null-input -r --arg force_defaults    "$force_defaults"    \
       (
         priority_rules($sink_priorities; "Audio/Sink"; 1400; 100)
         + priority_rules($source_priorities; "Audio/Source"; 2400; 100)
-        + volume_rules($sink_volumes; "Audio/Sink"; "device.routes.default-sink-volume")
-        + volume_rules($source_volumes; "Audio/Source"; "device.routes.default-source-volume")
+        + volume_rules($sink_volumes; "device.routes.default-sink-volume")
+        + volume_rules($source_volumes; "device.routes.default-source-volume")
       ) | sort_by(.actions["update-props"]["priority.session"] // 0),
 
     "wireplumber.settings": {
