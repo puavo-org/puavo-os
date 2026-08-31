@@ -1,14 +1,14 @@
 {
   "name": "linux",
-  "version": "6.12.101-1+puavo1+buildonce",
+  "version": "6.12.107-1+puavo1+buildonce",
   "tarballs": {
     "debian": {
-      "sha256sum": "eb563ea1a4e67b918936356092f07b57f3aa67c73cb41ec276f9ec1eaa0254b2",
-      "url": "http://security.debian.org/debian-security/pool/updates/main/l/linux/linux_6.12.101-1.debian.tar.xz"
+      "sha256sum": "d8c003ecac7c54f59c69dc61258f93d937dce90e70f53bb5a34dd58db13028ed",
+      "url": "http://security.debian.org/debian-security/pool/updates/main/l/linux/linux_6.12.107-1.debian.tar.xz"
     },
     "orig": {
-      "sha256sum": "ba6df356e6c9aeca8930556d2732eb502e168815a31269d74eb0d9d0c170fd89",
-      "url": "http://security.debian.org/debian-security/pool/updates/main/l/linux/linux_6.12.101.orig.tar.xz"
+      "sha256sum": "efc76d3c78a5d65f42724118c437d11db1c9f6309a5f024ee9a8b1978fdc6919",
+      "url": "http://security.debian.org/debian-security/pool/updates/main/l/linux/linux_6.12.107.orig.tar.xz"
     }
   }
 }
