@@ -78,11 +78,12 @@ proc systemaccount {groupname} {
 proc systemaccount_sr {groupname} {
   set systemgroup_dn [systemgroup_dn $groupname]
 
-  # XXX if /puavoschool is empty, should not check the school inclusion
   ldapset [
     format {
-      ([%s]/member & user)/puavoSchool & (this | this/puavoSchool)
-    } $systemgroup_dn
+      (([%s]/member & user)/puavoLdapServiceAccessAll & [TRUE])
+        |
+      (([%s]/member & user)/puavoSchool & (this | this/puavoSchool))
+    } $systemgroup_dn $systemgroup_dn
   ]
 }
 
