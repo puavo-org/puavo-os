@@ -65,8 +65,43 @@ proc rule {rulelines} {
 
 proc systemaccount_with_group {groupname} {
   global ldapsuffix
-  format {group/puavoSystemGroup/member="cn=%s,ou=System Groups,%s"} \
+  set group_dn [format {cn=%s,ou=System Groups,%s} $groupname $ldapsuffix]
+  format {group/puavoSystemGroup/member="%s"} $group_dn
+}
+
+proc systemaccount_school_restricted_with_group {groupname} {
+  global ldapsuffix
+
+  set group_dn [format {cn=%s,ou=System Groups,%s} $groupname $ldapsuffix]
+
+  # OK, the original
+  format {group/puavoSystemGroup/member="%s"} \
          $groupname $ldapsuffix
+
+  # OK
+
+  # OK
+  ldapset [format {[%s]/member & user} $group_dn]
+
+  # lists only the one puavoSchool and not its users (much too strict)
+  ldapset [
+    format {
+      ([%s]/member & user)/puavoSchool & this
+    } $group_dn
+  ]
+
+  # mostly good, but puavoSchool entry itself is missing
+  ldapset [
+    format {
+      ([%s]/member & user)/puavoSchool & this/puavoSchool
+    } $group_dn
+  ]
+
+  ldapset [
+    format {
+      ([%s]/member & user)/puavoSchool & (this | this/puavoSchool)
+    } $group_dn
+  ]
 }
 
 proc admins_with_permission {permission} {
