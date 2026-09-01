@@ -135,10 +135,47 @@ fun show_image() {
 	global.overlay_image.sprite.SetOpacity(1);
 }
 
-# Update status callback
+# The overlay sits in the top right corner and shows the user extra
+# information, such as instructions.
+overlay_sprite = Sprite();
+overlay.margin = 24;
+
+fun show_overlay(text) {
+	local.text_image;
+
+	if (text == "") {
+		overlay_sprite.SetOpacity(0);
+		return;
+	}
+
+	text_image = Image.Text(text, 1, 1, 1);
+	overlay_sprite.SetImage(text_image);
+	overlay_sprite.SetPosition(
+		Window.GetX() + Window.GetWidth() - text_image.GetWidth()
+			- overlay.margin,
+		Window.GetY() + overlay.margin, 10000);
+	overlay_sprite.SetOpacity(1);
+}
+
+# Commands arrive on the status channel as "<command>:<argument>". Every
+# command identifier is this wide, so both parts sit at fixed offsets.
+commands.length = 3;
+commands.show_image = "001";
+commands.show_overlay = "002";
+
 fun update_status_callback(status) {
-	if (status == "show-image") {
+	local.command;
+	local.argument;
+
+	command = status.SubString(0, commands.length);
+	argument = status.SubString(commands.length + 1, status.Length());
+
+	if (command == commands.show_image) {
 		show_image();
+	}
+
+	if (command == commands.show_overlay) {
+		show_overlay(argument);
 	}
 }
 

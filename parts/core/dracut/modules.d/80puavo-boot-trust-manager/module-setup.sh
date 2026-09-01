@@ -17,7 +17,8 @@ install() {
                   /usr/sbin/puavo-boot-trust-manager \
                   /usr/bin/efi-updatevar \
                   /usr/bin/sign-efi-sig-list \
-                  /usr/bin/chattr
+                  /usr/bin/chattr \
+                  /usr/bin/loadkeys
 
     # Install Secure Boot update scripts
     inst "${moddir}/scripts/update-secure-boot-db" \
@@ -36,6 +37,14 @@ install() {
     # Install persistent configurators
     mkdir -p "${initdir}/etc/puavo"
     "${moddir}/scripts/install-persistent-configurators" "${initdir}/etc/puavo/"
+
+    # Prebuild keymaps to avoid ckbcomp and its "large" dependencies in initrd.
+    keymap_directory="${initdir}/usr/share/puavo/keymaps"
+    mkdir -p "$keymap_directory"
+
+    while read -r keymap; do
+        ckbcomp "$keymap" | gzip -9 > "${keymap_directory}/${keymap}.kmap.gz"
+    done < "${moddir}/keymaps"
 
     # Install kernel command-line signer and related utilities
     instmods puavo_command_line_signer

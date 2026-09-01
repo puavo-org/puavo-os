@@ -8,6 +8,9 @@ const PUAVO_VENDOR_GUID: &str = "7cb44677-9bb9-4504-bb8f-923def5fa3b1";
 /// EFI variable name for requesting a PIN change from the OS
 const PIN_CHANGE_REQUEST_VARIABLE: &str = "PuavoPinChangeRequest";
 
+/// EFI variable name for the keymap the boot prompts read keys with
+const BOOT_KEYMAP_VARIABLE: &str = "PuavoBootKeymap";
+
 pub trait EfiProvider: Send + Sync {
     /// Check if Secure Boot is enabled.
     fn is_secure_boot_enabled(&self) -> bool;
@@ -21,6 +24,10 @@ pub trait EfiProvider: Send + Sync {
     /// Read the recovery bundle from the EFI variable.
     /// Returns `None` if the variable does not exist.
     fn read_recovery_bundle(&self) -> Option<String>;
+
+    /// Read the keymap the boot prompts of this device read keys with.
+    /// Returns None if the variable does not exist.
+    fn read_boot_keymap(&self) -> Option<String>;
 }
 
 /// Default EFI provider that interacts with real EFI variables.
@@ -57,6 +64,25 @@ impl SystemEfiProvider {
                 false
             }
         }
+    }
+
+    /// Read text from a Puavo EFI variable.
+    fn read_string_variable(name: &str) -> Option<String> {
+        let variable = Self::puavo_variable(name);
+
+        efivar::system()
+            .ok()
+            .and_then(|manager| manager.read(&variable).ok())
+            .and_then(|(value, _)| {
+                String::from_utf8(value)
+                    .inspect_err(|error| {
+                        error!(
+                            "EFI variable '{}' is not valid UTF-8: {:?}",
+                            name, error
+                        )
+                    })
+                    .ok()
+            })
     }
 
     /// Clear a Puavo EFI variable by writing a zero byte.
@@ -102,21 +128,11 @@ impl EfiProvider for SystemEfiProvider {
     }
 
     fn read_recovery_bundle(&self) -> Option<String> {
-        let variable = Self::puavo_variable(RECOVERY_BUNDLE_VARIABLE);
+        Self::read_string_variable(RECOVERY_BUNDLE_VARIABLE)
+    }
 
-        efivar::system()
-            .ok()
-            .and_then(|manager| manager.read(&variable).ok())
-            .and_then(|(value, _)| {
-                String::from_utf8(value)
-                    .inspect_err(|error| {
-                        error!(
-                            "Recovery bundle is not valid UTF-8: {:?}",
-                            error
-                        )
-                    })
-                    .ok()
-            })
+    fn read_boot_keymap(&self) -> Option<String> {
+        Self::read_string_variable(BOOT_KEYMAP_VARIABLE)
     }
 }
 
@@ -167,6 +183,11 @@ pub fn read_recovery_bundle() -> Option<String> {
     with_provider(|provider| provider.read_recovery_bundle())
 }
 
+/// Read the keymap the boot prompts of this device read keys with.
+pub fn read_boot_keymap() -> Option<String> {
+    with_provider(|provider| provider.read_boot_keymap())
+}
+
 #[cfg(test)]
 pub mod testing {
     use super::*;
@@ -178,6 +199,7 @@ pub mod testing {
         pub pin_change_requested: bool,
         pub sbat_raise_requested: AtomicBool,
         pub recovery_bundle: Option<String>,
+        pub boot_keymap: Option<String>,
     }
 
     impl Default for FakeEfiProvider {
@@ -187,6 +209,7 @@ pub mod testing {
                 pin_change_requested: false,
                 sbat_raise_requested: AtomicBool::new(false),
                 recovery_bundle: None,
+                boot_keymap: None,
             }
         }
     }
@@ -204,6 +227,10 @@ pub mod testing {
 
         fn read_recovery_bundle(&self) -> Option<String> {
             self.recovery_bundle.clone()
+        }
+
+        fn read_boot_keymap(&self) -> Option<String> {
+            self.boot_keymap.clone()
         }
     }
 }

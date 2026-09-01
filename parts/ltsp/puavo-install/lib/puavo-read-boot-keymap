@@ -1,0 +1,15 @@
+#!/bin/sh
+set -eu
+
+PUAVO_VENDOR_GUID='7cb44677-9bb9-4504-bb8f-923def5fa3b1'
+BOOT_KEYMAP_EFI_VARIABLE_NAME='PuavoBootKeymap'
+
+variable_name="${BOOT_KEYMAP_EFI_VARIABLE_NAME}-${PUAVO_VENDOR_GUID}"
+variable_path="/sys/firmware/efi/efivars/${variable_name}"
+
+if [ ! -e "$variable_path" ]; then
+  exit 1
+fi
+
+# Skip the 4-byte header
+dd if="$variable_path" bs=4 skip=1 2>/dev/null

@@ -19,7 +19,7 @@ pub trait UserDisplay {
     /// Ask the user for a password.
     ///
     /// Parameters:
-    /// - `prompt`: The human-readable text shown before password entry.
+    /// - `prompt`: The text shown before password entry.
     ///
     /// Errors:
     /// Returns a `PuavoError` if the underlying backend fails.
@@ -28,10 +28,21 @@ pub trait UserDisplay {
         prompt: &str,
     ) -> Result<Zeroizing<String>, PuavoError>;
 
+    /// Show text alongside whatever else is on screen.
+    /// Replaces any overlay already shown.
+    fn show_overlay(&self, _text: &str) -> Result<(), PuavoError> {
+        Ok(())
+    }
+
+    /// Hide the overlay that is shown alongside whatever else is on screen.
+    fn hide_overlay(&self) -> Result<(), PuavoError> {
+        Ok(())
+    }
+
     /// Ask the user a yes/no question.
     ///
     /// Parameters:
-    /// - `prompt`: The human-readable text shown before asking.
+    /// - `prompt`: The text shown before asking.
     ///
     /// Returns:
     /// - `Ok(true)` if the user answered yes.

@@ -43,6 +43,10 @@ impl EfiProvider for TestEfiProvider {
     fn read_recovery_bundle(&self) -> Option<String> {
         None
     }
+
+    fn read_boot_keymap(&self) -> Option<String> {
+        None
+    }
 }
 
 /// Set up the test EFI provider with default state (no secure boot, no PIN change requested).

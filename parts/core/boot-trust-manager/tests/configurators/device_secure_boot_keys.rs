@@ -1,6 +1,5 @@
 use std::{
-    fs,
-    io,
+    fs, io,
     os::unix::fs::PermissionsExt,
     path::{Path, PathBuf},
 };
@@ -50,9 +49,8 @@ impl Fixture {
         }
         Self {
             vault,
-            destination_parent: TempDir::new().expect(
-                "Failed to create the destination parent directory",
-            ),
+            destination_parent: TempDir::new()
+                .expect("Failed to create the destination parent directory"),
         }
     }
 
@@ -114,9 +112,7 @@ fn tightens_existing_destination_directory_mode() {
     fs::create_dir(&destination)
         .expect("Failed to pre create the destination directory");
     fs::set_permissions(&destination, fs::Permissions::from_mode(0o755))
-        .expect(
-            "Failed to set a permissive mode on the destination directory",
-        );
+        .expect("Failed to set a permissive mode on the destination directory");
 
     install_keys(&fixture.resources(), &destination).expect(
         "install_keys should succeed when the destination directory already exists",
@@ -127,7 +123,8 @@ fn tightens_existing_destination_directory_mode() {
 
 #[test]
 #[serial]
-fn installs_keys_with_expected_modes_even_when_previous_files_have_wrong_mode() {
+fn installs_keys_with_expected_modes_even_when_previous_files_have_wrong_mode()
+{
     let fixture = Fixture::populated();
     let destination = fixture.destination();
     fs::create_dir(&destination)
@@ -136,11 +133,8 @@ fn installs_keys_with_expected_modes_even_when_previous_files_have_wrong_mode() 
     let stale_private_key = destination.join(PRIVATE_KEY_FILENAME);
     fs::write(&stale_private_key, b"stale")
         .expect("Failed to write a stale private key file");
-    fs::set_permissions(
-        &stale_private_key,
-        fs::Permissions::from_mode(0o666),
-    )
-    .expect("Failed to set a permissive mode on the stale private key");
+    fs::set_permissions(&stale_private_key, fs::Permissions::from_mode(0o666))
+        .expect("Failed to set a permissive mode on the stale private key");
 
     install_keys(&fixture.resources(), &destination).expect(
         "install_keys should succeed when a stale destination file is present",

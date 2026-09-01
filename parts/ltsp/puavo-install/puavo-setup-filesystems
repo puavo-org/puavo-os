@@ -257,7 +257,7 @@ class BootVaultBuilder
       )
       handler.setup(@control_key)
 
-      # If the recovery key is set, add it
+      # If the recovery passphrase is set, add it
       if @recovery_key && !@recovery_key.empty?
         handler.add_key(@control_key, @recovery_key)
       end
@@ -803,7 +803,7 @@ module DiskHandler
       fs_conf['puavo_partition'], EncryptionDeviceName, nil)
     control_key = handler.setup()
 
-    # If the recovery key is set, add it
+    # If the recovery passphrase is set, add it
     if encryption && \
        encryption['recovery_key'] && \
        !encryption['recovery_key'].empty?
@@ -1162,36 +1162,6 @@ module QueryDiskInfo
     raise 'Windows setup prompts exceeded.'
   end
 
-  # Layout portable alphabet (modhex) used for recovery key generation.
-  RecoveryKeyAlphabet = 'cbdefghijklnrtuv'
-
-  # Generated recovery key export location.
-  RecoveryKeyExportPath = '/dev/shm/puavo-recovery-key'
-
-  def self.generate_recovery_key()
-    # Generate a 64 character key (256 bits) from 32 bytes
-    SecureRandom.random_bytes(32).each_byte.map { |byte|
-      first_index = byte >> 4
-      second_index = byte & 0x0f
-      RecoveryKeyAlphabet[first_index] + RecoveryKeyAlphabet[second_index]
-    }.join
-  end
-
-  def self.generate_and_export_recovery_key()
-    recovery_key = generate_recovery_key()
-
-    File.open(RecoveryKeyExportPath, 'w', 0600) do |file|
-      file.chmod(0600)
-      file.write(recovery_key)
-    end
-
-    UI::colormsg('Recovery key generated. Record it now.', HighLine::YELLOW)
-    UI::colormsg(recovery_key, HighLine::GREEN)
-    puts "Also written to #{ RecoveryKeyExportPath } for capture."
-
-    recovery_key
-  end
-
   def self.ask_encryption_setup()
     unless tpm2_available? then
       warn 'TPM 2.x is not available, disk encryption is disabled'
@@ -1211,14 +1181,14 @@ module QueryDiskInfo
     # Use a clone so we can safely mutate
     encryption = DiskHandler::EncryptionPresets[preset_key].clone
 
-    # If encryption is enabled, offer an optional generated recovery
-    # key, in order to ensure portability between keyboard layouts
     if encryption['policy']
       add_key_answer = UI::ask_with_default(
-        "Generate a recovery key? (y/N)", 'no', UI::RecoveryKeyPrompt)
-      if add_key_answer.downcase.start_with?('y')
-        encryption['recovery_key'] = generate_and_export_recovery_key()
-      end
+        'Add a recovery passphrase? (y/N)', 'N', UI::RecoveryKeyPrompt)
+      add_key = add_key_answer.downcase.start_with?('y')
+
+      BootKeymap::ask() if encryption['request_pin'] || add_key
+
+      encryption['recovery_key'] = RecoveryPassphrase::ask() if add_key
     end
 
     return encryption
@@ -1351,20 +1321,148 @@ module Size
 
 end
 
+# The passphrase that opens a device whose TPM will not.
+module RecoveryPassphrase
+  MinimumLength = 8
+  MaximumLength = 512
+
+  AllowedCharacters = /\A[[:ascii:]&&[a-zA-Z0-9[:punct:] ]]+\z/
+
+  def self.ask()
+    loop do
+      passphrase = UI::ask_and_confirm_secret('Enter recovery passphrase:')
+
+      if passphrase.length < MinimumLength then
+        UI::colormsg("Use at least #{ MinimumLength } characters.",
+                     HighLine::RED)
+        next
+      end
+
+      if passphrase.length > MaximumLength then
+        UI::colormsg("Use at most #{ MaximumLength } characters.",
+                     HighLine::RED)
+        next
+      end
+
+      unless passphrase.match?(AllowedCharacters) then
+        UI::colormsg('Use letters, digits, punctuation and spaces only.',
+                     HighLine::RED)
+        next
+      end
+
+      UI::colormsg('Recovery passphrase set.', HighLine::YELLOW)
+
+      return passphrase
+    end
+  end
+end
+
+# Configures the keymap for the boot environment.
+module BootKeymap
+  # Path to the file listing all keymaps the boot environment supports.
+  KeymapsPath =
+    '/usr/lib/dracut/modules.d/80puavo-boot-trust-manager/keymaps'
+
+  # Where the console keymap is written down, since nothing can report
+  # what the console has loaded.
+  MarkerPath = '/run/puavo/console-keymap'
+  Default = 'us'
+
+  def self.supported()
+    File.readlines(KeymapsPath, chomp: true).reject(&:empty?)
+  end
+
+  # The keymap the console is using, as written down by whoever loaded
+  # it.
+  def self.active()
+    keymap = File.read(MarkerPath).strip
+    keymap.empty? ? nil : keymap
+  rescue Errno::ENOENT
+    nil
+  end
+
+  # Load a keymap and configure the boot environment with it.
+  def self.apply(keymap)
+    generated, generation = Open3.capture2('ckbcomp', keymap)
+
+    unless generation.success? && !generated.empty? then
+      warn "Failed to generate the #{ keymap } keymap"
+      return nil
+    end
+
+    _, load = Open3.capture2('loadkeys', '-', stdin_data: generated)
+
+    unless load.success? then
+      warn "Failed to load the #{ keymap } keymap"
+      return nil
+    end
+
+    run('/usr/lib/puavo-ltsp-install/puavo-write-boot-keymap', keymap)
+
+    FileUtils.mkdir_p(File.dirname(MarkerPath))
+    File.write(MarkerPath, "#{ keymap }\n")
+
+    keymap
+  end
+
+  # Remind and let the user choose the keymap for the boot environment.
+  def self.ask()
+    return select() if UI::forced?(UI::BootKeymapPrompt)
+
+    keymap = active() || Default
+
+    # Select the keymap (again) if we do not recognize it.
+    unless supported().include?(keymap) then
+      UI::colormsg("Keymap #{ keymap.upcase } is unrecognized.",
+                   HighLine::RED)
+      return select()
+    end
+
+    UI::colormsg("Keymap: #{ keymap.upcase }.", HighLine::LIGHT_BLUE)
+
+    answer = UI::ask_with_default('Change the keymap? (y/N)', 'N')
+
+    # The boot environment is configured either way, since the keymap is
+    # not recorded until it is applied.
+    return apply(keymap) unless answer.downcase.start_with?('y')
+
+    select()
+  end
+
+  def self.select()
+    keymap = UI::ask_multiple_choices(
+      'Select the keymap:',
+      supported().map { |name| [name, name.upcase] },
+      UI::BootKeymapPrompt)
+
+    unless apply(keymap) then
+      UI::colormsg("Could not load the #{ keymap.upcase } keymap.",
+                   HighLine::RED)
+      return nil
+    end
+
+    UI::colormsg("Keymap is now #{ keymap.upcase }.",
+                 HighLine::LIGHT_BLUE)
+
+    keymap
+  end
+end
+
 module UI
+  BootKeymapPrompt,
   DiskDevicePrompt,
   EncryptionPresetPrompt,
   ExamSizePrompt,
   InstallWithoutRaidPrompt,
   PartitionPrompt,
+  RecoveryKeyPrompt,
   SetupExamPrompt,
   SetupWindowsPrompt,
   UnpartitionedSpacePrompt,
   WindowsSizePrompt,
   WipePartitionPrompt,
   WritePartitionsPrompt,
-  RecoveryKeyPrompt,
-    = *(1..13)
+    = *(1..14)
 
   @ask_forced      = {}
   @defaults        = {}
@@ -1385,32 +1483,34 @@ puavo-setup-filesystems [OPTIONS]
 
 -h, --help                        show help
 
+    --ask-boot-keymap             ask with default for boot keymap
     --ask-disk-device             ask with default for disk device
     --ask-encryption              ask with default for encryption preset
     --ask-exam-size               ask with default for exam partition size
     --ask-imageoverlay-size       ask with default for imageoverlay size
     --ask-install-without-raid    ask with default for install without raid
     --ask-partition               ask with default for partition
+    --ask-recovery-key            ask with default for recovery passphrase
     --ask-setup-exam              ask with default for setup exam
     --ask-setup-windows           ask with default for setup windows
     --ask-unpartitioned-space     ask with default for unpartitioned space
     --ask-windows-size            ask with default for windows size
     --ask-wipe-partition          ask with default for wipe partition
     --ask-write-partitions        ask with default for write partitions
-    --ask-recovery-key            ask with default for recovery key
+    --force-boot-keymap           force value for boot keymap
     --force-disk-device           force value for disk device
     --force-encryption            force value for encryption preset
     --force-exam-size             force value for exam partition size
     --force-imageoverlay-size     force value for imageoverlay size
     --force-install-without-raid  force value for install without raid
     --force-partition             force value for partition
+    --force-recovery-key          force value for recovery passphrase
     --force-setup-exam            force value for setup exam
     --force-setup-windows         force value for setup windows
     --force-unpartitioned-space   force value for unpartitioned space
     --force-windows-size          force value for windows size
     --force-wipe-partition        force value for wipe partition
     --force-write-partitions      force value for write partitions
-    --force-recovery-key          force value for recovery key
     --hosttype                    force value for hosttype
     --loopback-only               use only loopback devices
 
@@ -1421,32 +1521,34 @@ EOF
     begin
       opts = GetoptLong.new(
         [ '--help', '-h'                , GetoptLong::NO_ARGUMENT       ],
+        [ '--ask-boot-keymap'           , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-disk-device'           , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-encryption'            , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-exam-size'             , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-imageoverlay-size'     , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-install-without-raid'  , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-partition'             , GetoptLong::REQUIRED_ARGUMENT ],
+        [ '--ask-recovery-key'          , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-setup-exam'            , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-setup-windows'         , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-unpartitioned-space'   , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-windows-size'          , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-wipe-partition'        , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--ask-write-partitions'      , GetoptLong::REQUIRED_ARGUMENT ],
-        [ '--ask-recovery-key'          , GetoptLong::REQUIRED_ARGUMENT ],
+        [ '--force-boot-keymap'         , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-disk-device'         , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-encryption'          , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-exam-size'           , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-imageoverlay-size'   , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-install-without-raid', GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-partition'           , GetoptLong::REQUIRED_ARGUMENT ],
+        [ '--force-recovery-key'        , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-setup-exam'          , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-setup-windows'       , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-unpartitioned-space' , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-windows-size'        , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-wipe-partition'      , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--force-write-partitions'    , GetoptLong::REQUIRED_ARGUMENT ],
-        [ '--force-recovery-key'        , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--hosttype'                  , GetoptLong::REQUIRED_ARGUMENT ],
         [ '--loopback-only'             , GetoptLong::NO_ARGUMENT       ],
       )
@@ -1456,6 +1558,8 @@ EOF
         when '--help'
           help_and_exit
           exit(0)
+        when '--ask-boot-keymap'
+          @defaults[BootKeymapPrompt] = arg
         when '--ask-disk-device'
           @defaults[DiskDevicePrompt] = arg
         when '--ask-encryption'
@@ -1466,6 +1570,8 @@ EOF
           @defaults[InstallWithoutRaidPrompt] = arg
         when '--ask-partition'
           @defaults[PartitionPrompt] = arg
+        when '--ask-recovery-key'
+          @defaults[RecoveryKeyPrompt] = arg
         when '--ask-setup-exam'
           @defaults[SetupExamPrompt] = arg
         when '--ask-setup-windows'
@@ -1478,8 +1584,9 @@ EOF
           @defaults[WipePartitionPrompt] = arg
         when '--ask-write-partitions'
           @defaults[WritePartitionsPrompt] = arg
-        when '--ask-recovery-key'
-          @defaults[RecoveryKeyPrompt] = arg
+        when '--force-boot-keymap'
+          @defaults[BootKeymapPrompt] = arg
+          @force_defaults[BootKeymapPrompt] = true
         when '--force-disk-device'
           @defaults[DiskDevicePrompt] = arg
           @force_defaults[DiskDevicePrompt] = true
@@ -1495,6 +1602,9 @@ EOF
         when '--force-partition'
           @defaults[PartitionPrompt] = arg
           @force_defaults[PartitionPrompt] = true
+        when '--force-recovery-key'
+          @defaults[RecoveryKeyPrompt] = arg
+          @force_defaults[RecoveryKeyPrompt] = true
         when '--force-setup-exam'
           @defaults[SetupExamPrompt] = arg
           @force_defaults[SetupExamPrompt] = true
@@ -1513,9 +1623,6 @@ EOF
         when '--force-write-partitions'
           @defaults[WritePartitionsPrompt] = arg
           @force_defaults[WritePartitionsPrompt] = true
-        when '--force-recovery-key'
-          @defaults[RecoveryKeyPrompt] = arg
-          @force_defaults[RecoveryKeyPrompt] = true
         when '--hosttype'
           @hosttype = arg
         when '--loopback-only'
@@ -1526,6 +1633,10 @@ EOF
       help_and_exit
       exit(1)
     end
+  end
+
+  def self.forced?(prompt_key)
+    @force_defaults.has_key?(prompt_key)
   end
 
   def self.ask_with_default(question, default, prompt_key=nil)
@@ -1583,6 +1694,18 @@ EOF
 
   def self.colormsg(msg, color)
     HighLine.say(HighLine.new.color(msg, color))
+  end
+
+  def self.ask_and_confirm_secret(prompt)
+    loop do
+      first  = HighLine.ask("#{ prompt } ") { |q| q.echo = false }
+      second = HighLine.ask("Confirm #{ prompt.downcase } ") { |q|
+        q.echo = false }
+
+      return first if first == second
+
+      colormsg('Entries did not match. Please try again.', HighLine::RED)
+    end
   end
 end
 

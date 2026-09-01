@@ -1,5 +1,5 @@
 use log::{debug, error, info};
-use nix::libc::{reboot, sync, RB_AUTOBOOT};
+use nix::libc::{RB_AUTOBOOT, reboot, sync};
 use std::sync::atomic::{AtomicBool, Ordering};
 
 /// Set when something requires the machine to reboot upon program exit.
