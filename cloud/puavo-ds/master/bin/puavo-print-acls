@@ -126,9 +126,10 @@ set this_school_admins [ldapset "this/puavoSchool & user/puavoAdminOfSchool"]
 
 # this means: target/what and actor/who must be in the same school
 # and actor/who must also be a teacher
-set this_school_teachers [ldapset \
-  {([teacher,] + this/puavoSchool)
-     & (user/puavoEduPersonAffiliation + [,] + user/puavoSchool)}]
+set this_school_teachers [
+  ldapset {([teacher,] + this/puavoSchool)
+            & (user/puavoEduPersonAffiliation + [,] + user/puavoSchool)}
+]
 
 #
 # RULES
