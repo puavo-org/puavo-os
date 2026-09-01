@@ -26,11 +26,11 @@ msgstr "näst senaste"
 msgid "test"
 msgstr "test"
 
-#: puavo-laptop-setup:271
+#: puavo-laptop-setup:294
 msgid "and"
 msgstr "och"
 
-#: puavo-laptop-setup:353
+#: puavo-laptop-setup:376
 msgid ""
 "It is now possible to choose Windows from the boot menu when starting up the "
 "computer."
@@ -38,7 +38,7 @@ msgstr ""
 "Windows har nu tilläggats till startmenun. Menun syns alltid när man startar "
 "om datorn."
 
-#: puavo-laptop-setup:357
+#: puavo-laptop-setup:380
 msgid ""
 "Abitti 2 is not updated when running Windows, you have to boot into the "
 "current system to update it."
@@ -47,35 +47,35 @@ msgstr ""
 "byta / uppdatera din laptops Abitti 2 måste man välja normal start och välja "
 "det här Opinsys Os som används nu."
 
-#: puavo-laptop-setup:508
+#: puavo-laptop-setup:531
 msgid "error saving changes"
 msgstr "fel i sparning av ändringarna "
 
-#: puavo-laptop-setup:543
+#: puavo-laptop-setup:566
 msgid "Factory reset is running step"
 msgstr "Fabriksåterställning kör steg"
 
-#: puavo-laptop-setup:556
+#: puavo-laptop-setup:579
 msgid "Factory reset is running"
 msgstr "Fabriksåterställning pågår"
 
-#: puavo-laptop-setup:564
+#: puavo-laptop-setup:587
 msgid "Failed to start factory reset"
 msgstr "Fabriksåterställningen kunde inte börjas"
 
-#: puavo-laptop-setup:567 puavo-laptop-setup:598
+#: puavo-laptop-setup:590 puavo-laptop-setup:621
 msgid "Factory reset failed"
 msgstr "Fabriksåterställningen mislyckades"
 
-#: puavo-laptop-setup:585
+#: puavo-laptop-setup:608
 msgid "Factory reset succeeded."
 msgstr "Fabriksåterställningen lyckades."
 
-#: puavo-laptop-setup:587
+#: puavo-laptop-setup:610
 msgid "The system is going to reboot in few seconds..."
 msgstr "Systemet startar om i några sekunder..."
 
-#: puavo-laptop-setup:600
+#: puavo-laptop-setup:623
 msgid ""
 "Further details can be found from the factory reset log. Please contact "
 "support for assistance."
@@ -83,11 +83,15 @@ msgstr ""
 "Ytterligare detaljer kan hittas från fabriksåterställningsloggen. Kontakta "
 "supporten för hjälp."
 
-#: puavo-laptop-setup:669
+#: puavo-laptop-setup:717
+msgid "Failed to set the keymap"
+msgstr "Misslyckades att ställa in tangentbordslayouten"
+
+#: puavo-laptop-setup:730
 msgid "Change PIN on next boot?"
 msgstr "Ändra PIN-kod vid nästa start?"
 
-#: puavo-laptop-setup:673
+#: puavo-laptop-setup:734
 msgid ""
 "The disk encryption PIN can only be changed during boot. A PIN change "
 "request will be stored and the system will prompt you to set a new PIN on "
@@ -97,43 +101,43 @@ msgstr ""
 "ändring sparas och systemet uppmanar dig att ange en ny PIN-kod vid nästa "
 "start."
 
-#: puavo-laptop-setup:680 puavo-laptop-setup.glade:452
+#: puavo-laptop-setup:741 puavo-laptop-setup.glade:487
 msgid "Cancel"
 msgstr "Avbryt"
 
-#: puavo-laptop-setup:681
+#: puavo-laptop-setup:742
 msgid "Request PIN change"
 msgstr "Begär PIN-ändring"
 
-#: puavo-laptop-setup:682
+#: puavo-laptop-setup:743
 msgid "Request and reboot now"
 msgstr "Begär och starta om nu"
 
-#: puavo-laptop-setup:704
+#: puavo-laptop-setup:752
 msgid "Failed to request PIN change"
 msgstr "Misslyckades att begära PIN-ändring"
 
-#: puavo-laptop-setup:719
+#: puavo-laptop-setup:766
 msgid "PIN change requested"
 msgstr "PIN-ändring begärd"
 
-#: puavo-laptop-setup:722
+#: puavo-laptop-setup:769
 msgid "You will be prompted to change the PIN on the next boot."
 msgstr "Du kommer att uppmanas att ändra PIN-koden vid nästa start."
 
-#: puavo-laptop-setup:741
+#: puavo-laptop-setup:810
 msgid "Failed to load recovery data"
 msgstr "Misslyckades att ladda återställningsdata"
 
-#: puavo-laptop-setup:819 puavo-laptop-setup:885
+#: puavo-laptop-setup:882 puavo-laptop-setup:948
 msgid "Laptop setup"
 msgstr "Laptop inställningar"
 
-#: puavo-laptop-setup:875
+#: puavo-laptop-setup:938
 msgid "You do not have the required permissions to use this tool."
 msgstr "Du har inte tillräckliga rättigheter att använda verktyget."
 
-#: puavo-laptop-setup:885
+#: puavo-laptop-setup:948
 msgid "is already running"
 msgstr "är redan igång"
 
@@ -161,7 +165,7 @@ msgstr "flexibel version"
 msgid "this version"
 msgstr "den här versionen"
 
-#: puavo-laptop-setup.glade:164 puavo-laptop-setup.glade:501
+#: puavo-laptop-setup.glade:164 puavo-laptop-setup.glade:536
 msgid "Puavo OS (Linux)"
 msgstr "Puavo OS (Linux)"
 
@@ -169,7 +173,7 @@ msgstr "Puavo OS (Linux)"
 msgid "Abitti 2"
 msgstr "Abitti 2"
 
-#: puavo-laptop-setup.glade:196 puavo-laptop-setup.glade:517
+#: puavo-laptop-setup.glade:196 puavo-laptop-setup.glade:552
 msgid "Windows"
 msgstr "Windows"
 
@@ -190,8 +194,8 @@ msgstr "Diskkryptering..."
 msgid "Disk encryption"
 msgstr "Diskkryptering"
 
-#: puavo-laptop-setup.glade:304 puavo-laptop-setup.glade:391
-#: puavo-laptop-setup.glade:567
+#: puavo-laptop-setup.glade:304 puavo-laptop-setup.glade:426
+#: puavo-laptop-setup.glade:602
 msgid "Close"
 msgstr "Stäng"
 
@@ -203,23 +207,27 @@ msgstr "Visa diskåterställnings-QR-kod"
 msgid "Change PIN on next boot..."
 msgstr "Ändra PIN-kod vid nästa start..."
 
-#: puavo-laptop-setup.glade:375
+#: puavo-laptop-setup.glade:370
+msgid "Keymap at unlock"
+msgstr "Tangentbordslayout vid upplåsning"
+
+#: puavo-laptop-setup.glade:410
 msgid "Recovery QR code"
 msgstr "Diskåterställnings-QR-kod"
 
-#: puavo-laptop-setup.glade:434
+#: puavo-laptop-setup.glade:469
 msgid "Confirmation of factory reset"
 msgstr "Bekräftelse på fabriksåterställning"
 
-#: puavo-laptop-setup.glade:468
+#: puavo-laptop-setup.glade:503
 msgid "Reset"
 msgstr "Återställa"
 
-#: puavo-laptop-setup.glade:491
+#: puavo-laptop-setup.glade:526
 msgid "Select operating systems to reset:"
 msgstr "Välj operativsystem som ska återställas:"
 
-#: puavo-laptop-setup.glade:537
+#: puavo-laptop-setup.glade:572
 msgid ""
 "<big>Factory reset <span foreground=\"red\" size=\"x-large\">erases all user "
 "data</span> from selected operating systems and restores their state to "
@@ -229,10 +237,10 @@ msgstr ""
 "all användardata</span> från valda operativsystem och återställer deras "
 "tillstånd till fabriksinställningarna!</big>"
 
-#: puavo-laptop-setup.glade:552
+#: puavo-laptop-setup.glade:587
 msgid "Factory reset"
 msgstr "Fabriksåterställning"
 
-#: puavo-laptop-setup.glade:612
+#: puavo-laptop-setup.glade:647
 msgid "Factory reset log"
 msgstr "Fabriksåterställningslogg"

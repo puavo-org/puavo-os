@@ -1,0 +1,33 @@
+#!/bin/sh
+set -eu
+
+PUAVO_VENDOR_GUID='7cb44677-9bb9-4504-bb8f-923def5fa3b1'
+BOOT_KEYMAP_EFI_VARIABLE_NAME='PuavoBootKeymap'
+
+if [ $# -ne 1 ]; then
+  echo "usage: $(basename "$0") KEYMAP" >&2
+  exit 1
+fi
+
+keymap=$1
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo 'error: this script must be run as root' >&2
+  exit 1
+fi
+
+if [ ! -d /sys/firmware/efi/efivars ]; then
+  echo 'error: EFI variable filesystem is not mounted' >&2
+  exit 1
+fi
+
+# Create a temporary file to hold the data and remove it on exit
+data_file=$(mktemp)
+trap 'rm -f "$data_file"' EXIT
+printf %s "$keymap" > "$data_file"
+
+efivar \
+  --name "${PUAVO_VENDOR_GUID}-${BOOT_KEYMAP_EFI_VARIABLE_NAME}" \
+  --write \
+  --attributes 7 \
+  --datafile "$data_file"

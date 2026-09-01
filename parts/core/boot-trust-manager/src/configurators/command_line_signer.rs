@@ -90,9 +90,14 @@ impl Configurator for CommandLineSignerConfigurator {
         _display: &dyn UserDisplay,
     ) -> Result<(), PuavoError> {
         // Only log errors, so the other configurators can continue.
-        self.initialize(boot_vault).inspect_err(|error| {
-            error!("Failed to initialize kernel command-line signer: {}", error)
-        }).ok();
+        self.initialize(boot_vault)
+            .inspect_err(|error| {
+                error!(
+                    "Failed to initialize kernel command-line signer: {}",
+                    error
+                )
+            })
+            .ok();
         Ok(())
     }
 

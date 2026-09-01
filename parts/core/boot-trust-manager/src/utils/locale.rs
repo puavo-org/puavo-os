@@ -47,6 +47,7 @@ pub struct Strings {
     pub updating_secure_boot: &'static str,
     pub rebooting: &'static str,
     pub configuration_failed_prefix: &'static str,
+    pub keymap_hint: &'static str,
 }
 
 impl Strings {
@@ -76,6 +77,7 @@ static ENGLISH_STRINGS: Strings = Strings {
     updating_secure_boot: "Updating Secure Boot configuration...",
     rebooting: "Rebooting...",
     configuration_failed_prefix: "Configuration failed",
+    keymap_hint: "Keymap",
 };
 
 static FINNISH_STRINGS: Strings = Strings {
@@ -94,6 +96,7 @@ static FINNISH_STRINGS: Strings = Strings {
     updating_secure_boot: "Päivitetään Secure Boot -asetuksia...",
     rebooting: "Käynnistetään uudelleen...",
     configuration_failed_prefix: "Määritys epäonnistui",
+    keymap_hint: "Näppäimistöasettelu",
 };
 
 static SWEDISH_STRINGS: Strings = Strings {
@@ -112,6 +115,7 @@ static SWEDISH_STRINGS: Strings = Strings {
     updating_secure_boot: "Uppdaterar Secure Boot-konfiguration...",
     rebooting: "Startar om...",
     configuration_failed_prefix: "Konfigurationen misslyckades",
+    keymap_hint: "Tangentbordslayout",
 };
 
 static GERMAN_STRINGS: Strings = Strings {
@@ -130,6 +134,7 @@ static GERMAN_STRINGS: Strings = Strings {
     updating_secure_boot: "Secure Boot-Konfiguration wird aktualisiert...",
     rebooting: "Neustart...",
     configuration_failed_prefix: "Konfiguration fehlgeschlagen",
+    keymap_hint: "Tastaturbelegung",
 };
 
 static INSTALLED_STRINGS: RwLock<Option<&'static Strings>> = RwLock::new(None);

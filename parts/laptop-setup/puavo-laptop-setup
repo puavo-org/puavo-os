@@ -43,6 +43,43 @@ def puavoconf_get(puavoconf_key):
         return default_value
 
 
+BOOT_KEYMAPS_PATH = \
+    '/usr/lib/dracut/modules.d/80puavo-boot-trust-manager/keymaps'
+
+
+def boot_keymaps():
+    """The keymaps the boot environment supports."""
+    try:
+        with open(BOOT_KEYMAPS_PATH) as file:
+            return file.read().split()
+    except OSError:
+        return []
+
+
+def command_output(command):
+    try:
+        return subprocess.check_output(
+            command, stderr=subprocess.DEVNULL, text=True).strip()
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+def configured_boot_keymap():
+    return command_output(
+        ['/usr/lib/puavo-ltsp-install/puavo-read-boot-keymap']) or ''
+
+
+def active_boot_keymap():
+    keymaps = boot_keymaps()
+    configured = configured_boot_keymap()
+
+    if configured in keymaps:
+        return configured
+
+    # Without a configured keymap the device uses the first one.
+    return keymaps[0] if keymaps else ''
+
+
 def we_have_windows():
     return os.path.exists('/images/boot/.puavo_windows_partition')
 
@@ -142,6 +179,12 @@ class PuavoLaptopSetup:
                 self.disk_encryption_change_pin_button.show()
         except subprocess.CalledProcessError:
             pass
+
+        self.keymap_combobox \
+            = self.builder.get_object('keymap_combobox')
+        self.populate_keymaps()
+        self.keymap_combobox.connect('changed',
+                                              self.keymap_chosen)
 
         self.boot_abitti_button.connect(  'toggled', self.boot_abitti_chosen)
         self.boot_puavo_os_button.connect('toggled', self.boot_puavo_os_chosen)
@@ -659,6 +702,39 @@ class PuavoLaptopSetup:
         disk_encryption_dialog.run()
         disk_encryption_dialog.hide()
 
+    def populate_keymaps(self):
+        keymaps = sorted(boot_keymaps())
+
+        self.keymap_combobox.remove_all()
+
+        for keymap in keymaps:
+            self.keymap_combobox.append_text(keymap.upper())
+
+        active = active_boot_keymap()
+
+        if active in keymaps:
+            self.keymap_combobox.set_active(keymaps.index(active))
+
+        self.builder.get_object('keymap_box') \
+                    .set_visible(bool(keymaps))
+
+    def keymap_chosen(self, combobox):
+        shown = combobox.get_active_text()
+        keymap = shown.lower() if shown else None
+
+        if keymap is None or keymap == active_boot_keymap():
+            return
+
+        written = self.run_with_error_dialog(
+            ["pkexec",
+             "/usr/lib/puavo-ltsp-install/puavo-write-boot-keymap",
+             keymap],
+            _tr("Failed to set the keymap"),
+            parent=self.builder.get_object('disk_encryption_dialog'))
+
+        if written is None:
+            self.populate_keymaps()
+
     def request_pin_change(self, widget):
         # Show a confirmation dialog explaining that PIN change happens
         # during boot, and ask whether to reboot now.
@@ -685,27 +761,13 @@ class PuavoLaptopSetup:
         dialog.destroy()
 
         if response in (Gtk.ResponseType.ACCEPT, Gtk.ResponseType.YES):
-            try:
-                subprocess.check_output(
-                    ["pkexec", "/usr/lib/puavo-ltsp-install/puavo-change-unlock-pin"],
-                    stderr=subprocess.PIPE,
-                )
-            except subprocess.CalledProcessError as exception:
-                error_message = (
-                    exception.stderr.decode("utf-8")
-                    if exception.stderr
-                    else str(exception)
-                )
-                error_dialog = Gtk.MessageDialog(
-                    parent=self.builder.get_object("disk_encryption_dialog"),
-                    flags=0,
-                    message_type=Gtk.MessageType.ERROR,
-                    buttons=Gtk.ButtonsType.OK,
-                    text=_tr("Failed to request PIN change"),
-                )
-                error_dialog.format_secondary_text(error_message)
-                error_dialog.run()
-                error_dialog.destroy()
+            requested = self.run_with_error_dialog(
+                ["pkexec",
+                 "/usr/lib/puavo-ltsp-install/puavo-change-unlock-pin"],
+                _tr("Failed to request PIN change"),
+                parent=self.builder.get_object("disk_encryption_dialog"))
+
+            if requested is None:
                 return
 
             if response == Gtk.ResponseType.YES:
@@ -724,6 +786,29 @@ class PuavoLaptopSetup:
                 info_dialog.run()
                 info_dialog.destroy()
 
+    def show_error_dialog(self, text, secondary_text, parent=None):
+        dialog = Gtk.MessageDialog(
+            parent=parent or self.app_window,
+            flags=0,
+            message_type=Gtk.MessageType.ERROR,
+            buttons=Gtk.ButtonsType.OK,
+            text=text,
+        )
+        dialog.format_secondary_text(secondary_text)
+        dialog.run()
+        dialog.destroy()
+
+    def run_with_error_dialog(self, command, failure_text, parent=None):
+        try:
+            return subprocess.check_output(command, stderr=subprocess.PIPE)
+        except subprocess.CalledProcessError as exception:
+            self.show_error_dialog(
+                failure_text,
+                exception.stderr.decode('utf-8') if exception.stderr
+                else str(exception),
+                parent=parent)
+            return None
+
     def load_recovery_data(self):
         recovery_data = subprocess.check_output(
             ['/usr/lib/puavo-ltsp-install/puavo-read-recovery-bundle'],
@@ -736,18 +821,11 @@ class PuavoLaptopSetup:
         try:
             recovery_data = self.load_recovery_data()
         except subprocess.CalledProcessError as exception:
-            error_message = exception.stderr.decode('utf-8') \
-                if exception.stderr else str(exception)
-            error_title = _tr('Failed to load recovery data')
-            dialog = Gtk.MessageDialog(
-                parent=self.app_window,
-                flags=0,
-                message_type=Gtk.MessageType.ERROR,
-                buttons=Gtk.ButtonsType.OK,
-                text=f"{error_title}: {error_message}",
-            )
-            dialog.run()
-            dialog.destroy()
+            self.show_error_dialog(
+                _tr('Failed to load recovery data'),
+                exception.stderr.decode('utf-8') if exception.stderr
+                else str(exception),
+                parent=self.app_window)
             return
 
         recovery_qr_code_dialog = self.builder.get_object(

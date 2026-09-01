@@ -80,6 +80,13 @@ impl UserDisplay for ConsoleDisplay {
         Ok(())
     }
 
+    /// Show text alongside whatever else is on screen.
+    /// Replaces any overlay already shown.
+    fn show_overlay(&self, text: &str) -> Result<(), PuavoError> {
+        println!("{}", text);
+        Ok(())
+    }
+
     /// Clear the display (no-op).
     ///
     /// Errors:

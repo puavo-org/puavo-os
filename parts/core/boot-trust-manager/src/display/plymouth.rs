@@ -10,7 +10,10 @@ const PLYMOUTH_IMAGE_PATH: &str = "/run/plymouth-image.png";
 
 /// Plymouth status string that tells the active theme to
 /// load and display an image from the expected location.
-const PLYMOUTH_STATUS_SHOW_IMAGE: &str = "show-image";
+const COMMAND_SHOW_IMAGE: &str = "001";
+
+/// Show text in a corner of the screen.
+const COMMAND_SHOW_OVERLAY: &str = "002";
 
 /// Plymouth-backed `UserDisplay` implementation.
 pub struct PlymouthDisplay {
@@ -56,6 +59,11 @@ pub fn send_status_update(status: &str) -> Result<(), PuavoError> {
     Ok(())
 }
 
+/// Send a command to the Plymouth theme.
+pub fn send_command(command: &str, argument: &str) -> Result<(), PuavoError> {
+    send_status_update(&format!("{}:{}", command, argument))
+}
+
 /// Displays the specified image using Plymouth.
 pub fn show_image(source_path: &Path) -> Result<(), PuavoError> {
     let destination = Path::new(PLYMOUTH_IMAGE_PATH);
@@ -63,7 +71,7 @@ pub fn show_image(source_path: &Path) -> Result<(), PuavoError> {
 
     info!("Plymouth image copied to {}", destination.display());
 
-    send_status_update(PLYMOUTH_STATUS_SHOW_IMAGE)
+    send_command(COMMAND_SHOW_IMAGE, "")
 }
 
 impl UserDisplay for PlymouthDisplay {
@@ -97,6 +105,17 @@ impl UserDisplay for PlymouthDisplay {
         );
         output.stdout.zeroize();
         Ok(password)
+    }
+
+    /// Show text alongside whatever else is on screen.
+    /// Replaces any overlay already shown.
+    fn show_overlay(&self, text: &str) -> Result<(), PuavoError> {
+        send_command(COMMAND_SHOW_OVERLAY, text)
+    }
+
+    /// Hide the overlay that is shown alongside whatever else is on screen.
+    fn hide_overlay(&self) -> Result<(), PuavoError> {
+        send_command(COMMAND_SHOW_OVERLAY, "")
     }
 
     /// Display an informational message via Plymouth.

@@ -680,6 +680,10 @@ EOF
   if [ -z "$new_layout" ]; then
     echo 'Not changing keyboard layout'
   elif ckbcomp "$new_layout" 2>/dev/null | loadkeys -; then
+    # Nothing can easily determine the keymap the console has loaded.
+    # This lets the installer display the active keymap for the user.
+    mkdir -p /run/puavo
+    printf '%s\n' "$new_layout" > /run/puavo/console-keymap
     echo "Changed keyboard layout to \"${new_layout}\""
   else
     echo "Could not change keyboard layout" >&2

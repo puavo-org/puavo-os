@@ -19,7 +19,7 @@ use crate::{
     display::UserDisplay,
     error::PuavoError,
     utils::{
-        locale,
+        keyboard, locale,
         luks_tpm_token_manager::{LuksTpmTokenManager, MAX_TOKENS},
         mount::unmount,
         recovery_qr, tpm,
@@ -216,6 +216,7 @@ impl BootVault {
             if tokens.is_empty() { 0 } else { MAX_PIN_ONLY_ATTEMPTS };
 
         let strings = locale::strings();
+        let keymap = keyboard::load_configured_keymap();
 
         // Attempts made after the device reported a lockout.
         let mut locked_out_attempts = 0usize;
@@ -234,6 +235,14 @@ impl BootVault {
                 strings.pin_or_recovery_key_prompt
             };
 
+            if let Some(keymap) = &keymap {
+                let _ = display.show_overlay(&format!(
+                    "{}: {}",
+                    strings.keymap_hint,
+                    keymap.to_uppercase()
+                ));
+            }
+
             let user_input = match display.ask_password(prompt) {
                 Ok(input) => input,
                 Err(error) => {
@@ -242,6 +251,7 @@ impl BootVault {
                 }
             };
 
+            let _ = display.hide_overlay();
             let _ = display.clear();
 
             // Try TPM tokens with PIN
@@ -543,8 +553,7 @@ impl BootVaultResources {
 
         let property_path = self.mountpoint.join(key);
 
-        fs::write(property_path, value.as_ref())
-            .map_err(PuavoError::IoError)
+        fs::write(property_path, value.as_ref()).map_err(PuavoError::IoError)
     }
 
     /// Read the specified property from the mounted vault.

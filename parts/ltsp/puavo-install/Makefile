@@ -77,11 +77,13 @@ install : installdirs
 		lib/puavo-image-preinst \
 		lib/puavo-prepare-secure-boot \
 		lib/puavo-prepare-tpm-configuration \
+		lib/puavo-read-boot-keymap \
 		lib/puavo-read-recovery-bundle \
 		lib/puavo-reset \
 		lib/puavo-setup-secure-boot \
 		lib/puavo-torrent-updated \
 		lib/puavo-torrent-download-complete \
+		lib/puavo-write-boot-keymap \
 		lib/update-configuration \
 		lib/update-images \
 		lib/update-ltspimage-update-stats
