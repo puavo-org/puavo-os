@@ -1,13 +1,15 @@
 //! Implements recording of authorities and images by measuring them using TPM.
 
-use crate::tpm::{self, CommandResult, Extension};
+use crate::tpm::{self, CommandError, CommandResult, Extension};
 use alloc::vec::Vec;
 use uefi::proto::tcg::EventType;
 use uefi::proto::tcg::v2::{HashLogExtendEventFlags, Tcg};
-use uefi::{CStr16, Guid, cstr16, guid};
+use uefi::{CStr16, Guid, Status, cstr16, guid};
 
 const AUTHORITY_NAME: &CStr16 = cstr16!("SlabAuthority");
 const AUTHORITY_OWNER: Guid = guid!("af20bc5d-65ab-4c7c-80b4-b4efbf5ba588");
+
+const FLAT_IMAGE_EVENT_ID: u32 = 0x514B_F1A7;
 
 // TCG PC Client Platform Firmware Profile specification, revision 1.06:
 //
@@ -90,14 +92,43 @@ pub fn image(
     record.extend_from_slice(&(device_path.len() as u64).to_le_bytes());
     record.extend_from_slice(device_path);
 
+    let request = Extension {
+        pcr: tpm::PCR_4,
+        event_type: EventType::EFI_BOOT_SERVICES_APPLICATION,
+        logged: &record,
+        hashed: image,
+        flags: HashLogExtendEventFlags::PE_COFF_IMAGE,
+    };
+    match tpm::extend(tcg, request) {
+        Err(CommandError::Transport(Status::UNSUPPORTED)) => {}
+        result => return result,
+    }
+
+    // Some (older) firmware cannot explicitly hash a program.
+    // Record the bytes instead of refusing the boot.
+    verification!("this machine cannot hash a program, recording its bytes");
+    flat_image(tcg, &record, image)
+}
+
+/// Records a flat hash over the specified image.
+fn flat_image(
+    tcg: &mut Tcg,
+    image_load_event: &[u8],
+    image: &[u8],
+) -> CommandResult<()> {
+    let mut record = Vec::new();
+    record.extend_from_slice(&FLAT_IMAGE_EVENT_ID.to_le_bytes());
+    record.extend_from_slice(&(image_load_event.len() as u32).to_le_bytes());
+    record.extend_from_slice(image_load_event);
+
     tpm::extend(
         tcg,
         Extension {
             pcr: tpm::PCR_4,
-            event_type: EventType::EFI_BOOT_SERVICES_APPLICATION,
+            event_type: EventType::EVENT_TAG,
             logged: &record,
             hashed: image,
-            flags: HashLogExtendEventFlags::PE_COFF_IMAGE,
+            flags: HashLogExtendEventFlags::empty(),
         },
     )
 }
