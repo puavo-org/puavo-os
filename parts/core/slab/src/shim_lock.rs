@@ -189,7 +189,7 @@ unsafe extern "efiapi" fn decide_for_firmware(
     _boot_policy: u8,
 ) -> Status {
     if file_buffer.is_null() || file_size == 0 {
-        security_violation!("an image with no contents, refusing");
+        debug!("an image with no contents, refusing");
         return Status::SECURITY_VIOLATION;
     }
     let Ok(size) = u32::try_from(file_size) else {
