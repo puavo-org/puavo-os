@@ -23,9 +23,18 @@ install() {
     $(which xxd) \
     $(which find) \
     $(which awk) \
-    $(which cut)
+    $(which cut) \
+    $(which base64) \
+    $(which jq) \
+    $(which losetup) \
+    $(which tail) \
+    $(which veritysetup)
+
+  # The root filesystem image is opened through dm-verity
+  instmods dm-verity
 
   inst "$moddir/puavo-current-efi-boot-disk" /usr/bin/puavo-current-efi-boot-disk
+  inst "$moddir/puavo-open-image-verity" /usr/bin/puavo-open-image-verity
 
   # Remove NVIDIA blacklist and configuration files
   rm -f "${initdir}/etc/modprobe.d/nvidia-blacklists-nouveau.conf" \

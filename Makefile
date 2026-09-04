@@ -247,8 +247,11 @@ rootfs-image: check-buildhost $(rootfs_dir) $(image_dir)
 	$(MAKE) verify-boot-components
 	$(_sudo) .aux/create-image-grubenv '$(rootfs_dir)' '$(release_name)'
 	$(_sudo) mksquashfs '$(rootfs_dir)' '$(image_dir)/$(_image_file).tmp' \
-		-noappend -no-recovery -no-sparse -wildcards -comp lzo        \
-		-ef config/squashfs_exclude_list                              \
+		-noappend -no-recovery -no-sparse -wildcards -comp lzo            \
+		-ef config/squashfs_exclude_list                                  \
+		|| { rm -f '$(image_dir)/$(_image_file).tmp'; false; }
+	$(_sudo) .aux/append-image-verity-data '$(image_dir)/$(_image_file).tmp' \
+		'$(rootfs_dir)/puavo-os/.module-signing-key.pem'                     \
 		|| { rm -f '$(image_dir)/$(_image_file).tmp'; false; }
 	$(_sudo) mv '$(image_dir)/$(_image_file).tmp' '$(image_dir)/$(_image_file)'
 	@echo Built '$(image_dir)/$(_image_file)' successfully.

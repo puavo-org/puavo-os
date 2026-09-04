@@ -8,6 +8,7 @@ panic() {
 }
 
 PUAVO_HOSTTYPE=''
+PUAVO_IMAGE_DEVICE_NAME='image'
 PUAVO_IMAGE_LOAD_TO_RAM=0
 PUAVO_IMAGE_PATH=
 PUAVO_IMAGE_OVERLAY=
@@ -87,7 +88,8 @@ update_image_copy_progress() {
 }
 
 loopmount_image() {
-  local image_fs_size image_fs_type imagepath tmpfs_imagepath tmpfs_size
+  local image_device image_fs_size image_fs_type imagepath \
+    tmpfs_imagepath tmpfs_size
 
   if [ ! -f "${NEWROOT}${PUAVO_IMAGE_PATH}" ]; then
     panic "${NEWROOT}${PUAVO_IMAGE_PATH} does not exist!"
@@ -125,12 +127,12 @@ loopmount_image() {
     imagepath="$tmpfs_imagepath"
   fi
 
-  mount -r -t "$image_fs_type" -o loop "$imagepath" "$NEWROOT"
-  ret=$?
+  image_device=$(puavo-open-image-verity "$imagepath" \
+                                         "$PUAVO_IMAGE_DEVICE_NAME") \
+    || panic "failed to verify the integrity of ${imagepath}"
 
-  if [ "$ret" -gt 0 ]; then
-    panic "failed to loop mount ${imagepath} to ${NEWROOT}"
-  fi
+  mount -r -t "$image_fs_type" "$image_device" "$NEWROOT" \
+    || panic "failed to mount ${image_device} to ${NEWROOT}"
 }
 
 do_union_mount() {
