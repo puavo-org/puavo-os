@@ -1,0 +1,56 @@
+#!/bin/sh
+
+# Open the specified image with verity and print the resulting device.
+# The verity data is expected to be at the end of the image.
+
+set -eu
+
+FOOTER_SIZE=4096
+FOOTER_VERSION=1
+
+panic() {
+  echo "error: $*" >&2
+  exit 1
+}
+
+if [ "$#" -ne 2 ]; then
+  echo "Usage: $0 <image-file> <device-name>" >&2
+  exit 2
+fi
+
+image_file=$1
+device_name=$2
+
+[ -f "$image_file" ] || panic "no such image file: ${image_file}"
+
+footer=$(tail -c "$FOOTER_SIZE" "$image_file")
+
+read_field() {
+  echo "$footer" | jq --exit-status --raw-output ".$1"
+}
+
+version=$(read_field version)           \
+  && data_size=$(read_field data_size)  \
+  && root_hash=$(read_field root_hash)  \
+  && signature=$(read_field signature)  \
+  || panic "failed to parse verity data from ${image_file}"
+
+[ "$version" = "$FOOTER_VERSION" ] \
+  || panic "${image_file} has verity footer version ${version}"
+
+signature_file="/run/puavo/${device_name}.p7s"
+mkdir -p "$(dirname "$signature_file")"
+echo "$signature" | base64 --decode > "$signature_file"
+
+modprobe dm-verity
+
+loop_device=$(losetup -f) || panic 'no free loop device'
+losetup -r "$loop_device" "$image_file" \
+  || panic "failed to attach ${image_file} to ${loop_device}"
+
+veritysetup open "$loop_device" "$device_name" "$loop_device" "$root_hash" \
+  --hash-offset="$data_size"                                               \
+  --root-hash-signature="$signature_file"                                  \
+  || panic "root hash of ${image_file} is not trusted"
+
+echo "/dev/mapper/${device_name}"
