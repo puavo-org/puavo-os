@@ -361,8 +361,8 @@ class packages {
     , 'khangman'
     , 'ktouch'
     , 'kwordquiz'
+    , 'luanti'
     , 'luola'
-    , 'minetest'
     , 'neverball'
     , 'openttd'
     , 'qml-module-qtquick-dialogs'	        # needed by teamviewer
