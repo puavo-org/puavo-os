@@ -43,6 +43,7 @@ class packages::purged {
     , 'translate-toolkit-doc'
     , 'recordmydesktop'         # obs-studio records the screen
     , 'dvgrab'                  # FireWire capture
+    , 'oxygen-icon-theme'       # nothing uses it anymore
 
     # various HTML api docs. not quite needed in image
     , 'libglib2.0-doc'

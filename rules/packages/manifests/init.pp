@@ -547,18 +547,13 @@ class packages {
     , 'wxmaxima' ]:
       tag => [ 'tag_science', 'tag_debian_desktop', ];
 
-    [ 'deepin-icon-theme'
-    , 'faenza-icon-theme'
-    , 'gnome-icon-theme'
-    , 'gtk2-engines'
-    , 'gtk2-engines-pixbuf'
-    , 'obsidian-icon-theme'
-    , 'oxygen-icon-theme'
+    [ 'faenza-icon-theme'
+    , 'gnome-icon-theme'	# puavomenu icon search path
+    , 'gtk2-engines-pixbuf'	# required by gnome-themes-extra
     , 'xscreensaver-data'
     , 'xscreensaver-gl'
     , 'yaru-theme-gnome-shell'
-    , 'yaru-theme-gtk'
-    , 'yaru-theme-icon' ]:
+    , 'yaru-theme-gtk' ]:
       tag => [ 'tag_themes', 'tag_debian_desktop', ];
 
     # desktop-packages relating to gnome and other, some of these
