@@ -37,6 +37,10 @@ class packages::purged {
     # (runs dpkg-query without speed considerations)
     , 'im-config'
 
+    # recommended by packages we keep
+    , 'recordmydesktop'         # obs-studio records the screen
+    , 'dvgrab'                  # FireWire capture
+
     # various HTML api docs. not quite needed in image
     , 'libglib2.0-doc'
     , 'libgtk-3-doc'

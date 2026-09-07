@@ -383,14 +383,11 @@ class packages {
     [ 'blender'
     , 'breeze-icon-theme'	# wanted (not required) by kdenlive
     , 'dia'
-    , 'dvgrab'
     , 'feh'
     , 'freecad'
-    , 'geeqie'
     , 'gimp'
     , 'gimp-data-extras'
     # , 'gimp-plugin-registry'  # XXX missing from Trixie
-    , 'godot3'
     , 'gthumb'
     , 'heif-gdk-pixbuf'         # Support for HEIF/HEIC Image formats
     , 'inkscape'
@@ -399,8 +396,6 @@ class packages {
     , 'krita'
     , 'krita-l10n'
     # , 'libsane'               # XXX missing from Trixie
-    , 'meshlab'
-    , 'mjpegtools'
     , 'mypaint'
     # , 'nautilus-image-converter'      # XXX missing from Trixie
     , 'obs-studio'
@@ -408,7 +403,6 @@ class packages {
     , 'openscad'
     , 'openshot-qt'
     , 'pencil2d'
-    , 'pitivi'
     , 'python3-lxml'
     , 'qiv'
     , 'sane-utils'
@@ -418,9 +412,7 @@ class packages {
       tag => [ 'tag_graphics', 'tag_debian_desktop', ];
 
     [ 'irssi'
-    , 'irssi-plugin-xmpp'
-    , 'pidgin'
-    , 'pidgin-plugin-pack' ]:
+    , 'irssi-plugin-xmpp' ]:
       tag => [ 'tag_instant_messaging', 'tag_debian_desktop', ];
 
     [ 'libncurses6'             # needed by passmark-performance-test
@@ -444,8 +436,7 @@ class packages {
     , 'libwsman-clientpp-dev' ]:
       tag => [ 'tag_lib_devel', 'tag_debian_desktop', ];
 
-    [ 'goobox'
-    , 'gstreamer1.0-clutter-3.0'
+    [ 'gstreamer1.0-clutter-3.0'
     , 'gstreamer1.0-libav'
     , 'gstreamer1.0-plugins-bad'
     , 'gstreamer1.0-plugins-base'
@@ -455,14 +446,9 @@ class packages {
     , 'gstreamer1.0-vaapi'
     , 'handbrake'
     , 'handbrake-cli'
-    , 'kaffeine'
     , 'libdvd-pkg'
     , 'libdvdread8t64'
-    , 'recordmydesktop'
-    , 'regionset'
-    , 'smplayer'
     , 'vlc'
-    , 'winff'
     , 'x264' ]:
       tag => [ 'tag_mediaplayer', 'tag_debian_desktop', ];
 
@@ -486,8 +472,6 @@ class packages {
 
     [ 'calibre'
     # , 'freeplane'     # XXX Trixie
-    , 'gummi'
-    , 'impressive'
     , 'libreoffice'
     , 'libreoffice-base'
     , 'libreoffice-librelogo'
@@ -514,8 +498,6 @@ class packages {
     # , 'aseba'                         # XXX missing from Trixie
     , 'avr-libc'
     , 'emacs'
-    , 'eric'
-    , 'eric-api-files'
     , 'fastboot'
     , 'fritzing'
     , 'gambas3'
@@ -539,7 +521,6 @@ class packages {
     , 'racket'
     , 'racket-doc'
     , 'sbcl'
-    , 'scite'
     # , 'scratch'                       # XXX missing from Trixie
     , 'thonny' ]:
       tag => [ 'tag_programming', 'tag_debian_desktop', ];
@@ -557,7 +538,6 @@ class packages {
       tag => [ 'tag_remote_access', 'tag_debian_desktop', ];
 
     [ 'avogadro'
-    , 'gnucap'
     , 'gnuplot'
     , 'gnuplot-x11'
     , 'kalzium'
@@ -567,7 +547,6 @@ class packages {
     , 'kstars'
     , 'marble-qt'
     , 'openbabel'
-    , 'pspp'
     , 'qgis'
     , 'step'
     , 'texlive-fonts-recommended'
@@ -671,6 +650,7 @@ class packages {
     , 'ibus-m17n'
     , 'ibus-pinyin'
     , 'ibus-table'
+    , 'gir1.2-gnomedesktop-3.0'	# desktop icons extension
     , 'inputattach'
     , 'itstool'
     , 'kcalc'
@@ -831,9 +811,7 @@ class packages {
     , 'ca-certificates-java'
     , 'chromium'
     , 'chromium-l10n'
-    , 'epiphany-browser'
     , 'icedtea-netx'
-    , 'liferea'
     , 'openjdk-25-jdk'
     , 'openjdk-25-jre'
     , 'php-cli'
