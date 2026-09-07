@@ -31,7 +31,7 @@ _tr = gettext.gettext
 
 dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
-ICON_PATH = '/usr/share/icons/oxygen/base/64x64/actions/document-edit.png'
+ICON_PATH = '/usr/share/puavo-exammode/puavo-exammode-setup-applet.svg'
 
 css = b"""
 button {

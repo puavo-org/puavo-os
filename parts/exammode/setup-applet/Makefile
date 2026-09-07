@@ -27,6 +27,7 @@ i18nupdate: po/puavo-exammode-setup-applet.pot po/de/puavo-exammode-setup-applet
 .PHONY: installdirs
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-exammode
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
@@ -36,6 +37,8 @@ installdirs:
 install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-exammode-setup-applet \
 		start-puavo-exammode-setup-applet
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-exammode \
+		puavo-exammode-setup-applet.svg
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		start-puavo-exammode-setup-applet.desktop
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES \
