@@ -799,8 +799,8 @@ class packages {
     , 'chromium'
     , 'chromium-l10n'
     , 'icedtea-netx'
-    , 'openjdk-25-jdk'
-    , 'openjdk-25-jre'
+    , 'openjdk-21-jdk'
+    , 'openjdk-21-jre'
     , 'php-cli'
     , 'php-sqlite3'
     , 'sqlite3' ]:
