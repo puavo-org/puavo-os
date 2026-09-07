@@ -169,7 +169,6 @@ class packages {
     , 'sysbench'
     , 'sysfsutils'
     , 'sysstat'
-    # , 'tftp'                  # XXX missing from Trixie
     , 'telnet'
     , 'terminator'
     , 'time'
@@ -177,7 +176,6 @@ class packages {
     , 'tmux-plugin-manager'
     , 'tshark'
     , 'ulogd2'
-    # , 'vinagre'               # XXX missing from Trixie
     , 'vrms'
     , 'w3m'
     , 'wakeonlan'
@@ -200,7 +198,6 @@ class packages {
     , 'libasound2-plugins'
     , 'mumble'
     , 'pavucontrol'
-    # , 'pavumeter'             # XXX missing from Trixie
     , 'qstopmotion'
     , 'shotcut'
     , 'simplescreenrecorder'
@@ -235,7 +232,6 @@ class packages {
     , 'sbsigntool'
     , 'systemd'
     , 'systemd-ukify'
-    # , 'tomoyo-tools'  # XXX missing from Trixie
     , 'udev'
     , 'udisks2'
     , 'vlan' ]:
@@ -248,7 +244,6 @@ class packages {
 
     [ 'gdm3'
     , 'i3'
-    # , 'network-manager-fortisslvpn-gnome'     # XXX missing from Trixie
     , 'network-manager-openvpn-gnome'
     , 'network-manager-vpnc-gnome'
     , 'notify-osd'
@@ -333,7 +328,6 @@ class packages {
     , 'firmware-b43-installer'
     , 'firmware-b43legacy-installer'
     , 'firmware-linux-free'
-    # , 'firmware-microbit-micropython' # XXX missing from Trixie
     , 'isight-firmware-tools'
     , 'iucode-tool'
     , 'sigrok-firmware-fx2lafw'
@@ -382,7 +376,6 @@ class packages {
     , 'freecad'
     , 'gimp'
     , 'gimp-data-extras'
-    # , 'gimp-plugin-registry'  # XXX missing from Trixie
     , 'godot3'
     , 'gthumb'
     , 'heif-gdk-pixbuf'         # Support for HEIF/HEIC Image formats
@@ -391,10 +384,8 @@ class packages {
     , 'kolourpaint'
     , 'krita'
     , 'krita-l10n'
-    # , 'libsane'               # XXX missing from Trixie
     , 'meshlab'
     , 'mypaint'
-    # , 'nautilus-image-converter'      # XXX missing from Trixie
     , 'obs-studio'
     , 'okular'
     , 'openscad'
@@ -470,7 +461,6 @@ class packages {
       tag => [ 'tag_network', 'tag_debian_desktop', ];
 
     [ 'calibre'
-    # , 'freeplane'     # XXX Trixie
     , 'gummi'
     , 'impressive'
     , 'libreoffice'
@@ -496,7 +486,6 @@ class packages {
       tag => [ 'tag_printing', 'tag_debian_desktop', ];
 
     [ 'adb'
-    # , 'aseba'                         # XXX missing from Trixie
     , 'avr-libc'
     , 'emacs'
     , 'fastboot'
@@ -521,7 +510,6 @@ class packages {
     , 'python-is-python3'
     , 'racket'
     , 'sbcl'
-    # , 'scratch'                       # XXX missing from Trixie
     , 'thonny' ]:
       tag => [ 'tag_programming', 'tag_debian_desktop', ];
 
@@ -718,7 +706,6 @@ class packages {
     , 'speech-dispatcher'
     , 'speech-dispatcher-festival'		# for Finnish TTS
     , 'speech-dispatcher-pico'			# for English and German TTS
-    # , 'speedcrunch'                           # XXX missing from Trixie
     , 'ssh-askpass-gnome'
     , 'telepathy-idle'
     , 'tesseract-ocr'
@@ -766,7 +753,6 @@ class packages {
     ]:
       tag => [ 'tag_puavopkg', 'tag_debian_desktop', ];
 
-    # [ 'anki'                          # XXX missing from Trixie
     [ 'bindfs'
     , 'binfmt-support'
     , 'blueman'
@@ -793,7 +779,7 @@ class packages {
     , 'rename'
     , 'system-config-printer'
     , 'tlp'
-    # , 'ubertooth'             # XXX missing from Trixie
+    , 'ubertooth'
     , 'unace'
     # , 'unionfs-fuse'    # Ekapeli might need this.    # XXX missing from Trixie
     , 'wimtools'
