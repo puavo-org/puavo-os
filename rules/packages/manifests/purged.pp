@@ -53,6 +53,11 @@ class packages::purged {
 
     , 'needrestart'     # no need for this when using image-based system
 
+    # other rarely used documentation that can be looked online
+    , 'maxima-doc'
+    , 'racket-doc'
+    , 'translate-toolkit-doc'
+
     # the functionality in these is not for our end users
     , 'mercurial'
     , 'software-properties-gtk'

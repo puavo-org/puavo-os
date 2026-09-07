@@ -520,7 +520,6 @@ class packages {
     , 'python3-pygame'
     , 'python-is-python3'
     , 'racket'
-    , 'racket-doc'
     , 'sbcl'
     # , 'scratch'                       # XXX missing from Trixie
     , 'thonny' ]:
