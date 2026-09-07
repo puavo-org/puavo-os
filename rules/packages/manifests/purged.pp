@@ -38,6 +38,9 @@ class packages::purged {
     , 'im-config'
 
     # recommended by packages we keep
+    , 'maxima-doc'
+    , 'racket-doc'
+    , 'translate-toolkit-doc'
     , 'recordmydesktop'         # obs-studio records the screen
     , 'dvgrab'                  # FireWire capture
 
