@@ -76,6 +76,7 @@ class packages {
     , 'krb5-admin-server'
     , 'krb5-kdc'
     , 'less'
+    , 'libudev0'
     , 'libudev1'
     , 'logrotate'
     , 'mdadm'
