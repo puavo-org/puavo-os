@@ -811,8 +811,8 @@ class packages {
     , 'ca-certificates-java'
     , 'chromium'
     , 'chromium-l10n'
-    , 'openjdk-25-jdk'
-    , 'openjdk-25-jre'
+    , 'openjdk-21-jdk'
+    , 'openjdk-21-jre'
     , 'php-cli'
     , 'php-sqlite3'
     , 'sqlite3' ]:
