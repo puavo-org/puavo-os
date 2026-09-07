@@ -43,3 +43,9 @@ if (user === "guest") {
 }
 
 lockPref("nglayout.enable_drag_images", false);
+
+// Follow the session language. As a default the user can still pick
+// another one in the settings.
+firefox_locales = { de: "de", fi: "fi", fr: "fr", sv: "sv-SE", uk: "uk" };
+language = String(getenv("LANG") || "").substring(0, 2);
+defaultPref("intl.locale.requested", firefox_locales[language] || "en-GB");
