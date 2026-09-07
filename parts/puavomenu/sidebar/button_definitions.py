@@ -36,7 +36,7 @@ SB_BUTTONS = {
     },
     "exam_mode": {
         "title": "sb_exam_mode",
-        "icon": "/usr/share/icons/oxygen/base/64x64/actions/document-edit.png",
+        "icon": "/opt/puavomenu/icons/document-edit.svg",
         "command": {
             "type": "command",
             "args": "puavo-exammode-ctrl start-ui",
@@ -90,7 +90,7 @@ SB_BUTTONS = {
     },
     "logout": {
         "title": "sb_logout",
-        "icon": "/usr/share/icons/Papirus/64x64/apps/gnome-logout.svg",
+        "icon": "/usr/share/icons/Tela/scalable/apps/system-log-out.svg",
         "command": {"type": "command", "args": "gnome-session-quit --logout"},
     },
     "restart": {
