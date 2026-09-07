@@ -353,24 +353,17 @@ class packages {
       tag => [ 'tag_fonts', 'tag_debian_desktop', ];
 
     [ 'aisleriot'
-    , 'dosbox'
     , 'gcompris-qt'
     , 'gnome-games'
-    , 'gnubg'
-    , 'gnuchess'
     , 'khangman'
     , 'ktouch'
     , 'kwordquiz'
-    , 'luola'
-    , 'minetest'
     , 'neverball'
-    , 'openttd'
     , 'qml-module-qtquick-dialogs'	        # needed by teamviewer
     , 'qml-module-qtquick-privatewidgets'	# needed by teamviewer
     , 'tuxmath'
     , 'tuxpaint'
-    , 'tuxpaint-stamps-default'
-    , 'xmoto' ]:
+    , 'tuxpaint-stamps-default' ]:
       tag => [ 'tag_games', 'tag_debian_desktop', ];
 
     [ 'dbus-x11'
