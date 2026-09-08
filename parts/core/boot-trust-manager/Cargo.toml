@@ -2,6 +2,7 @@
 name = "puavo-boot-trust-manager"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.85.0"
 autotests = false
 
 [lib]
@@ -63,7 +64,7 @@ base64 = "0.21"
 serial_test = "3.0"
 ctor = "0.2"
 rqrr = { version = "0.10.1", default-features = false }
-rcgen = { version = "0.14.9", default-features = false, features = ["pem", "ring"] }
+rcgen = { version = "0.14", default-features = false, features = ["pem", "ring"] }
 
 [profile.release]
 strip = true
