@@ -25,6 +25,11 @@ $(BIN): Cargo.lock Cargo.toml $(SOURCE_FILES)
 install: build install-directories
 	cp $(BIN) $(DESTDIR)/usr/sbin/
 
+# Captures the boots the tests compare against. Needs QEMU and swtpm.
+.PHONY: captures
+captures:
+	sh tests/scripts/refresh-captures
+
 .PHONY: format
 format:
 	cargo fmt
