@@ -1,0 +1,3 @@
+#!/bin/sh
+# Stands in for the real command in tests and records what it was asked for.
+echo "$2 dated $3" > "$PUAVO_TEST_RECORD"

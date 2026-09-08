@@ -46,6 +46,7 @@ pub struct Strings {
     pub configuring_disk_encryption: &'static str,
     pub updating_secure_boot: &'static str,
     pub preparing_secure_boot_update: &'static str,
+    pub applying_secure_boot_update: &'static str,
     pub rebooting: &'static str,
     pub configuration_failed_prefix: &'static str,
 }
@@ -76,6 +77,7 @@ static ENGLISH_STRINGS: Strings = Strings {
     configuring_disk_encryption: "Configuring disk encryption...",
     updating_secure_boot: "Updating Secure Boot configuration...",
     preparing_secure_boot_update: "Preparing Secure Boot update...",
+    applying_secure_boot_update: "Applying Secure Boot update...",
     rebooting: "Rebooting...",
     configuration_failed_prefix: "Configuration failed",
 };
@@ -95,6 +97,7 @@ static FINNISH_STRINGS: Strings = Strings {
     configuring_disk_encryption: "Määritetään levyn salausta...",
     updating_secure_boot: "Päivitetään Secure Boot -asetuksia...",
     preparing_secure_boot_update: "Valmistellaan Secure Boot -päivitystä...",
+    applying_secure_boot_update: "Otetaan Secure Boot -päivitys käyttöön...",
     rebooting: "Käynnistetään uudelleen...",
     configuration_failed_prefix: "Määritys epäonnistui",
 };
@@ -114,6 +117,7 @@ static SWEDISH_STRINGS: Strings = Strings {
     configuring_disk_encryption: "Konfigurerar diskkryptering...",
     updating_secure_boot: "Uppdaterar Secure Boot-konfiguration...",
     preparing_secure_boot_update: "Förbereder Secure Boot-uppdatering...",
+    applying_secure_boot_update: "Tillämpar Secure Boot-uppdatering...",
     rebooting: "Startar om...",
     configuration_failed_prefix: "Konfigurationen misslyckades",
 };
@@ -133,6 +137,7 @@ static GERMAN_STRINGS: Strings = Strings {
     configuring_disk_encryption: "Festplattenverschlüsselung wird konfiguriert...",
     updating_secure_boot: "Secure Boot-Konfiguration wird aktualisiert...",
     preparing_secure_boot_update: "Secure Boot-Update wird vorbereitet...",
+    applying_secure_boot_update: "Secure Boot-Update wird angewendet...",
     rebooting: "Neustart...",
     configuration_failed_prefix: "Konfiguration fehlgeschlagen",
 };

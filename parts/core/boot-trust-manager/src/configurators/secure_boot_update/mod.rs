@@ -1,12 +1,14 @@
 //! Secure Boot database updates, prepared before the enrollments and applied
 //! after them.
 
+pub mod apply;
 pub mod prepare;
 
 use std::{cell::RefCell, rc::Rc};
 
 use crate::secure_boot::update::PreparedSecureBootUpdate;
 
+pub use apply::ApplySecureBootUpdateConfigurator;
 pub use prepare::PrepareSecureBootUpdateConfigurator;
 
 /// Directory of the databases installed in the image.
