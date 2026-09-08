@@ -23,6 +23,5 @@ install_configurator() {
   fi
 }
 
-install_configurator fallback
 install_configurator primary
 install_configurator secure-boot-updates
