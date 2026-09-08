@@ -4,6 +4,7 @@
 
 mod database;
 mod device;
+mod microsoft;
 mod prediction;
 pub(super) mod slab;
 mod validator;

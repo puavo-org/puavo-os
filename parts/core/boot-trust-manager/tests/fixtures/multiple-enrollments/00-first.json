@@ -2,6 +2,8 @@
   "name": "first-enrollment",
   "version": 1,
   "policy": {
-    "tpm2-pcrs": ["7:sha256"]
+    "tpm2-pcrs": {
+      "7:sha256": null
+    }
   }
 }

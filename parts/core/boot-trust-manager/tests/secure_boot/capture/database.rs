@@ -6,7 +6,7 @@ use puavo_boot_trust_manager::secure_boot::database::{
     SignatureDatabase, SignatureList,
 };
 
-use super::{Capture, slab};
+use super::{Capture, microsoft, slab};
 
 /// The contents of the database variable in a capture.
 fn measured_database(profile: &str) -> Vec<u8> {
@@ -33,6 +33,13 @@ fn recreate_from_measurement_data(measured: &[u8]) -> Vec<u8> {
 #[test]
 fn recreated_database_is_measured_one() {
     let measured = measured_database(slab::PROFILE);
+
+    assert_eq!(recreate_from_measurement_data(&measured), measured);
+}
+
+#[test]
+fn microsoft_database_recreates_the_same() {
+    let measured = measured_database(microsoft::PROFILE);
 
     assert_eq!(recreate_from_measurement_data(&measured), measured);
 }
