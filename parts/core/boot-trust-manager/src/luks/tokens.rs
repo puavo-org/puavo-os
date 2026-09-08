@@ -1,17 +1,21 @@
 use libcryptsetup_rs::consts::flags::{CryptActivate, CryptDeactivate};
 use libcryptsetup_rs::consts::vals::EncryptionFormat;
 use libcryptsetup_rs::{CryptDevice, CryptInit};
-use log::debug;
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use zeroize::Zeroizing;
 
 use crate::error::PuavoError;
+use crate::secure_boot::{
+    chain::{Device, Measurement},
+    validator::Validator,
+};
 
 pub const MAX_TOKENS: u32 = 32;
 pub const TPM_TOKEN_TYPE: &str = "systemd-tpm2";
@@ -42,9 +46,11 @@ pub struct LuksTpmToken {
 /// Enrollment policy used when creating a TPM2 token via `systemd-cryptenroll`.
 #[derive(Serialize, Deserialize, Debug, Clone, Hash)]
 pub struct LuksTpmEnrollmentPolicy {
-    /// PCR expressions for direct TPM binding (e.g. ["7:sha256", "15:sha256=<value>"]).
+    /// The PCRs to bind, each with the chain of measurements that predicts
+    /// its value. A PCR without a chain is bound to its current value. The
+    /// map is ordered, so the policy hashes and serializes deterministically.
     #[serde(rename = "tpm2-pcrs")]
-    pub specific_pcrs_expressions: Option<Vec<String>>,
+    pub specific_pcrs: Option<BTreeMap<String, Option<Vec<Measurement>>>>,
 
     /// PCR expressions to be validated using a TPM public key policy (e.g. ["11:sha256"]).
     #[serde(rename = "tpm2-public-key-pcrs", default)]
@@ -61,16 +67,71 @@ pub struct LuksTpmEnrollmentPolicy {
     pub public_keys: Vec<(PathBuf, String)>,
 }
 
+/// The PCR expressions passed to the enrollment tool, and whether they match
+/// the current state of the machine.
+pub struct Bindings {
+    pub pcr_expressions: Vec<String>,
+    pub describes_current_state: bool,
+}
+
 impl LuksTpmEnrollmentPolicy {
+    /// Evaluates every chain of this policy.
+    pub fn evaluate(
+        &self,
+        device: &dyn Device,
+    ) -> Result<Bindings, PuavoError> {
+        let Some(pcrs) = &self.specific_pcrs else {
+            info!("No specific PCRs in policy");
+            return Ok(Bindings {
+                pcr_expressions: Vec::new(),
+                describes_current_state: true,
+            });
+        };
+
+        let mut pcr_expressions = Vec::with_capacity(pcrs.len());
+        let mut describes_current_state = true;
+
+        for (register, chain) in pcrs {
+            let Some(chain) = chain else {
+                // Without a chain the tool reads the current PCR value.
+                debug!("{register} is bound to whatever it holds now");
+                pcr_expressions.push(register.clone());
+                continue;
+            };
+
+            let comparison = Validator::new(device).check(register, chain)?;
+            comparison.log_result();
+
+            let register_holds_it = comparison.matches == Some(true);
+            describes_current_state &= register_holds_it;
+            pcr_expressions
+                .push(format!("{register}={}", comparison.predicted));
+        }
+
+        debug!(
+            "The policy binds {:?}, and {} the state this machine is in",
+            pcr_expressions,
+            match describes_current_state {
+                true => "describes",
+                false => "does not describe",
+            }
+        );
+
+        Ok(Bindings { pcr_expressions, describes_current_state })
+    }
+
     /// Extract unique PCR indices used by this enrollment policy.
     ///
     /// Returns a sorted, deduplicated vector of PCR indices from both
     /// specific PCR expressions and public key PCR expressions.
     pub fn pcr_indices(&self) -> Vec<u32> {
-        let mut indices: Vec<u32> = self
-            .specific_pcrs_expressions
+        let pcrs: Vec<String> = self
+            .specific_pcrs
             .as_ref()
-            .unwrap_or(&Vec::new())
+            .map(|pcrs| pcrs.keys().cloned().collect())
+            .unwrap_or_default();
+
+        let mut indices: Vec<u32> = pcrs
             .iter()
             .chain(self.public_key_pcrs_expressions.iter())
             .filter_map(|expression| expression.split(':').next()?.parse().ok())
@@ -261,6 +322,7 @@ impl LuksTpmTokenManager {
     /// Parameters:
     /// * `recovery_key_path` - Path to the recovery key file.
     /// * `policy` - The enrollment policy specifying PCRs, PIN usage, and other options.
+    /// * `bindings` - The PCR values the policy binds, computed for this machine.
     /// * `pin` - Optional PIN used for unlocking the device.
     /// * `public_key_path` - Path to a TPM PCR public key.
     /// * `wipe` - If true, any existing TPM token will be removed before enrolling the new one.
@@ -271,6 +333,7 @@ impl LuksTpmTokenManager {
         &self,
         recovery_key_path: &Path,
         policy: &LuksTpmEnrollmentPolicy,
+        bindings: &Bindings,
         pin: Option<&Zeroizing<String>>,
         public_key_path: Option<&PathBuf>,
         wipe: bool,
@@ -283,8 +346,11 @@ impl LuksTpmTokenManager {
             arguments.push("--wipe-slot=tpm2".to_string());
         }
 
-        if let Some(expressions) = &policy.specific_pcrs_expressions {
-            arguments.push(format!("--tpm2-pcrs={}", expressions.join("+")));
+        if !bindings.pcr_expressions.is_empty() {
+            arguments.push(format!(
+                "--tpm2-pcrs={}",
+                bindings.pcr_expressions.join("+")
+            ));
         }
 
         if let Some(public_key_path) = public_key_path {
@@ -333,8 +399,9 @@ impl LuksTpmTokenManager {
             .map_err(PuavoError::IoError)?;
 
         if !output.status.success() {
-            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-            return Err(PuavoError::ShellError(stderr));
+            let standard_error =
+                String::from_utf8_lossy(&output.stderr).to_string();
+            return Err(PuavoError::ShellError(standard_error));
         }
 
         Ok(())

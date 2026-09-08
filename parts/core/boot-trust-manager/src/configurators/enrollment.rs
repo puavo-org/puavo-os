@@ -13,12 +13,18 @@ use crate::{
     display::UserDisplay,
     error::PuavoError,
     hashing::Hashed,
-    luks::tokens::{LuksTpmEnrollmentPolicy, LuksTpmTokenManager},
+    luks::tokens::{Bindings, LuksTpmEnrollmentPolicy, LuksTpmTokenManager},
+    secure_boot::chain::SystemDevice,
     system::locale,
     tpm::read_pcrs_as_string,
 };
 
 const CONFIGURATION_BASE_DIRECTORY: &str = "/etc/puavo/enrollment";
+
+/// Directory of the enrollments generated during this boot. It is a tmpfs,
+/// so they do not persist across boots.
+pub const GENERATED_CONFIGURATION_DIRECTORY: &str = "/run/puavo/enrollment";
+
 const STATE_FILENAME: &str = "enrollment.state.json";
 
 #[derive(Serialize, Deserialize, Debug, Clone, Hash)]
@@ -32,9 +38,30 @@ pub struct EnrollmentItemConfiguration {
     pub policy: LuksTpmEnrollmentPolicy,
 }
 
+impl EnrollmentItemConfiguration {
+    /// Reads an enrollment from a file and resolves the public keys its
+    /// policy references.
+    pub fn read(path: &Path) -> Result<Self, PuavoError> {
+        debug!("Reading enrollment configuration file: {:?}", path);
+
+        let data = fs::read_to_string(path)?;
+        let mut enrollment =
+            serde_json::from_str::<Self>(&data).map_err(|error| {
+                PuavoError::MalformedPolicy {
+                    path: path.display().to_string(),
+                    why: error.to_string(),
+                }
+            })?;
+        enrollment.policy.find_public_keys()?;
+
+        Ok(enrollment)
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct EnrollmentSetConfiguration {
-    /// All enrollment items to apply (order matters; first will wipe existing tokens)
+    /// All enrollment items to apply. The order matters and the first one
+    /// wipes the existing tokens.
     enrollments: Vec<EnrollmentItemConfiguration>,
 }
 
@@ -113,50 +140,78 @@ impl EnrollmentConfigurator {
     /// Returns:
     /// A vector of configurators, one per enrollment set found.
     pub fn from_directory(directory: &str) -> Result<Vec<Self>, PuavoError> {
+        let enrollments = Self::read_directory(directory)?;
+
+        if enrollments.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        Ok(vec![Self {
+            configuration: EnrollmentSetConfiguration { enrollments },
+        }])
+    }
+
+    /// Returns the names of the enrollments applied on the last successful
+    /// enrollment.
+    pub fn applied_names(
+        resources: &BootVaultResources,
+    ) -> Result<Vec<String>, PuavoError> {
+        Ok(EnrollmentSetState::load(resources)?
+            .map(|state| {
+                state
+                    .enrollments
+                    .into_iter()
+                    .map(|record| record.name)
+                    .collect()
+            })
+            .unwrap_or_default())
+    }
+
+    /// Returns the enrollments installed in the image.
+    pub fn read_shipped_configurations()
+    -> Result<Vec<EnrollmentItemConfiguration>, PuavoError> {
+        Self::read_directory(CONFIGURATION_BASE_DIRECTORY)
+    }
+
+    /// Reads the enrollments in a directory sorted by file name.
+    /// A missing directory returns none.
+    fn read_directory(
+        directory: &str,
+    ) -> Result<Vec<EnrollmentItemConfiguration>, PuavoError> {
         debug!("Loading enrollments from {}", directory);
 
-        let directory_reader = match fs::read_dir(directory) {
-            Ok(reader) => reader,
+        let listing = match fs::read_dir(directory) {
+            Ok(listing) => listing,
             Err(error) if error.kind() == ErrorKind::NotFound => {
-                debug!(
-                    "Enrollment directory '{}' does not exist, skipping",
-                    directory
-                );
+                debug!("{} does not exist, skipping", directory);
                 return Ok(Vec::new());
             }
             Err(error) => return Err(error.into()),
         };
 
-        // List and sort enrollment JSON files
-        let mut json_paths: Vec<_> = directory_reader
-            .filter_map(|entry_result| entry_result.ok())
+        let mut paths: Vec<_> = listing
+            .filter_map(|entry| entry.ok())
             .map(|entry| entry.path())
             .filter(|path| {
                 path.extension().and_then(|extension| extension.to_str())
                     == Some("json")
             })
             .collect();
-        json_paths.sort();
+        paths.sort();
 
-        let mut enrollments: Vec<EnrollmentItemConfiguration> = Vec::new();
+        paths
+            .iter()
+            .map(|path| EnrollmentItemConfiguration::read(path))
+            .collect()
+    }
 
-        for path in json_paths {
-            debug!("Reading enrollment configuration file: {:?}", path);
-            let data = fs::read_to_string(&path)?;
-            let mut enrollment =
-                serde_json::from_str::<EnrollmentItemConfiguration>(&data)
-                    .map_err(PuavoError::EnrollmentStateError)?;
-            enrollment.policy.find_public_keys()?;
-            enrollments.push(enrollment);
-        }
+    /// Returns the enrollments to apply, the installed ones followed by the
+    /// ones generated during this boot.
+    fn items(&self) -> Result<Vec<EnrollmentItemConfiguration>, PuavoError> {
+        let mut items = self.configuration.enrollments.clone();
+        items.extend(Self::read_directory(GENERATED_CONFIGURATION_DIRECTORY)?);
 
-        if enrollments.is_empty() {
-            return Ok(Vec::new());
-        }
-
-        let configuration = EnrollmentSetConfiguration { enrollments };
-
-        Ok(vec![Self { configuration }])
+        Ok(items)
     }
 
     /// Return true if any token on the specified device is invalid.
@@ -191,12 +246,10 @@ impl EnrollmentConfigurator {
     /// Compare the desired set (from configuration) with the stored state.
     /// Returns true if they differ in names or versions.
     fn any_configuration_changed(
-        &self,
+        items: &[EnrollmentItemConfiguration],
         resources: &BootVaultResources,
     ) -> Result<bool, PuavoError> {
-        let enrollment_hashes: HashMap<String, u64> = self
-            .configuration
-            .enrollments
+        let enrollment_hashes: HashMap<String, u64> = items
             .iter()
             .map(|enrollment| (enrollment.name.clone(), enrollment.hashed()))
             .collect();
@@ -211,10 +264,8 @@ impl EnrollmentConfigurator {
     }
 
     /// Collect all unique PCR indices used by the all enrollment configurations.
-    fn collect_pcr_indices(&self) -> Vec<u32> {
-        let mut indices: Vec<u32> = self
-            .configuration
-            .enrollments
+    fn collect_pcr_indices(items: &[EnrollmentItemConfiguration]) -> Vec<u32> {
+        let mut indices: Vec<u32> = items
             .iter()
             .flat_map(|enrollment| enrollment.policy.pcr_indices())
             .collect();
@@ -226,10 +277,10 @@ impl EnrollmentConfigurator {
 
     /// Check if the cached PCR state matches the current PCR values.
     fn pcr_cache_matches(
-        &self,
+        items: &[EnrollmentItemConfiguration],
         resources: &BootVaultResources,
     ) -> Result<bool, PuavoError> {
-        let pcr_indices = self.collect_pcr_indices();
+        let pcr_indices = Self::collect_pcr_indices(items);
         let pcr_state = read_pcrs_as_string(&pcr_indices)?;
         debug!("Current PCR state: {:?}", pcr_state);
 
@@ -244,10 +295,10 @@ impl EnrollmentConfigurator {
 
     /// Save the current PCR state to the boot vault cache.
     fn save_pcr_cache(
-        &self,
+        items: &[EnrollmentItemConfiguration],
         resources: &BootVaultResources,
     ) -> Result<(), PuavoError> {
-        let pcr_indices = self.collect_pcr_indices();
+        let pcr_indices = Self::collect_pcr_indices(items);
         let pcr_state = read_pcrs_as_string(&pcr_indices)?;
         debug!("Current PCR state: {:?}", pcr_state);
 
@@ -257,10 +308,10 @@ impl EnrollmentConfigurator {
     }
 
     /// Builds the current enrollment state from the configuration.
-    fn build_state_from_configurations(&self) -> EnrollmentSetState {
-        let enrollments = self
-            .configuration
-            .enrollments
+    fn build_state_from_configurations(
+        items: &[EnrollmentItemConfiguration],
+    ) -> EnrollmentSetState {
+        let enrollments = items
             .iter()
             .map(|enrollment| EnrollmentStateRecord {
                 name: enrollment.name.clone(),
@@ -276,17 +327,18 @@ impl EnrollmentConfigurator {
         token_manager: &mut LuksTpmTokenManager,
         recovery_key_path: &Path,
         pin: Option<&Zeroizing<String>>,
-        items: &[EnrollmentItemConfiguration],
+        evaluated: &[(EnrollmentItemConfiguration, Bindings)],
     ) -> Result<(), PuavoError> {
         let mut wipe = true;
 
-        for item in items {
+        for (item, bindings) in evaluated {
             let policy = &item.policy;
 
             if policy.public_keys.is_empty() {
                 token_manager.enroll(
                     recovery_key_path,
                     policy,
+                    bindings,
                     pin,
                     None,
                     wipe,
@@ -297,6 +349,7 @@ impl EnrollmentConfigurator {
                     token_manager.enroll(
                         recovery_key_path,
                         policy,
+                        bindings,
                         pin,
                         Some(public_key),
                         wipe,
@@ -307,6 +360,39 @@ impl EnrollmentConfigurator {
         }
 
         Ok(())
+    }
+
+    /// Evaluates every enrollment. At least one must match the current state
+    /// of the machine, otherwise every token would bind a different state and
+    /// the disk could not be unlocked. The others may describe a future
+    /// state.
+    fn evaluate(
+        items: Vec<EnrollmentItemConfiguration>,
+    ) -> Result<Vec<(EnrollmentItemConfiguration, Bindings)>, PuavoError> {
+        let mut evaluated = Vec::with_capacity(items.len());
+
+        for item in items {
+            match item.policy.evaluate(&SystemDevice) {
+                Ok(bindings) => evaluated.push((item, bindings)),
+                Err(error) => error!(
+                    "Failed to evaluate '{}' on this machine: {}",
+                    item.name, error
+                ),
+            }
+        }
+
+        let describing: Vec<&str> = evaluated
+            .iter()
+            .filter(|(_, bindings)| bindings.describes_current_state)
+            .map(|(item, _)| item.name.as_str())
+            .collect();
+
+        if describing.is_empty() {
+            return Err(PuavoError::NoEnrollmentDescribesMachine);
+        }
+
+        info!("This machine is described by {}", describing.join(", "));
+        Ok(evaluated)
     }
 
     /// Enroll all configured TPM policies for both the boot vault.
@@ -329,10 +415,8 @@ impl EnrollmentConfigurator {
             .test_passphrase(&recovery_key)
             .map_err(|_| PuavoError::InvalidRecoveryKey)?;
 
-        info!(
-            "Applying {} enrollment(s)",
-            self.configuration.enrollments.len()
-        );
+        let evaluated = Self::evaluate(self.items()?)?;
+        info!("Applying {} enrollment(s)", evaluated.len());
 
         let pin = boot_vault.pin().cloned();
 
@@ -341,10 +425,12 @@ impl EnrollmentConfigurator {
             boot_vault.device_mut(),
             &recovery_key_path,
             pin.as_ref(),
-            &self.configuration.enrollments,
+            &evaluated,
         )?;
 
-        self.build_state_from_configurations().save(&resources)?;
+        let items: Vec<EnrollmentItemConfiguration> =
+            evaluated.iter().map(|(item, _)| item.clone()).collect();
+        Self::build_state_from_configurations(&items).save(&resources)?;
 
         let restrictions = UnlockRestrictions::from_current_state();
         if let Err(error) = resources.write_unlock_restrictions(&restrictions) {
@@ -353,7 +439,7 @@ impl EnrollmentConfigurator {
 
         // Cache the PCR state after successful enrollment to skip token validation on future boots
         // when PCR values remain unchanged.
-        if let Err(error) = self.save_pcr_cache(&resources) {
+        if let Err(error) = Self::save_pcr_cache(&items, &resources) {
             error!("Failed to save PCR cache: {}", error);
         }
 
@@ -385,15 +471,16 @@ impl Configurator for EnrollmentConfigurator {
         }
 
         let resources = boot_vault.resources();
+        let items = self.items()?;
 
-        if self.any_configuration_changed(resources)? {
+        if Self::any_configuration_changed(&items, resources)? {
             debug!("Enrollment configurations have changed");
             return Ok(true);
         }
 
         // Check if PCR state matches the cache from last successful enrollment.
         // If PCRs match, we can skip the slow token validation.
-        match self.pcr_cache_matches(resources) {
+        match Self::pcr_cache_matches(&items, resources) {
             Ok(true) => {
                 debug!("PCR state matches cache, skipping token validation");
                 return Ok(false);
@@ -429,5 +516,29 @@ impl Configurator for EnrollmentConfigurator {
 
     fn name(&self) -> &'static str {
         "Enrollment"
+    }
+}
+
+/// Test helpers for the enrollment state file. They live here because the
+/// file name and format are private to this module.
+#[cfg(test)]
+pub mod testing {
+    use super::*;
+
+    /// Writes the specified names as the last applied enrollments.
+    pub fn write_applied_names(
+        resources: &BootVaultResources,
+        names: &[String],
+    ) -> Result<(), PuavoError> {
+        EnrollmentSetState {
+            enrollments: names
+                .iter()
+                .map(|name| EnrollmentStateRecord {
+                    name: name.clone(),
+                    hash: 0,
+                })
+                .collect(),
+        }
+        .save(resources)
     }
 }

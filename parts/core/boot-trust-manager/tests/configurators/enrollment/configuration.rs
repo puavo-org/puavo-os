@@ -260,7 +260,11 @@ fn loads_multiple_enrollment_configurations() {
     assert_eq!(first.name, "first-enrollment");
     assert_eq!(first.version, 1);
     assert_eq!(
-        first.policy.specific_pcrs_expressions,
+        first
+            .policy
+            .specific_pcrs
+            .as_ref()
+            .map(|pcrs| pcrs.keys().cloned().collect::<Vec<String>>()),
         Some(vec!["7:sha256".to_string()])
     );
     assert!(first.policy.public_key_pcrs_expressions.is_empty());
@@ -269,7 +273,11 @@ fn loads_multiple_enrollment_configurations() {
     assert_eq!(second.name, "second-enrollment");
     assert_eq!(second.version, 2);
     assert_eq!(
-        second.policy.specific_pcrs_expressions,
+        second.policy.specific_pcrs.as_ref().map(|pcrs| pcrs
+            .keys()
+            .cloned()
+            .collect::<Vec<String>>(
+        )),
         Some(vec!["8:sha256".to_string()])
     );
     assert!(second.policy.public_key_pcrs_expressions.is_empty());
@@ -278,7 +286,11 @@ fn loads_multiple_enrollment_configurations() {
     assert_eq!(third.name, "third-enrollment");
     assert_eq!(third.version, 3);
     assert_eq!(
-        third.policy.specific_pcrs_expressions,
+        third
+            .policy
+            .specific_pcrs
+            .as_ref()
+            .map(|pcrs| pcrs.keys().cloned().collect::<Vec<String>>()),
         Some(vec!["11:sha256".to_string()])
     );
     assert_eq!(
