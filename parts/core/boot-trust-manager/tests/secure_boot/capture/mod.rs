@@ -2,17 +2,21 @@
 //! base the counter started from. Every variable and certificate in these
 //! tests comes from the capture.
 
+mod device;
+mod prediction;
 pub(super) mod slab;
+mod validator;
 
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use tempfile::TempDir;
 
 use puavo_boot_trust_manager::error::PuavoError;
 use puavo_boot_trust_manager::secure_boot::chain::{
     Device, variable_name_and_contents,
 };
+use puavo_boot_trust_manager::secure_boot::database::SignatureDatabase;
 use uuid::Uuid;
 
 /// Directory of the captures.
@@ -182,4 +186,20 @@ pub(super) fn write_variables_into_directory(
     }
 
     (directory, names)
+}
+
+/// Writes the certificate of the database entry whose subject matches the
+/// pattern to a file beside the variables and returns its path.
+pub(super) fn certificate_file_by_subject_pattern(
+    directory: &Path,
+    pattern: &str,
+) -> PathBuf {
+    let database =
+        SignatureDatabase::read(&fs::read(directory.join("db")).unwrap())
+            .unwrap();
+    let entry = database.find_by_subject_pattern(pattern).unwrap().unwrap();
+
+    let path = directory.join(format!("{pattern}.der"));
+    fs::write(&path, entry.certificate()).unwrap();
+    path
 }

@@ -12,6 +12,8 @@ use puavo_boot_trust_manager::{
         BootVault, BootVaultUnlockMethod, MAX_LOCKED_OUT_ATTEMPTS,
     },
     display::UserDisplay,
+    error::PuavoError,
+    secure_boot::chain::{Device, SystemDevice},
     tpm::{
         clear_dictionary_lockout, is_in_lockout, read_pcrs, read_pcrs_as_string,
     },
@@ -283,4 +285,30 @@ fn unlock_gives_up_after_repeated_attempts_while_locked_out() {
         MAX_LOCKED_OUT_ATTEMPTS,
         "Unlock should give up after the locked attempt limit"
     );
+}
+
+#[test]
+#[serial]
+fn existing_register_can_be_read() {
+    const SPARE_REGISTER: u32 = 16;
+
+    tpm::reset();
+    tpm::extend(
+        SPARE_REGISTER,
+        "3333333333333333333333333333333333333333333333333333333333333333",
+    );
+
+    let read = SystemDevice.read_register(SPARE_REGISTER).unwrap();
+
+    assert_eq!(read, tpm::read(SPARE_REGISTER));
+}
+
+#[test]
+#[serial]
+fn non_existent_register_is_refused() {
+    tpm::reset();
+
+    let error = SystemDevice.read_register(u32::MAX).err().unwrap();
+
+    assert!(matches!(error, PuavoError::NotFound(_)), "{error}");
 }
