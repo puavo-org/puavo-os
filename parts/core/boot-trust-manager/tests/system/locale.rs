@@ -3,7 +3,7 @@ use std::fs;
 use serial_test::serial;
 use tempfile::TempDir;
 
-use puavo_boot_trust_manager::utils::locale::{
+use puavo_boot_trust_manager::system::locale::{
     Locale, Strings, read_locale_from_grub_environment, reset_strings,
     set_strings, strings,
 };

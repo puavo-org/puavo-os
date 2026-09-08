@@ -5,8 +5,7 @@ use log::{error, info, warn};
 
 use crate::{
     configurators::Configurator, devices::boot_vault::BootVault,
-    display::UserDisplay, error::PuavoError,
-    utils::luks_tpm_token_manager::LuksTpmTokenManager,
+    display::UserDisplay, error::PuavoError, luks::tokens::LuksTpmTokenManager,
 };
 
 /// Path to the server signing public key. When
@@ -90,9 +89,14 @@ impl Configurator for CommandLineSignerConfigurator {
         _display: &dyn UserDisplay,
     ) -> Result<(), PuavoError> {
         // Only log errors, so the other configurators can continue.
-        self.initialize(boot_vault).inspect_err(|error| {
-            error!("Failed to initialize kernel command-line signer: {}", error)
-        }).ok();
+        self.initialize(boot_vault)
+            .inspect_err(|error| {
+                error!(
+                    "Failed to initialize kernel command-line signer: {}",
+                    error
+                )
+            })
+            .ok();
         Ok(())
     }
 

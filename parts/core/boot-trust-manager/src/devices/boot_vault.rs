@@ -17,14 +17,11 @@ use crate::{
         unlock_restrictions::UnlockRestrictions,
     },
     display::UserDisplay,
+    display::recovery_qr,
     error::PuavoError,
-    utils::{
-        locale,
-        luks_tpm_token_manager::{LuksTpmTokenManager, MAX_TOKENS},
-        mount::unmount,
-        recovery_qr, tpm,
-        udev::device_from_device_node_path,
-    },
+    luks::tokens::{LuksTpmTokenManager, MAX_TOKENS},
+    system::{locale, mount::unmount, udev::device_from_device_node_path},
+    tpm,
 };
 
 /// Relative path (within the EFI partition) to the boot vault image.
@@ -543,8 +540,7 @@ impl BootVaultResources {
 
         let property_path = self.mountpoint.join(key);
 
-        fs::write(property_path, value.as_ref())
-            .map_err(PuavoError::IoError)
+        fs::write(property_path, value.as_ref()).map_err(PuavoError::IoError)
     }
 
     /// Read the specified property from the mounted vault.

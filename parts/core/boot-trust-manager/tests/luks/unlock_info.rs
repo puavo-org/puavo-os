@@ -1,7 +1,7 @@
 use serial_test::serial;
 use tempfile::TempDir;
 
-use puavo_boot_trust_manager::utils::unlock_info::{
+use puavo_boot_trust_manager::luks::unlock_info::{
     UNLOCK_INFO_PATH, save_to_efi,
 };
 

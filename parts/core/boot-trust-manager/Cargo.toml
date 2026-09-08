@@ -2,6 +2,7 @@
 name = "puavo-boot-trust-manager"
 version = "0.1.0"
 edition = "2024"
+autotests = false
 
 [lib]
 name = "puavo_boot_trust_manager"
@@ -12,28 +13,52 @@ name = "puavo-boot-trust-manager"
 path = "src/main.rs"
 
 [dependencies]
+# Disk encryption
 libcryptsetup-rs = { version = "0.15.0", features = ["mutex"] }
 loopdev-3 = "0.5.2"
-nix = "0.30.1"
-tempfile = "3.21.0"
-thiserror = "2.0.16"
-udev = "0.9.3"
-log = "0.4"
-env_logger = "0.11"
-serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0"
-clap = { version = "4.5", features = ["derive"] }
-rpassword = "7"
-sha2 = "0.10.9"
-efivar = { git = "https://github.com/iTrooz/efivar-rs", rev = "7ff7ead356a24a3aed61fb755160fe7888224e76" }
-tss-esapi = { version = "7.5.1", default-features = false }
-tss-esapi-sys = "0.5.0"
-hex = "0.4.3"
-qrcode = { version = "0.14", default-features = false, features = ["image"] }
-image = { version = "=0.25.9", default-features = false, features = ["png"] }
 zeroize = "~1.8"
 
+# TPM
+tss-esapi = { version = "7.5.1", default-features = false }
+tss-esapi-sys = "0.5.0"
+
+# Firmware and Secure Boot
+efivar = { git = "https://github.com/iTrooz/efivar-rs", rev = "7ff7ead356a24a3aed61fb755160fe7888224e76" }
+x509-cert = { version = "0.2", default-features = false }
+const-oid = { version = "0.9", default-features = false, features = ["db"] }
+
+# Operating system
+nix = "0.30.1"
+udev = "0.9.3"
+
+# Serialization and encoding
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0"
+hex = "0.4.3"
+uuid = "1"
+sha2 = "0.10.9"
+
+# User interface
+clap = { version = "4.5", features = ["derive"] }
+rpassword = "7"
+qrcode = { version = "0.14", default-features = false, features = ["image"] }
+image = { version = "=0.25.9", default-features = false, features = ["png"] }
+
+# Logging and errors
+log = "0.4"
+env_logger = "0.11"
+thiserror = "2.0.16"
+
+# Files
+tempfile = "3.21.0"
+glob = "0.3"
+
+[[test]]
+name = "main"
+path = "tests/main.rs"
+
 [dev-dependencies]
+base64 = "0.21"
 serial_test = "3.0"
 ctor = "0.2"
 rqrr = { version = "0.10.1", default-features = false }

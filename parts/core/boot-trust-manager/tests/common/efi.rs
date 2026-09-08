@@ -1,6 +1,6 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use puavo_boot_trust_manager::utils::efi::{self, EfiProvider};
+use puavo_boot_trust_manager::system::efi::{self, EfiProvider};
 
 /// Test EFI provider for mocking EFI variables in tests.
 pub struct TestEfiProvider {

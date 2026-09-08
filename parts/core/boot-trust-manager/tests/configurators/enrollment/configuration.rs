@@ -4,7 +4,7 @@ use puavo_boot_trust_manager::{
     boot_trust_manager::BootTrustManager,
     configurators::{Configurator, enrollment::EnrollmentConfigurator},
     devices::boot_vault::BootVault,
-    utils::luks_tpm_token_manager::LuksTpmTokenManager,
+    luks::tokens::LuksTpmTokenManager,
 };
 use serial_test::serial;
 use zeroize::Zeroizing;

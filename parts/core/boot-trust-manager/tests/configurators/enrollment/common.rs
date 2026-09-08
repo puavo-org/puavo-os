@@ -4,7 +4,7 @@ use puavo_boot_trust_manager::{
     configurators::enrollment::EnrollmentConfigurator,
     devices::boot_vault::{BootVault, BootVaultUnlockMethod},
     display::UserDisplay,
-    utils::luks_tpm_token_manager::LuksTpmTokenManager,
+    luks::tokens::LuksTpmTokenManager,
 };
 use zeroize::Zeroizing;
 

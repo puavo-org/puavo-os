@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{error::PuavoError, utils::kernel_commandline};
+use crate::{error::PuavoError, system::kernel_commandline};
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq, Eq)]
 pub struct UnlockRestrictions {

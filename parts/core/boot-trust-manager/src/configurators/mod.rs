@@ -8,7 +8,7 @@ use crate::configurators::secure_boot_database::{
 use crate::devices::boot_vault::BootVault;
 use crate::display::UserDisplay;
 use crate::error::PuavoError;
-use crate::utils::luks_tpm_token_manager::LuksTpmTokenManager;
+use crate::luks::tokens::LuksTpmTokenManager;
 
 pub mod command_line_signer;
 pub mod device_secure_boot_keys;

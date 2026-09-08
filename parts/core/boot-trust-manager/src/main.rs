@@ -16,7 +16,7 @@ use clap::{Parser, Subcommand};
 use puavo_boot_trust_manager::{
     boot_trust_manager::{BootTrustManager, BootTrustManagerConfiguration},
     error::PuavoError,
-    utils::reboot,
+    system::reboot,
 };
 
 #[derive(Parser, Debug)]

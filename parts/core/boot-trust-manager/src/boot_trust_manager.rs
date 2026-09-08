@@ -13,15 +13,15 @@ use crate::{
     },
     display::{UserDisplay, choose_display},
     error::PuavoError,
-    utils::{
+    luks::{tokens::LuksTpmTokenManager, unlock_info},
+    system::{
         efi,
         locale::{self, Strings},
-        luks_tpm_token_manager::LuksTpmTokenManager,
         mount::{MountGuard, unmount},
-        reboot, tpm,
+        reboot,
         udev::filesystem_type,
-        unlock_info,
     },
+    tpm,
 };
 
 /// LUKS device name for the root device
@@ -168,9 +168,8 @@ impl BootTrustManager {
             warn!("Failed to clear TPM dictionary lockout: {}", error);
         }
 
-        // Configurators may request a reboot upon exit. For example,
-        // Secure Boot updates require resealing on the next reboot,
-        // and user interaction during that window is undesirable.
+        // Configurators may request a reboot upon exit
+        // (e.g. Secure Boot update).
         if reboot::is_requested() {
             let _ = display.show_message(locale::strings().rebooting);
         }

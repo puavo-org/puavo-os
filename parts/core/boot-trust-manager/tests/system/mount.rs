@@ -4,7 +4,7 @@ use std::process::Command;
 use serial_test::serial;
 use tempfile::TempDir;
 
-use puavo_boot_trust_manager::utils::mount::{MountGuard, unmount};
+use puavo_boot_trust_manager::system::mount::{MountGuard, unmount};
 
 /// Helper to perform a bind mount
 fn bind_mount(source: &std::path::Path, target: &std::path::Path) {

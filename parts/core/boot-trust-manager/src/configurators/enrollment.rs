@@ -12,14 +12,10 @@ use crate::{
     },
     display::UserDisplay,
     error::PuavoError,
-    utils::{
-        hashed::Hashed,
-        locale,
-        luks_tpm_token_manager::{
-            LuksTpmEnrollmentPolicy, LuksTpmTokenManager,
-        },
-        tpm::read_pcrs_as_string,
-    },
+    hashing::Hashed,
+    luks::tokens::{LuksTpmEnrollmentPolicy, LuksTpmTokenManager},
+    system::locale,
+    tpm::read_pcrs_as_string,
 };
 
 const CONFIGURATION_BASE_DIRECTORY: &str = "/etc/puavo/enrollment";

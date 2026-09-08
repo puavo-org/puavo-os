@@ -3,4 +3,7 @@ pub mod configurators;
 pub mod devices;
 pub mod display;
 pub mod error;
-pub mod utils;
+pub mod hashing;
+pub mod luks;
+pub mod system;
+pub mod tpm;

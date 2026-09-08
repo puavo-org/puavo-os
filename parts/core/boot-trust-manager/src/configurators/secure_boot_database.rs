@@ -11,7 +11,8 @@ use crate::{
     devices::boot_vault::{BootVault, BootVaultResources},
     display::UserDisplay,
     error::PuavoError,
-    utils::{locale, luks_tpm_token_manager::LuksTpmTokenManager, reboot},
+    luks::tokens::LuksTpmTokenManager,
+    system::{locale, reboot},
 };
 
 /// Directory where Secure Boot database update subdirectories are placed.

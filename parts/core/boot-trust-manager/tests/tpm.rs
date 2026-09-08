@@ -12,7 +12,7 @@ use puavo_boot_trust_manager::{
         BootVault, BootVaultUnlockMethod, MAX_LOCKED_OUT_ATTEMPTS,
     },
     display::UserDisplay,
-    utils::tpm::{
+    tpm::{
         clear_dictionary_lockout, is_in_lockout, read_pcrs, read_pcrs_as_string,
     },
 };

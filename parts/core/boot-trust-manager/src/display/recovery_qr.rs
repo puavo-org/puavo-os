@@ -6,7 +6,7 @@ use qrcode::QrCode;
 
 use crate::display::plymouth;
 use crate::error::PuavoError;
-use crate::utils::efi;
+use crate::system::efi;
 
 /// Render data as a QR code PNG image and save it to
 /// the specified path.
@@ -69,8 +69,8 @@ pub fn show_recovery_qr() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utils::efi::testing::FakeEfiProvider;
-    use crate::utils::efi::{reset_provider, set_provider};
+    use crate::system::efi::testing::FakeEfiProvider;
+    use crate::system::efi::{reset_provider, set_provider};
     use rqrr::PreparedImage;
     use serial_test::serial;
 

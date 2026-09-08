@@ -1,7 +1,10 @@
 mod common;
 mod configurators;
 mod devices;
-mod utils;
+mod hashing;
+mod luks;
+mod system;
+mod tpm;
 
 use std::sync::Once;
 
