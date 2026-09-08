@@ -1,0 +1,36 @@
+#!/bin/sh
+
+set -eu
+
+# Fails unless the database in a rootfs equals the combination of its
+# certificates and its build date is recorded beside it. The initrd carries
+# both.
+#
+#   $1  directory holding the certificates
+#   $2  signature list to check
+
+usage="usage: $(basename "$0") <certificate-directory> <database>"
+certificate_directory=${1:?$usage}
+database=${2:?$usage}
+
+scratch=$(mktemp -d)
+trap 'rm -rf "$scratch"' EXIT
+
+# The date is stored beside the list, not inside it, so the list is compared
+# with any date.
+"$(dirname "$0")/combine-secure-boot-database" \
+  "$certificate_directory" "${scratch}/db.esl" 0 >/dev/null
+
+if ! cmp -s "${scratch}/db.esl" "$database"; then
+  echo "error: ${database} is not what ${certificate_directory} combines to" >&2
+  exit 1
+fi
+
+built="$(dirname "$database")/built"
+case $(cat "$built" 2>/dev/null) in
+  [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]) ;;
+  *)
+    echo "error: ${built} must hold the build date of ${database} as YYYYMMDDHHMMSS" >&2
+    exit 1
+    ;;
+esac

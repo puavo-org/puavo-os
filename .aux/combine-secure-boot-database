@@ -1,0 +1,56 @@
+#!/bin/sh
+
+set -eu
+
+# The sort order determines the output bytes, so it must not depend on the
+# locale.
+export LC_ALL=C
+
+# Combines certificates into one Secure Boot signature list and writes the
+# build date beside it. The output is deterministic, so the measurement of the
+# list can be predicted before enrollment. Run manually when a certificate
+# changes and commit the result.
+#
+#   $1  directory holding the certificates, as DER or PEM files
+#   $2  signature list to write
+#   $3  build date as YYYYMMDDHHMMSS
+
+usage="usage: $(basename "$0") <certificate-directory> <output> <built>"
+certificate_directory=${1:?$usage}
+output=${2:?$usage}
+built=${3:?$usage}
+
+# Signature owner GUID recorded in every entry.
+owner=7cb44677-9bb9-4504-bb8f-923def5fa3b1
+
+scratch=$(mktemp -d)
+trap 'rm -rf "$scratch"' EXIT
+
+: > "${scratch}/combined"
+
+# Sorted, so the result does not depend on the directory read order.
+find "$certificate_directory" -maxdepth 1 -type f \
+  \( -name '*.der' -o -name '*.pem' \) | sort |
+while IFS= read -r certificate; do
+  case "$certificate" in
+    *.der)
+      openssl x509 -inform DER -in "$certificate" \
+        -out "${scratch}/certificate.pem"
+      ;;
+    *.pem)
+      cp "$certificate" "${scratch}/certificate.pem"
+      ;;
+  esac
+
+  cert-to-efi-sig-list -g "$owner" "${scratch}/certificate.pem" \
+    "${scratch}/entry.esl"
+  cat "${scratch}/entry.esl" >> "${scratch}/combined"
+done
+
+if [ ! -s "${scratch}/combined" ]; then
+  echo "error: ${certificate_directory} holds no certificates" >&2
+  exit 1
+fi
+
+mv "${scratch}/combined" "$output"
+echo "$built" > "$(dirname "$output")/built"
