@@ -38,6 +38,11 @@ install: build
 test-binary:
 	cargo build --target $(TARGET) --bin slab
 
+# Records TPM event log during boot. Used for generating test data.
+.PHONY: measurements
+measurements:
+	cargo build --target $(TARGET) --bin measurements
+
 # Runs every test harness.
 .PHONY: test
 test: test-binary

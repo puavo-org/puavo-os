@@ -11,6 +11,11 @@ publish = false
 name = "slab"
 path = "src/main.rs"
 
+# Records TPM event log during boot. Used for generating test data.
+[[bin]]
+name = "measurements"
+path = "src/bin/measurements.rs"
+
 [dependencies]
 # Raw UEFI protocol structs for writing the next stage loaded image device.
 uefi-raw = "0.11"
