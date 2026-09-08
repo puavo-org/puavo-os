@@ -3,8 +3,11 @@ use std::{path::Path, process::Command};
 use log::{debug, info};
 use tss_esapi::{
     Context,
+    abstraction::nv,
     constants::{CapabilityType, PropertyTag},
+    handles::NvIndexTpmHandle,
     interface_types::algorithm::HashingAlgorithm,
+    interface_types::resource_handles::NvAuth,
     structures::{
         CapabilityData::TpmProperties, PcrSelectionListBuilder, PcrSlot,
     },
@@ -12,6 +15,9 @@ use tss_esapi::{
 };
 
 use crate::error::PuavoError;
+
+/// Number of PCRs in a PC Client TPM.
+pub const PCR_COUNT: u32 = 24;
 
 const IN_LOCKOUT_FLAG: u32 = 1 << 9;
 
@@ -104,6 +110,53 @@ pub fn read_pcrs_as_string(pcr_indices: &[u32]) -> Result<String, PuavoError> {
         .collect();
 
     Ok(lines.join("\n"))
+}
+
+/// Reads the contents of an NV index.
+fn read_nv<const SIZE: usize>(index: u32) -> Result<[u8; SIZE], PuavoError> {
+    debug!("Reading TPM NV index {:#010x}", index);
+
+    let tcti = TctiNameConf::from_environment_variable()
+        .unwrap_or(TctiNameConf::Device(Default::default()));
+
+    let mut context = Context::new(tcti).map_err(|error| {
+        PuavoError::TpmError(format!("Failed to create TPM context: {}", error))
+    })?;
+
+    let handle = NvIndexTpmHandle::new(index).map_err(|error| {
+        PuavoError::TpmError(format!(
+            "Failed to address index {:#010x}: {}",
+            index, error
+        ))
+    })?;
+
+    let contents = context
+        .execute_with_nullauth_session(|context| {
+            let index = context.tr_from_tpm_public(handle.into())?;
+            nv::read_full(context, NvAuth::NvIndex(index.into()), handle)
+        })
+        .map_err(|error| {
+            PuavoError::TpmError(format!(
+                "Failed to read index {:#010x}: {}",
+                index, error
+            ))
+        })?;
+
+    let bytes: [u8; SIZE] = contents.as_slice().try_into().map_err(|_| {
+        PuavoError::TpmError(format!(
+            "Index {:#010x} holds {} bytes, where {} were expected",
+            index,
+            contents.len(),
+            SIZE
+        ))
+    })?;
+
+    Ok(bytes)
+}
+
+/// Reads an NV index that holds a big endian u64.
+pub fn read_nv_u64(index: u32) -> Result<u64, PuavoError> {
+    Ok(u64::from_be_bytes(read_nv::<8>(index)?))
 }
 
 /// Clear the TPM dictionary attack lockout using the lockout authorization file.

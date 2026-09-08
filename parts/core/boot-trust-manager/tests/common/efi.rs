@@ -4,21 +4,12 @@ use puavo_boot_trust_manager::system::efi::{self, EfiProvider};
 
 /// Test EFI provider for mocking EFI variables in tests.
 pub struct TestEfiProvider {
-    secure_boot_enabled: bool,
     pin_change_requested: AtomicBool,
 }
 
 impl TestEfiProvider {
     pub fn new() -> Self {
-        Self {
-            secure_boot_enabled: false,
-            pin_change_requested: AtomicBool::new(false),
-        }
-    }
-
-    pub fn with_secure_boot(mut self, enabled: bool) -> Self {
-        self.secure_boot_enabled = enabled;
-        self
+        Self { pin_change_requested: AtomicBool::new(false) }
     }
 
     pub fn with_pin_change_requested(self, requested: bool) -> Self {
@@ -29,7 +20,11 @@ impl TestEfiProvider {
 
 impl EfiProvider for TestEfiProvider {
     fn is_secure_boot_enabled(&self) -> bool {
-        self.secure_boot_enabled
+        false
+    }
+
+    fn is_secure_boot_update_allowed(&self) -> bool {
+        false
     }
 
     fn is_pin_change_requested(&self) -> bool {
@@ -50,23 +45,9 @@ pub fn reset() {
     efi::set_provider(Box::new(TestEfiProvider::new()));
 }
 
-/// Set up test EFI with secure boot enabled.
-pub fn with_secure_boot() {
-    efi::set_provider(Box::new(TestEfiProvider::new().with_secure_boot(true)));
-}
-
 /// Set up test EFI with PIN change requested.
 pub fn with_pin_change_requested() {
     efi::set_provider(Box::new(
         TestEfiProvider::new().with_pin_change_requested(true),
-    ));
-}
-
-/// Set up test EFI with both secure boot and PIN change requested.
-pub fn with_secure_boot_and_pin_change_requested() {
-    efi::set_provider(Box::new(
-        TestEfiProvider::new()
-            .with_secure_boot(true)
-            .with_pin_change_requested(true),
     ));
 }

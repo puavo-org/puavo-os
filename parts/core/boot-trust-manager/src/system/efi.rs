@@ -1,12 +1,46 @@
 use efivar::efi::{Variable, VariableFlags, VariableVendor};
 use log::{debug, error, warn};
 use std::sync::RwLock;
+use uuid::Uuid;
 
-/// Puavo vendor GUID for custom EFI variables
-const PUAVO_VENDOR_GUID: &str = "7cb44677-9bb9-4504-bb8f-923def5fa3b1";
+use crate::error::PuavoError;
+
+/// Puavo vendor GUID for EFI variables and signature owners.
+pub const PUAVO_VENDOR: Uuid =
+    Uuid::from_u128(0x7cb44677_9bb9_4504_bb8f_923def5fa3b1);
 
 /// EFI variable name for requesting a PIN change from the OS
 const PIN_CHANGE_REQUEST_VARIABLE: &str = "PuavoPinChangeRequest";
+
+/// EFI variable name for controlling whether the device is allowed to perform
+/// Secure Boot database updates.
+const SECURE_BOOT_UPDATE_VARIABLE: &str = "PuavoSecureBootUpdate";
+
+/// EFI variable name for the recovery bundle.
+const RECOVERY_BUNDLE_VARIABLE: &str = "PuavoRecoveryBundle";
+
+/// Reads a UEFI variable of any vendor. An unset variable reads as empty.
+pub fn read_variable(vendor: Uuid, name: &str) -> Result<Vec<u8>, PuavoError> {
+    let variable =
+        Variable::new_with_vendor(name, VariableVendor::Custom(vendor));
+
+    let manager = efivar::system().map_err(|error| {
+        PuavoError::NotFound(format!(
+            "UEFI variables are not available: {error}"
+        ))
+    })?;
+
+    match manager.read(&variable) {
+        Ok((contents, _)) => Ok(contents),
+        Err(efivar::Error::VarNotFound { .. }) => {
+            debug!("UEFI variable '{}' is not set, so it is empty", name);
+            Ok(Vec::new())
+        }
+        Err(error) => Err(PuavoError::NotFound(format!(
+            "UEFI variable '{name}' could not be read: {error}"
+        ))),
+    }
+}
 
 pub trait EfiProvider: Send + Sync {
     /// Check if Secure Boot is enabled.
@@ -14,6 +48,9 @@ pub trait EfiProvider: Send + Sync {
 
     /// Check if a PIN change has been requested via EFI variable.
     fn is_pin_change_requested(&self) -> bool;
+
+    /// Whether this device is permitted to enroll a Secure Boot database.
+    fn is_secure_boot_update_allowed(&self) -> bool;
 
     /// Clear the PIN change request EFI variable.
     fn clear_pin_change_request(&self);
@@ -29,27 +66,16 @@ pub struct SystemEfiProvider;
 impl SystemEfiProvider {
     /// Create a Puavo-namespaced EFI variable.
     fn puavo_variable(name: &str) -> Variable {
-        Variable::new_with_vendor(
-            name,
-            VariableVendor::Custom(
-                PUAVO_VENDOR_GUID.parse().unwrap_or_default(),
-            ),
-        )
+        Variable::new_with_vendor(name, VariableVendor::Custom(PUAVO_VENDOR))
     }
 
     /// Read a boolean flag from a Puavo EFI variable.
     fn read_bool_variable(name: &str) -> bool {
-        let variable = Self::puavo_variable(name);
-        let Ok(manager) = efivar::system() else {
-            error!("EFI variables not available");
-            return false;
-        };
-
-        match manager.read(&variable) {
-            Ok((data, _)) => {
+        match read_variable(PUAVO_VENDOR, name) {
+            Ok(bytes) => {
                 let set =
-                    !data.is_empty() && data.iter().any(|&byte| byte != 0);
-                debug!("EFI variable '{}': {:?} -> {}", name, data, set);
+                    !bytes.is_empty() && bytes.iter().any(|&byte| byte != 0);
+                debug!("EFI variable '{}': {:?} -> {}", name, bytes, set);
                 set
             }
             Err(error) => {
@@ -79,9 +105,6 @@ impl SystemEfiProvider {
     }
 }
 
-/// EFI variable name for the recovery bundle.
-const RECOVERY_BUNDLE_VARIABLE: &str = "PuavoRecoveryBundle";
-
 impl EfiProvider for SystemEfiProvider {
     fn is_secure_boot_enabled(&self) -> bool {
         let variable = Variable::new("SecureBoot");
@@ -95,6 +118,10 @@ impl EfiProvider for SystemEfiProvider {
 
     fn is_pin_change_requested(&self) -> bool {
         Self::read_bool_variable(PIN_CHANGE_REQUEST_VARIABLE)
+    }
+
+    fn is_secure_boot_update_allowed(&self) -> bool {
+        Self::read_bool_variable(SECURE_BOOT_UPDATE_VARIABLE)
     }
 
     fn clear_pin_change_request(&self) {
@@ -152,6 +179,11 @@ pub fn is_secure_boot_enabled() -> bool {
     with_provider(|provider| provider.is_secure_boot_enabled())
 }
 
+/// Check if Secure Boot updates are permitted on this device.
+pub fn is_secure_boot_update_allowed() -> bool {
+    with_provider(|provider| provider.is_secure_boot_update_allowed())
+}
+
 /// Check if a PIN change has been requested via EFI variable.
 pub fn is_pin_change_requested() -> bool {
     with_provider(|provider| provider.is_pin_change_requested())
@@ -170,12 +202,13 @@ pub fn read_recovery_bundle() -> Option<String> {
 #[cfg(test)]
 pub mod testing {
     use super::*;
-    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::atomic::AtomicBool;
 
     /// Configurable EFI provider shared by the library unit tests.
     pub struct FakeEfiProvider {
         pub secure_boot_enabled: bool,
         pub pin_change_requested: bool,
+        pub secure_boot_update_allowed: bool,
         pub sbat_raise_requested: AtomicBool,
         pub recovery_bundle: Option<String>,
     }
@@ -185,6 +218,7 @@ pub mod testing {
             Self {
                 secure_boot_enabled: false,
                 pin_change_requested: false,
+                secure_boot_update_allowed: false,
                 sbat_raise_requested: AtomicBool::new(false),
                 recovery_bundle: None,
             }
@@ -198,6 +232,10 @@ pub mod testing {
 
         fn is_pin_change_requested(&self) -> bool {
             self.pin_change_requested
+        }
+
+        fn is_secure_boot_update_allowed(&self) -> bool {
+            self.secure_boot_update_allowed
         }
 
         fn clear_pin_change_request(&self) {}
