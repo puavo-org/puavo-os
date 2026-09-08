@@ -1,5 +1,6 @@
 use std::fs;
 use std::process::Command;
+use std::{path::Path, thread, time::Duration};
 
 use serial_test::serial;
 use tempfile::TempDir;
@@ -7,7 +8,7 @@ use tempfile::TempDir;
 use puavo_boot_trust_manager::system::mount::{MountGuard, unmount};
 
 /// Helper to perform a bind mount
-fn bind_mount(source: &std::path::Path, target: &std::path::Path) {
+fn bind_mount(source: &Path, target: &Path) {
     let status = Command::new("mount")
         .arg("--bind")
         .arg(source)
@@ -18,7 +19,7 @@ fn bind_mount(source: &std::path::Path, target: &std::path::Path) {
 }
 
 /// Helper to check if a path is mounted
-fn is_mounted(path: &std::path::Path) -> bool {
+fn is_mounted(path: &Path) -> bool {
     Command::new("mountpoint")
         .arg("-q")
         .arg(path)
@@ -40,7 +41,7 @@ fn mount_guard_unmounts_on_drop() {
         let _ = MountGuard::new(target.path());
     }
 
-    std::thread::sleep(std::time::Duration::from_millis(100));
+    thread::sleep(Duration::from_millis(100));
     assert!(!is_mounted(target.path()));
 }
 
@@ -55,7 +56,7 @@ fn mount_guard_explicit_unmount() {
     let guard = MountGuard::new(target.path());
     guard.unmount().expect("Unmount should succeed");
 
-    std::thread::sleep(std::time::Duration::from_millis(100));
+    thread::sleep(Duration::from_millis(100));
     assert!(!is_mounted(target.path()));
 }
 

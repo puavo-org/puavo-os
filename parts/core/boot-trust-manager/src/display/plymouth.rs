@@ -1,3 +1,4 @@
+use std::fs;
 use std::{path::Path, process::Command, thread, time::Duration};
 
 use log::info;
@@ -59,7 +60,7 @@ pub fn send_status_update(status: &str) -> Result<(), PuavoError> {
 /// Displays the specified image using Plymouth.
 pub fn show_image(source_path: &Path) -> Result<(), PuavoError> {
     let destination = Path::new(PLYMOUTH_IMAGE_PATH);
-    std::fs::copy(source_path, destination)?;
+    fs::copy(source_path, destination)?;
 
     info!("Plymouth image copied to {}", destination.display());
 

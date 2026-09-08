@@ -1,3 +1,4 @@
+use std::fs;
 use std::path::{Path, PathBuf};
 
 use image::Luma;
@@ -63,7 +64,7 @@ pub fn show_recovery_qr() {
         })
         .ok();
 
-    let _ = std::fs::remove_file(&temporary_qr_code);
+    let _ = fs::remove_file(&temporary_qr_code);
 }
 
 #[cfg(test)]
@@ -73,6 +74,7 @@ mod tests {
     use crate::system::efi::{reset_provider, set_provider};
     use rqrr::PreparedImage;
     use serial_test::serial;
+    use std::env;
 
     /// Decode a QR code from a PNG file on disk.
     fn decode_qr_from_png(path: &Path) -> String {
@@ -99,7 +101,7 @@ mod tests {
             ..Default::default()
         }));
 
-        let path = std::env::temp_dir().join("test_save_recovery_qr.png");
+        let path = env::temp_dir().join("test_save_recovery_qr.png");
 
         let result = generate_recovery_qr_code(&path).unwrap();
         assert!(result);
@@ -107,7 +109,7 @@ mod tests {
         let decoded = decode_qr_from_png(&path);
         assert_eq!(decoded, bundle);
 
-        let _ = std::fs::remove_file(&path);
+        let _ = fs::remove_file(&path);
         reset_provider();
     }
 
@@ -116,8 +118,8 @@ mod tests {
     fn save_recovery_qr_code_without_bundle() {
         set_provider(Box::new(FakeEfiProvider::default()));
 
-        let path = std::env::temp_dir().join("test_save_recovery_qr_none.png");
-        std::fs::remove_file(&path).ok();
+        let path = env::temp_dir().join("test_save_recovery_qr_none.png");
+        fs::remove_file(&path).ok();
 
         let result = generate_recovery_qr_code(&path).unwrap();
         assert!(!result);

@@ -1,4 +1,6 @@
+use std::fs;
 use std::path::PathBuf;
+use std::process::Command;
 
 use puavo_boot_trust_manager::{
     boot_trust_manager::BootTrustManager,
@@ -159,7 +161,7 @@ fn run_configurators_enrolls_only_boot_vault() {
     assert!(!configurators.is_empty(), "Expected at least one configurator");
 
     // Set up loop device for primary partition
-    let primary_loop = std::process::Command::new("losetup")
+    let primary_loop = Command::new("losetup")
         .args(["--find", "--show", &images.primary])
         .output()
         .expect("Failed to set up loop device for primary");
@@ -206,8 +208,7 @@ fn run_configurators_enrolls_only_boot_vault() {
 fn empty_enrollment_directory_returns_no_configurators() {
     let images = setup();
     let empty_dir = format!("{}/empty-enrollment", images.directory);
-    std::fs::create_dir_all(&empty_dir)
-        .expect("Failed to create empty directory");
+    fs::create_dir_all(&empty_dir).expect("Failed to create empty directory");
 
     let configurators = EnrollmentConfigurator::from_directory(&empty_dir)
         .expect("Failed to load from empty directory");

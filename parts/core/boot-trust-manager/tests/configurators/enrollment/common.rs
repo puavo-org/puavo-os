@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::process::Command;
 
 use puavo_boot_trust_manager::{
     configurators::enrollment::EnrollmentConfigurator,
@@ -40,7 +41,7 @@ pub fn mount_vault_and_primary(
     display: &dyn UserDisplay,
 ) -> (BootVault, LuksTpmTokenManager) {
     // Set up loop device for primary partition
-    let primary_loop = std::process::Command::new("losetup")
+    let primary_loop = Command::new("losetup")
         .args(["--find", "--show", &images.primary])
         .output()
         .expect("Failed to set up loop device for primary");
@@ -68,7 +69,7 @@ pub fn mount_vault_and_primary(
 
 /// Helper to set up loop device for primary partition
 pub fn setup_primary_loop(images: &luks::TestImages) -> String {
-    let primary_loop = std::process::Command::new("losetup")
+    let primary_loop = Command::new("losetup")
         .args(["--find", "--show", &images.primary])
         .output()
         .expect("Failed to set up loop device for primary");

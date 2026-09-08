@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::process::Command;
 
 use serial_test::serial;
 use zeroize::Zeroizing;
@@ -23,7 +24,7 @@ fn display() -> Box<dyn UserDisplay> {
 
 /// Helper to set up loop device for primary partition
 fn setup_primary_loop(images: &luks::TestImages) -> String {
-    let primary_loop = std::process::Command::new("losetup")
+    let primary_loop = Command::new("losetup")
         .args(["--find", "--show", &images.primary])
         .output()
         .expect("Failed to set up loop device for primary");

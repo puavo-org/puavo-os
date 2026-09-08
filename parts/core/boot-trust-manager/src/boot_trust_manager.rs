@@ -1,5 +1,5 @@
 use std::{
-    fs,
+    fs, mem,
     path::{Path, PathBuf},
     process::Command,
 };
@@ -386,8 +386,8 @@ impl BootTrustManager {
         info!("Boot vault mounted at {}", VAULT_MOUNTPOINT);
 
         // Prevent automatic cleanup by forgetting the resources
-        std::mem::forget(efi_mount);
-        std::mem::forget(boot_vault);
+        mem::forget(efi_mount);
+        mem::forget(boot_vault);
 
         Ok(VAULT_MOUNTPOINT.into())
     }

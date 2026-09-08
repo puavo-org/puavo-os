@@ -1,4 +1,5 @@
 use std::fs;
+use std::path::Path;
 
 use serial_test::serial;
 use tempfile::TempDir;
@@ -8,7 +9,7 @@ use puavo_boot_trust_manager::system::locale::{
     set_strings, strings,
 };
 
-fn write_grub_environment(directory: &std::path::Path, contents: &str) {
+fn write_grub_environment(directory: &Path, contents: &str) {
     let grub_directory = directory.join("EFI/puavo/grub");
     fs::create_dir_all(&grub_directory).unwrap();
     fs::write(grub_directory.join("grubenv"), contents).unwrap();

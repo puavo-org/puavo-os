@@ -1,4 +1,5 @@
 use serial_test::serial;
+use std::fs;
 use tempfile::TempDir;
 
 use puavo_boot_trust_manager::luks::unlock_info::{
@@ -10,8 +11,7 @@ use puavo_boot_trust_manager::luks::unlock_info::{
 fn unlock_info_json_encoding_and_fields() {
     // Collect unlock info and save to "EFI"
     let temporary_directory = TempDir::new().unwrap();
-    std::fs::create_dir_all(temporary_directory.path().join("EFI/puavo"))
-        .unwrap();
+    fs::create_dir_all(temporary_directory.path().join("EFI/puavo")).unwrap();
 
     save_to_efi(temporary_directory.path());
 
@@ -19,7 +19,7 @@ fn unlock_info_json_encoding_and_fields() {
     assert!(info_file.exists(), "Should create unlock info file");
 
     // Verify saved file is valid JSON
-    let saved_content = std::fs::read_to_string(&info_file).unwrap();
+    let saved_content = fs::read_to_string(&info_file).unwrap();
     let value: serde_json::Value = serde_json::from_str(&saved_content)
         .expect("Saved file should be valid JSON");
 
