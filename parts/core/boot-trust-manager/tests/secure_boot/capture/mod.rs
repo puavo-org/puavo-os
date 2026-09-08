@@ -2,6 +2,7 @@
 //! base the counter started from. Every variable and certificate in these
 //! tests comes from the capture.
 
+mod database;
 mod device;
 mod prediction;
 pub(super) mod slab;
