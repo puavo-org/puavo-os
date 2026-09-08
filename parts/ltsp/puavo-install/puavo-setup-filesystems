@@ -109,12 +109,16 @@ end
 class LuksPartitionHandler
   attr_accessor :partition, :encryption_device_name, :policy
 
+  # Each TPM token takes over a kilobyte of the metadata area, and a
+  # device has one per boot configuration it enrolls. The area can only
+  # be sized when formatting, so it is sized for growth.
   LUKS_FORMAT_OPTIONS = [
     '--type=luks2',
     '--cipher=aes-xts-plain64',
     '--key-size=256',
     '--pbkdf=argon2id',
     '--iter-time=1000',
+    '--luks2-metadata-size=64k',
     '--batch-mode'
   ].freeze
 
