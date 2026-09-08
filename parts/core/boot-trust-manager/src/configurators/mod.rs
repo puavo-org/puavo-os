@@ -2,8 +2,9 @@ use crate::configurators::command_line_signer::CommandLineSignerConfigurator;
 use crate::configurators::device_secure_boot_keys::DeviceSecureBootKeysConfigurator;
 use crate::configurators::enrollment::EnrollmentConfigurator;
 use crate::configurators::pin::PinConfigurator;
-use crate::configurators::secure_boot_database::{
-    SecureBootDatabaseConfigurator, SystemSecureBootShell,
+use crate::configurators::secure_boot_update::{
+    ApplySecureBootUpdateConfigurator, PrepareSecureBootUpdateConfigurator,
+    SecureBootUpdateContext,
 };
 use crate::devices::boot_vault::BootVault;
 use crate::display::UserDisplay;
@@ -14,7 +15,6 @@ pub mod command_line_signer;
 pub mod device_secure_boot_keys;
 pub mod enrollment;
 pub mod pin;
-pub mod secure_boot_database;
 pub mod secure_boot_update;
 
 /// Build and return all available configurator instances.
@@ -32,12 +32,24 @@ pub fn configurators() -> Result<Vec<Box<dyn Configurator>>, PuavoError> {
             .map(|configurator| Box::new(configurator) as Box<dyn Configurator>)
     }
 
-    let configurators = configurators(PinConfigurator::new()?)
-        .chain(configurators(EnrollmentConfigurator::new()?))
-        .chain(configurators(SecureBootDatabaseConfigurator::new(
-            SystemSecureBootShell {},
+    // Shared between the configurator that prepares an update and the one
+    // that applies it.
+    let secure_boot_update = SecureBootUpdateContext::default();
+
+    // The device keys are installed first, because an enrollment policy
+    // references the device certificate.
+    let configurators = configurators(DeviceSecureBootKeysConfigurator::new()?)
+        .chain(configurators(PinConfigurator::new()?))
+        // A database update is prepared before the enrollments and written
+        // to the firmware after them, so a token for the resulting state
+        // exists before the firmware enters it.
+        .chain(configurators(PrepareSecureBootUpdateConfigurator::new(
+            secure_boot_update.clone(),
         )?))
-        .chain(configurators(DeviceSecureBootKeysConfigurator::new()?))
+        .chain(configurators(EnrollmentConfigurator::new()?))
+        .chain(configurators(ApplySecureBootUpdateConfigurator::new(
+            secure_boot_update,
+        )))
         .chain(configurators(CommandLineSignerConfigurator::new()?));
 
     Ok(configurators.collect())

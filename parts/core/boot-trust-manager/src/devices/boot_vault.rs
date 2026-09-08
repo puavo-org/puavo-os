@@ -58,8 +58,6 @@ const PCR_STATE_FILENAME: &str = "pcr.state";
 const UNLOCK_RESTRICTIONS_FILENAME: &str = "unlock.restrictions.json";
 
 const ENROLLED_DATABASE_PROPERTY: &str = "enrolled.json";
-const DB_VERSION_PROPERTY: &str = "db.version";
-const DBX_VERSION_PROPERTY: &str = "dbx.version";
 
 const PK_PRIVATE_KEY_FILENAME: &str = "pk.priv";
 const PK_CERTIFICATE_FILENAME: &str = "pk.pem";
@@ -719,41 +717,6 @@ impl BootVaultResources {
             &format!("{name}.{ENROLLED_DATABASE_PROPERTY}"),
             recorded,
         )
-    }
-
-    /// Read the installed Secure Boot db version from the boot vault.
-    ///
-    /// Returns `0` when no version has been recorded yet.
-    pub fn db_version(&self) -> Result<u32, PuavoError> {
-        self.read_version(DB_VERSION_PROPERTY)
-    }
-
-    /// Persist the installed Secure Boot db version in the boot vault.
-    pub fn set_db_version(&self, version: u32) -> Result<(), PuavoError> {
-        self.write_property(DB_VERSION_PROPERTY, version.to_string())
-    }
-
-    /// Read the installed Secure Boot dbx version from the boot vault.
-    ///
-    /// Returns `0` when no version has been recorded yet.
-    pub fn dbx_version(&self) -> Result<u32, PuavoError> {
-        self.read_version(DBX_VERSION_PROPERTY)
-    }
-
-    /// Persist the installed Secure Boot dbx version in the boot vault.
-    pub fn set_dbx_version(&self, version: u32) -> Result<(), PuavoError> {
-        self.write_property(DBX_VERSION_PROPERTY, version.to_string())
-    }
-
-    /// Read a version property, returning `0` when absent.
-    fn read_version(&self, key: &str) -> Result<u32, PuavoError> {
-        match self.read_property(key)? {
-            Some(value) => value
-                .trim()
-                .parse::<u32>()
-                .map_err(|_| PuavoError::PropertyParseError(key.to_string())),
-            None => Ok(0),
-        }
     }
 
     /// Save unlock restrictions to the boot vault.
