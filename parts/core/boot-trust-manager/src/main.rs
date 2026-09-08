@@ -16,8 +16,10 @@ use clap::{Parser, Subcommand};
 use puavo_boot_trust_manager::{
     boot_trust_manager::{BootTrustManager, BootTrustManagerConfiguration},
     error::PuavoError,
+    secure_boot::prediction,
     system::reboot,
 };
+use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -39,6 +41,12 @@ enum Commands {
     },
     /// Run configurators and automatically unmount everything afterwards
     Manage,
+    /// Print what a policy predicts for its registers and what they hold
+    Predict {
+        /// Path to an enrollment policy file
+        #[arg(long = "policy")]
+        policy: PathBuf,
+    },
     /// Unlock the boot vault and leave it open for external access
     Open {
         /// Device node path containing the EFI partition with boot vault and primary encrypted partition
@@ -48,13 +56,14 @@ enum Commands {
 }
 
 fn main() -> Result<(), i32> {
+    let configuration = ApplicationConfiguration::parse();
+
     let _ = env_logger::Builder::from_env(
         env_logger::Env::default().default_filter_or("debug"),
     )
     .format_timestamp_secs()
     .try_init();
 
-    let configuration = ApplicationConfiguration::parse();
     let command = configuration.command.clone();
     let manager_config = BootTrustManagerConfiguration {
         force_console: configuration.force_console,
@@ -64,6 +73,7 @@ fn main() -> Result<(), i32> {
     let result = match command {
         Commands::Close { mountpoint } => manager.close(mountpoint),
         Commands::Manage => manager.manage(),
+        Commands::Predict { policy } => prediction::predict(&policy),
         Commands::Open { device } => manager.open(device),
     };
 
@@ -75,7 +85,12 @@ fn main() -> Result<(), i32> {
         | PuavoError::NoPrimaryLuksPartition
         | PuavoError::NoEFIBootDisk(_)
         | PuavoError::NoEFIPartition => Ok(()),
-        _ => Err(1),
+        // Printed to standard error so the cause is visible regardless of
+        // the log level.
+        error => {
+            eprintln!("error: {error}");
+            Err(1)
+        }
     });
 
     reboot::reboot_if_requested();
