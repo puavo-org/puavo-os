@@ -617,6 +617,7 @@ class packages {
     , 'gnome-settings-daemon'
     , 'gnome-shell'
     , 'gnome-shell-extensions'
+    , 'gnome-shell-extension-tiling-assistant'
     , 'gnome-shell-extension-user-theme'
     , 'gnome-sushi'
     , 'gnome-system-monitor'

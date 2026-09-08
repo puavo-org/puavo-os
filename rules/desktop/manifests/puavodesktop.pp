@@ -30,6 +30,7 @@ class desktop::puavodesktop {
       subpath => 'session_profile',
       require => [ File['/usr/share/puavo-art']
                  , Package['faenza-icon-theme']
+                 , Package['gnome-shell-extension-tiling-assistant']
                  , Package['puavomenu'] ];
   }
 
@@ -43,5 +44,6 @@ class desktop::puavodesktop {
   }
 
   Package <| title == faenza-icon-theme
+          or title == gnome-shell-extension-tiling-assistant
           or title == puavomenu |>
 }
