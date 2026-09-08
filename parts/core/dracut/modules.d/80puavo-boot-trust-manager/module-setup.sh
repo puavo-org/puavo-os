@@ -51,6 +51,18 @@ install() {
     cp /etc/puavo-conf/server.pub \
        "${initdir}/etc/puavo-conf" || true
 
+    # An enrollment policy may reference a certificate file of the database
+    mkdir -p "${initdir}/etc/puavo-secure-boot/db"
+    cp /etc/puavo-secure-boot/db/*.der \
+       "${initdir}/etc/puavo-secure-boot/db" || true
+
+    # The database of the image and its build date, for enrollment
+    cp /etc/puavo-secure-boot/db.esl \
+       /etc/puavo-secure-boot/built \
+       "${initdir}/etc/puavo-secure-boot" || true
+    cp /etc/puavo-secure-boot/dbx.bin \
+       "${initdir}/etc/puavo-secure-boot" 2>/dev/null || true
+
     # Enable the service in initrd
     mkdir -p "${initdir}/etc/systemd/system/initrd.target.wants"
     ln_r "/usr/lib/systemd/system/puavo-boot-trust-manager.service" \

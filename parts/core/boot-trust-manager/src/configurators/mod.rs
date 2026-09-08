@@ -15,6 +15,7 @@ pub mod device_secure_boot_keys;
 pub mod enrollment;
 pub mod pin;
 pub mod secure_boot_database;
+pub mod secure_boot_update;
 
 /// Build and return all available configurator instances.
 /// Configurator becomes available when its configuration file is present.
