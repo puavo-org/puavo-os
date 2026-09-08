@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::process::Command;
 
-use puavo_boot_trust_manager::{
+use boot_trust_manager::{
     configurators::enrollment::EnrollmentConfigurator,
     devices::boot_vault::{BootVault, BootVaultUnlockMethod},
     display::UserDisplay,

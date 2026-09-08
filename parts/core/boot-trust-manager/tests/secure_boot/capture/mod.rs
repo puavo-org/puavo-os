@@ -14,11 +14,11 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;
 
-use puavo_boot_trust_manager::error::PuavoError;
-use puavo_boot_trust_manager::secure_boot::chain::{
+use boot_trust_manager::error::PuavoError;
+use boot_trust_manager::secure_boot::chain::{
     Device, variable_name_and_contents,
 };
-use puavo_boot_trust_manager::secure_boot::database::SignatureDatabase;
+use boot_trust_manager::secure_boot::database::SignatureDatabase;
 use uuid::Uuid;
 
 /// Directory of the captures.

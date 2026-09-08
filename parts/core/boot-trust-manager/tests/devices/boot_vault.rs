@@ -4,7 +4,7 @@ use std::process::Command;
 use serial_test::serial;
 
 use crate::common::{display::TestDisplay, fixture_directory, luks, tpm};
-use puavo_boot_trust_manager::{
+use boot_trust_manager::{
     configurators::enrollment::EnrollmentConfigurator,
     devices::boot_vault::{BootVault, BootVaultUnlockMethod},
     display::UserDisplay,

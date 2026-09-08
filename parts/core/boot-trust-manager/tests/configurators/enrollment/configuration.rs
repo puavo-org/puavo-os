@@ -2,7 +2,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
-use puavo_boot_trust_manager::{
+use boot_trust_manager::{
     boot_trust_manager::BootTrustManager,
     configurators::{Configurator, enrollment::EnrollmentConfigurator},
     devices::boot_vault::BootVault,

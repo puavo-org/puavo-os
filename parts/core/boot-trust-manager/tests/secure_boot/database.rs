@@ -1,7 +1,7 @@
 //! Checks the database reader against the database a captured boot measured.
 
-use puavo_boot_trust_manager::error::PuavoError;
-use puavo_boot_trust_manager::secure_boot::database::{
+use boot_trust_manager::error::PuavoError;
+use boot_trust_manager::secure_boot::database::{
     SignatureDatabase, read_certificate_file,
 };
 use std::fs;

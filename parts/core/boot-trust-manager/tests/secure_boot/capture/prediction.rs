@@ -8,11 +8,11 @@ use std::{
 };
 use tempfile::TempDir;
 
-use puavo_boot_trust_manager::configurators::enrollment::EnrollmentItemConfiguration;
-use puavo_boot_trust_manager::error::PuavoError;
-use puavo_boot_trust_manager::luks::tokens::LuksTpmEnrollmentPolicy;
-use puavo_boot_trust_manager::secure_boot::chain::{Measurement, Source};
-use puavo_boot_trust_manager::secure_boot::prediction::{Register, Report};
+use boot_trust_manager::configurators::enrollment::EnrollmentItemConfiguration;
+use boot_trust_manager::error::PuavoError;
+use boot_trust_manager::luks::tokens::LuksTpmEnrollmentPolicy;
+use boot_trust_manager::secure_boot::chain::{Measurement, Source};
+use boot_trust_manager::secure_boot::prediction::{Register, Report};
 
 use super::slab;
 use super::{

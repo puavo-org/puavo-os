@@ -5,7 +5,7 @@ use std::{path::Path, thread, time::Duration};
 use serial_test::serial;
 use tempfile::TempDir;
 
-use puavo_boot_trust_manager::system::mount::{MountGuard, unmount};
+use boot_trust_manager::system::mount::{MountGuard, unmount};
 
 /// Helper to perform a bind mount
 fn bind_mount(source: &Path, target: &Path) {

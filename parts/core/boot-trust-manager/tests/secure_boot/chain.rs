@@ -7,8 +7,8 @@ use std::{
 };
 use tempfile::TempDir;
 
-use puavo_boot_trust_manager::error::PuavoError;
-use puavo_boot_trust_manager::secure_boot::chain::{
+use boot_trust_manager::error::PuavoError;
+use boot_trust_manager::secure_boot::chain::{
     Chain, Entry, Measurement, Source,
 };
 

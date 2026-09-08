@@ -5,7 +5,7 @@ use serial_test::serial;
 use zeroize::Zeroizing;
 
 use crate::common::{display::TestDisplay, efi, luks, tpm};
-use puavo_boot_trust_manager::{
+use boot_trust_manager::{
     configurators::{Configurator, pin::PinConfigurator},
     devices::boot_vault::BootVault,
     display::UserDisplay,

@@ -1,7 +1,7 @@
 //! The validator checked against a captured boot, whose PCR value the device
 //! serves as the current one.
 
-use puavo_boot_trust_manager::secure_boot::validator::Validator;
+use boot_trust_manager::secure_boot::validator::Validator;
 
 use super::slab;
 use super::{Capture, CapturedDevice, write_variables_into_directory};

@@ -6,7 +6,7 @@ rust-version = "1.85.0"
 autotests = false
 
 [lib]
-name = "puavo_boot_trust_manager"
+name = "boot_trust_manager"
 path = "src/lib.rs"
 
 [[bin]]

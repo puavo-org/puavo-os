@@ -1,4 +1,4 @@
-use puavo_boot_trust_manager::configurators::{
+use boot_trust_manager::configurators::{
     Configurator, enrollment::EnrollmentConfigurator,
 };
 use serial_test::serial;

@@ -1,4 +1,4 @@
-use puavo_boot_trust_manager::hashing::Hashed;
+use boot_trust_manager::hashing::Hashed;
 
 #[test]
 fn hashed_returns_consistent_value_for_same_input() {

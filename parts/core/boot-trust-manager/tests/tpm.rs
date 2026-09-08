@@ -7,7 +7,7 @@ use crate::{
     common::{display::TestDisplay, luks, tpm},
     configurators::enrollment::common::enroll_and_tpm_unlock,
 };
-use puavo_boot_trust_manager::{
+use boot_trust_manager::{
     devices::boot_vault::{
         BootVault, BootVaultUnlockMethod, MAX_LOCKED_OUT_ATTEMPTS,
     },

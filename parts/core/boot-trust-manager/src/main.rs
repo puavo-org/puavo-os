@@ -13,7 +13,7 @@
 /// to the `BootTrustManager`.
 use clap::{Parser, Subcommand};
 
-use puavo_boot_trust_manager::{
+use boot_trust_manager::{
     boot_trust_manager::{BootTrustManager, BootTrustManagerConfiguration},
     error::PuavoError,
     secure_boot::prediction,

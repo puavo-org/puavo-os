@@ -2,7 +2,7 @@ use serial_test::serial;
 use tempfile::TempDir;
 use zeroize::Zeroizing;
 
-use puavo_boot_trust_manager::devices::boot_vault::BootVaultResources;
+use boot_trust_manager::devices::boot_vault::BootVaultResources;
 
 #[test]
 #[serial]

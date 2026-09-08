@@ -2,7 +2,7 @@
 //! compares the bytes, which checks that the lists this code writes have the
 //! format the firmware reads.
 
-use puavo_boot_trust_manager::secure_boot::database::{
+use boot_trust_manager::secure_boot::database::{
     SignatureDatabase, SignatureList,
 };
 

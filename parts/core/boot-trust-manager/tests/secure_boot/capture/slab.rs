@@ -2,7 +2,7 @@
 
 use std::{fs, path::Path};
 
-use puavo_boot_trust_manager::secure_boot::chain::{
+use boot_trust_manager::secure_boot::chain::{
     Chain, Entry, Measurement, Source,
 };
 
