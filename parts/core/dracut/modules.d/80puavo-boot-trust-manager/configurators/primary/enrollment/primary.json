@@ -1,10 +1,35 @@
 {
   "name": "primary",
   "policy": {
-    "tpm2-pcrs": [
-      "7:sha256",
-      "15:sha256=0000000000000000000000000000000000000000000000000000000000000000"
-    ],
+    "tpm2-pcrs": {
+      "7:sha256": [
+        { "variable": { "name": "SecureBoot" } },
+        { "variable": { "name": "PK" } },
+        { "variable": { "name": "KEK" } },
+        { "variable": { "name": "db" } },
+        { "variable": { "name": "dbx" } },
+        "separator",
+        {
+          "authority": {
+            "database": "db",
+            "entry": { "subject": "Puavo Slab*" }
+          }
+        },
+        "slab-base",
+        {
+          "slab-authority": {
+            "identity": "a2bc8f41-47c7-4379-82a3-f696790b2879"
+          }
+        },
+        {
+          "authority": {
+            "database": "db",
+            "entry": { "subject": "Puavo Device Secure Boot Key" }
+          }
+        }
+      ],
+      "15:sha256": []
+    },
     "tpm2-public-key-pcrs": ["11:sha256"],
     "tpm2-public-key-directory": "/etc/puavo-conf"
   },
