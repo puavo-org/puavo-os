@@ -37,6 +37,34 @@ pub enum PuavoError {
     #[error("Boot vault is not installed")]
     NoBootVault,
 
+    #[error("Invalid signature database: {0}")]
+    MalformedSignatureDatabase(String),
+
+    #[error("{path} is not a certificate: {why}")]
+    MalformedCertificate { path: String, why: String },
+
+    #[error("Invalid chain: {0}")]
+    MalformedChain(String),
+
+    #[error("{path} is not a valid policy: {why}")]
+    MalformedPolicy { path: String, why: String },
+
+    #[error(
+        "{path} holds '{stamp}', which is not a build date in the form YYYYMMDDHHMMSS"
+    )]
+    MalformedDate { path: String, stamp: String },
+
+    #[error("'{pattern}' matches more than one entry: {names:?}")]
+    AmbiguousSubject { pattern: String, names: Vec<String> },
+
+    #[error("A policy chain could not be evaluated")]
+    ChainNotEvaluated,
+
+    #[error(
+        "Failed to set up disk encryption. No enrollment matches the current state of this machine."
+    )]
+    NoEnrollmentDescribesMachine,
+
     #[error("Failed to find the current boot EFI device")]
     NoEFIBootDisk(String),
 

@@ -5,5 +5,6 @@ pub mod display;
 pub mod error;
 pub mod hashing;
 pub mod luks;
+pub mod secure_boot;
 pub mod system;
 pub mod tpm;
