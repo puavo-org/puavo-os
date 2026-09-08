@@ -20,6 +20,7 @@ use crate::{
     display::recovery_qr,
     error::PuavoError,
     luks::tokens::{LuksTpmTokenManager, MAX_TOKENS},
+    secure_boot::update::EnrolledDatabase,
     system::{locale, mount::unmount, udev::device_from_device_node_path},
     tpm,
 };
@@ -55,6 +56,8 @@ pub const VAULT_FILESYSTEM_TYPE: &str = "ext4";
 pub const VAULT_RECOVERY_KEY: &str = "recovery.key";
 const PCR_STATE_FILENAME: &str = "pcr.state";
 const UNLOCK_RESTRICTIONS_FILENAME: &str = "unlock.restrictions.json";
+
+const ENROLLED_DATABASE_PROPERTY: &str = "enrolled.json";
 const DB_VERSION_PROPERTY: &str = "db.version";
 const DBX_VERSION_PROPERTY: &str = "dbx.version";
 
@@ -684,6 +687,38 @@ impl BootVaultResources {
     /// Return the path to the device-specific Secure Boot certificate within the vault.
     pub fn secure_boot_certificate_path(&self) -> PathBuf {
         self.mountpoint.join(SECURE_BOOT_CERTIFICATE_FILENAME)
+    }
+
+    /// The database enrolled for the named Secure Boot variable, or None when
+    /// none was enrolled.
+    pub fn enrolled_database(
+        &self,
+        name: &str,
+    ) -> Result<Option<EnrolledDatabase>, PuavoError> {
+        let property = format!("{name}.{ENROLLED_DATABASE_PROPERTY}");
+
+        let Some(recorded) = self.read_property(&property)? else {
+            return Ok(None);
+        };
+
+        serde_json::from_str(&recorded)
+            .map(Some)
+            .map_err(|_| PuavoError::PropertyParseError(property))
+    }
+
+    /// Records the database enrolled for a Secure Boot variable.
+    pub fn set_enrolled_database(
+        &self,
+        name: &str,
+        enrolled: &EnrolledDatabase,
+    ) -> Result<(), PuavoError> {
+        let recorded = serde_json::to_string(enrolled)
+            .map_err(PuavoError::EnrollmentStateError)?;
+
+        self.write_property(
+            &format!("{name}.{ENROLLED_DATABASE_PROPERTY}"),
+            recorded,
+        )
     }
 
     /// Read the installed Secure Boot db version from the boot vault.
