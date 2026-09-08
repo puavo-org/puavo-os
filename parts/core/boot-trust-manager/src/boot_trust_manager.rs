@@ -1,4 +1,8 @@
-use std::{fs, path::PathBuf, process::Command};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+    process::Command,
+};
 
 use log::{debug, error, info, warn};
 
@@ -216,7 +220,7 @@ impl BootTrustManager {
         // EFI partition is automatically unmounted here
     }
 
-    fn install_locale(efi_mountpoint: &PathBuf) {
+    fn install_locale(efi_mountpoint: &Path) {
         let locale_value =
             locale::read_locale_from_grub_environment(efi_mountpoint);
         locale::set_strings(Strings::for_locale(locale_value));

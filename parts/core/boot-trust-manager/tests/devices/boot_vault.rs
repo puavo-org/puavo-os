@@ -94,9 +94,7 @@ fn resources_read_write_property() {
     vault.mount(&PathBuf::from(&images.vault), &*display()).unwrap();
 
     let resources = vault.resources();
-    resources
-        .write_property("test-property", "test-value".to_string())
-        .unwrap();
+    resources.write_property("test-property", "test-value").unwrap();
 
     let value = resources.read_property("test-property").unwrap();
     assert_eq!(value, Some("test-value".to_string()));

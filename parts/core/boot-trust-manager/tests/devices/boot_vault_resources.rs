@@ -10,7 +10,7 @@ fn write_and_read_property() {
     let temp = TempDir::new().unwrap();
     let resources = BootVaultResources::new(temp.path());
 
-    resources.write_property("test_key", "test_value".to_string()).unwrap();
+    resources.write_property("test_key", "test_value").unwrap();
 
     let value = resources.read_property("test_key").unwrap();
     assert_eq!(value, Some("test_value".to_string()));

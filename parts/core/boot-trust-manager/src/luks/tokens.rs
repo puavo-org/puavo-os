@@ -353,8 +353,11 @@ impl LuksTpmTokenManager {
             ));
         }
 
-        if let Some(public_key_path) = public_key_path {
-            if !policy.public_key_pcrs_expressions.is_empty() {
+        // A public key is used only together with PCRs it signs.
+        match public_key_path {
+            Some(public_key_path)
+                if !policy.public_key_pcrs_expressions.is_empty() =>
+            {
                 arguments.push(format!(
                     "--tpm2-public-key-pcrs={}",
                     policy.public_key_pcrs_expressions.join("+")
@@ -370,6 +373,7 @@ impl LuksTpmTokenManager {
                         .to_string(),
                 );
             }
+            _ => {}
         }
 
         if pin.is_some() {
