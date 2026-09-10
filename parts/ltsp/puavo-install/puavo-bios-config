@@ -43,6 +43,22 @@ check_hash() {
 }
 
 flash_fwupd() {
+  if ! [ -d /sys/firmware/efi ]; then
+    printf "${RED}Selected option cannot be run on Legacy MBR installations! Exiting.${NC}\n"
+    return 1
+  fi
+
+  # Temporarily (read-only) mount EFI partition in order to check free space
+  efimount=$(mktemp -d /tmp/efimount.XXXXXX)
+  efipart="$(blkid -t 'PARTLABEL="EFI system partition"' | cut -d ':' -f 1)"
+  mount -r "$efipart" "$efimount"
+  if [ $(lsblk --output FSAVAIL -nlb $efipart) -lt 157286400 ]; then
+    printf "${RED}EFI partition has less than 150 MiB of free space, exiting.${NC}\n"
+    umount "$efimount"
+    return 1
+  fi
+  umount "$efimount"
+
   param=""
   version=""
   mainboard_sysid=$(dmidecode -s baseboard-product-name)
