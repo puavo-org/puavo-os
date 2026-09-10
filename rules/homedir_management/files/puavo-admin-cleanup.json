@@ -1,4 +1,14 @@
 {
+  "puavo.admin.cleanup.caches.ensure_free_space": {
+    "default": "false",
+    "description": "If true, remove user cache directories when disk space is low",
+    "typehint": "bool"
+  },
+  "puavo.admin.cleanup.caches.names": {
+    "default": "chromium fontconfig google-chrome mozilla",
+    "description": "A whitespace-separated list of subdirectories under .cache to remove in case disk space is low",
+    "typehint": "string"
+  },
   "puavo.admin.cleanup.homedirs.ensure_free_space": {
     "default": "false",
     "description": "If true, remove most unused home directories when disk space is low",

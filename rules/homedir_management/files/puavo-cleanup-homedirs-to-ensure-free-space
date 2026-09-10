@@ -6,21 +6,22 @@ set -eu
 [ -e /run/puavo/nbd-server ] && exit 0
 
 logmsg() {
-  logger -t puavo-clean-homedirs "$@"
+  logger -t puavo-cleanup-homedirs "$@"
 }
 
-if [ "$(puavo-conf puavo.admin.cleanup.homedirs.ensure_free_space)" != 'true' ]; then
+ensure_free_space=$(puavo-conf puavo.admin.cleanup.homedirs.ensure_free_space)
+if [ "$ensure_free_space" != 'true' ]; then
   exit 0
 fi
 
-if [ "$(puavo-conf puavo.admin.personally_administered)" = 'true' ]; then
+personally_administered="$(puavo-conf puavo.admin.personally_administered)"
+if [ "$personally_administered" = 'true' ]; then
   exit 0
 fi
 
 logmsg -p user.notice 'activating...'
 
 freespace_min=$(puavo-conf puavo.admin.cleanup.homedirs.freespace_min)
-
 if ! echo "$freespace_min" | grep -Eqx '[0-9]+'; then
   logmsg -p user.err \
          'puavo.admin.cleanup.homedirs.freespace_min is not a number'

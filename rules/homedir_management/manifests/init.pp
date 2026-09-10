@@ -13,6 +13,11 @@ class homedir_management {
       mode   => '0755',
       source => 'puppet:///modules/homedir_management/puavo-report-about-homedir-cleanups';
 
+    '/usr/local/sbin/puavo-cleanup-caches-to-ensure-free-space':
+      mode    => '0755',
+      require => Puavo_conf::Definition['puavo-admin-cleanup.json'],
+      source  => 'puppet:///modules/homedir_management/puavo-cleanup-caches-to-ensure-free-space';
+
     '/usr/local/sbin/puavo-cleanup-homedirs-to-ensure-free-space':
       mode    => '0755',
       require => Puavo_conf::Definition['puavo-admin-cleanup.json'],

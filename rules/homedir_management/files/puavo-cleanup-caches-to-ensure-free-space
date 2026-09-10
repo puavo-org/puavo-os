@@ -1,0 +1,117 @@
+#!/bin/sh
+
+set -eu
+
+# no homedir cleanups on netboot devices
+[ -e /run/puavo/nbd-server ] && exit 0
+
+cache_name_regexp='^[A-Za-z0-9][A-Za-z0-9._-]+$'
+
+logmsg() {
+  logger -t puavo-cleanup-caches "$@" || true
+}
+
+ensure_free_space="$(puavo-conf puavo.admin.cleanup.caches.ensure_free_space)"
+if [ "$ensure_free_space" != 'true' ]; then
+  exit 0
+fi
+
+personally_administered=$(puavo-conf puavo.admin.personally_administered)
+if [ "$personally_administered" = 'true' ]; then
+  exit 0
+fi
+
+# use the same threshold for caches as homedir cleanup
+freespace_min=$(puavo-conf puavo.admin.cleanup.homedirs.freespace_min)
+if ! echo "$freespace_min" | grep -Eqx '[0-9]+'; then
+  logmsg -p user.err \
+         'puavo.admin.cleanup.homedirs.freespace_min is not a number'
+  exit 1
+fi
+
+cache_name_list=$(puavo-conf puavo.admin.cleanup.caches.names)
+if [ -z "$cache_name_list" ]; then
+  logmsg -p user.info 'puavo.admin.cleanup.caches.names is empty'
+  exit 0
+fi
+
+save_homedir_exception=''
+if [ -n "${PAM_USER:-}" ]; then
+  save_homedir_exception="${PAM_USER:-}"
+fi
+
+cleanup_caches_under_homedir() {
+  local cache_path user_homedir user_gid user_uid
+  user_homedir=$1
+
+  user_gid=$(stat -c %g "$user_homedir") || return 1
+  user_uid=$(stat -c %u "$user_homedir") || return 1
+  for cache_name in $cache_name_list; do
+    if ! printf %s "$cache_name" | grep -qE "$cache_name_regexp"; then
+      continue
+    fi
+    cache_dir="${user_homedir}/.cache/${cache_name}"
+    if [ "$(realpath -m -- "$cache_dir")" \
+            != "$(realpath -ms -- "$cache_dir")" ]; then
+      logmsg -p user.warning "ignoring cache dir with symlinks: '${cache_dir}'"
+      continue
+    fi
+
+    if [ ! -d "$cache_dir" ]; then
+      continue
+    fi
+    if ! setpriv "--reuid=${user_uid}" "--regid=${user_gid}" --init-groups \
+      --inh-caps=-all rm -rf -- "$cache_dir"; then
+        logmsg -p user.warning "error in removing ${cache_dir}"
+        return 1
+    fi
+
+    logmsg -p user.info "removed cache directory ${cache_dir}"
+  done
+
+  return 0
+}
+
+# XXX should be "/usr/lib/puavo-ltsp-client/puavo-check-available-space --sync /home"
+# XXX in Trixie
+get_freespace_amount() {
+  stat -f -c '%S * %a' /home | bc -l
+}
+
+lookup_oldest_file() {
+  find /home -maxdepth 1 -mindepth 1 ! -type l \
+    -a ! -name "$save_homedir_exception" -printf '%T@ %p\0' \
+      | sort -nz | grep -zom 1 '.*' | sed 's/[^ ]* //'
+}
+
+# log warnings about bad cache names (but carry on)
+for cache_name in $cache_name_list; do
+  if ! printf %s "$cache_name" | grep -qE "$cache_name_regexp"; then
+    logmsg -p user.warning "bad cache name in puavo-conf: '${cache_name}'"
+  fi
+done
+
+while true; do
+  freespace_amount=$(get_freespace_amount)
+  logmsg -p user.info \
+         "/home has ${freespace_amount} bytes of free space, expecting ${freespace_min} bytes"
+  if [ "$(get_freespace_amount)" -ge "$freespace_min" ]; then
+    logmsg -p user.info '/home has enough free space'
+    break
+  fi
+
+  oldest_homedir=$(lookup_oldest_file)
+  if [ -z "$oldest_homedir" ]; then
+    logmsg -p user.info \
+           'oldest homedir could not be found, perhaps there are no files under /home?'
+    break
+  fi
+
+  logmsg -p user.info \
+         "not enough free space on /home, removing caches from under ${oldest_homedir}: last modified on $(stat -c %y "$oldest_homedir" || true)"
+  if ! cleanup_caches_under_homedir "$oldest_homedir"; then
+    logmsg -p user.err "error cleaning up cache in ${oldest_homedir}"
+    logmsg -p user.err 'giving up cleaning up caches'
+    exit 1
+  fi
+done
