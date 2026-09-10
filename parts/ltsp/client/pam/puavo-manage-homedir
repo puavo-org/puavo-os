@@ -11,7 +11,7 @@ if [ "${PAM_TYPE:-}" != 'open_session' ]; then
 fi
 
 logmsg() {
-  logger -t puavo-manage-homedir "$@"
+  logger -t puavo-manage-homedir "$@" || true
 }
 
 username=${1:-}
