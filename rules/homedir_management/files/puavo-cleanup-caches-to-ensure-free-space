@@ -52,10 +52,13 @@ cleanup_caches_under_homedir() {
   user_uid=$(stat -c %u "$user_homedir") || return 1
 
   for cache_name in $cache_name_list; do
-    if ! printf %s "$cache_name" | grep -qE "$cache_name_regexp"; then
+    if [ "$cache_name" = '*' ]; then
+      cache_dir="${user_homedir}/.cache"
+    elif printf %s "$cache_name" | grep -qE "$cache_name_regexp"; then
+      cache_dir="${user_homedir}/.cache/${cache_name}"
+    else
       continue
     fi
-    cache_dir="${user_homedir}/.cache/${cache_name}"
     if [ "$(realpath -m -- "$cache_dir")" \
             != "$(realpath -ms -- "$cache_dir")" ]; then
       logmsg -p user.warning "ignoring cache dir with symlinks: '${cache_dir}'"
@@ -94,11 +97,13 @@ lookup_homedirs_oldest_first() {
 }
 
 # log warnings about bad cache names (but carry on)
-for cache_name in $cache_name_list; do
-  if ! printf %s "$cache_name" | grep -qE "$cache_name_regexp"; then
-    logmsg -p user.warning "bad cache name in puavo-conf: '${cache_name}'"
-  fi
-done
+if [ "$cache_name_list" != '*' ]; then
+  for cache_name in $cache_name_list; do
+    if ! printf %s "$cache_name" | grep -qE "$cache_name_regexp"; then
+      logmsg -p user.warning "bad cache name in puavo-conf: '${cache_name}'"
+    fi
+  done
+fi
 
 enough_space_msg='(not as much as was expected)'
 for homedir in $(lookup_homedirs_oldest_first); do
