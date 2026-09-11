@@ -137,7 +137,7 @@ EOF
     nginx_conf += <<EOF
 
 server {
-    listen 443 http2 ssl;
+    listen 443 ssl;
     server_name #{ collabora_domain };
 
     ssl_certificate #{ cert_chain_path };
@@ -161,28 +161,25 @@ server {
         proxy_set_header Host $http_host;
     }
 
-    # main websocket
-    location ~ ^/cool/(.*)/ws$ {
+    # main websocket, download, presentation (legacy svg) and image upload
+    location ^~ /cool/ {
         proxy_pass https://#{ DOCKER_IP }:9980;
+        proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "Upgrade";
         proxy_set_header Host $http_host;
         proxy_read_timeout 36000s;
     }
 
-    # download, presentation and image upload
-    location ~ ^/(c|l)ool {
+    # health checks, used since 26.04.3.1 by load balancers and monitoring
+    location ^~ /livez {
         proxy_pass https://#{ DOCKER_IP }:9980;
         proxy_set_header Host $http_host;
     }
 
-    # Admin Console websocket
-    location ^~ /cool/adminws {
+    location ^~ /readyz {
         proxy_pass https://#{ DOCKER_IP }:9980;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "Upgrade";
         proxy_set_header Host $http_host;
-        proxy_read_timeout 36000s;
     }
 
     location / { return 404; }

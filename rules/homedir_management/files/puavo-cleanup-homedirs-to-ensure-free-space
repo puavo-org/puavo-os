@@ -6,22 +6,23 @@ set -eu
 [ -e /run/puavo/nbd-server ] && exit 0
 
 logmsg() {
-  logger -t puavo-clean-homedirs "$@"
+  logger -t puavo-cleanup-homedirs "$@" || true
 }
 
-if [ "$(puavo-conf puavo.admin.cleanup.homedirs.ensure_free_space)" != 'true' ]; then
+ensure_free_space=$(puavo-conf puavo.admin.cleanup.homedirs.ensure_free_space)
+if [ "$ensure_free_space" != 'true' ]; then
   exit 0
 fi
 
-if [ "$(puavo-conf puavo.admin.personally_administered)" = 'true' ]; then
+personally_administered="$(puavo-conf puavo.admin.personally_administered)"
+if [ "$personally_administered" = 'true' ]; then
   exit 0
 fi
 
 logmsg -p user.notice 'activating...'
 
 freespace_min=$(puavo-conf puavo.admin.cleanup.homedirs.freespace_min)
-
-if ! echo "$freespace_min" | grep -Eqx '[0-9]+'; then
+if ! printf %s "$freespace_min" | grep -Eqx '[0-9]+'; then
   logmsg -p user.err \
          'puavo.admin.cleanup.homedirs.freespace_min is not a number'
   exit 1
@@ -36,10 +37,19 @@ get_freespace_amount() {
   /usr/lib/puavo-ltsp-client/puavo-check-available-space --sync /home
 }
 
-lookup_oldest_file() {
-  find /home -maxdepth 1 -mindepth 1 ! -type l \
-    -a ! -name "$save_homedir_exception" -printf '%T@ %p\0' \
-      | sort -nz | grep -zom 1 '.*' | sed 's/[^ ]* //'
+lookup_oldest_homedir() {
+  find /home -maxdepth 1 -mindepth 1 -type d \
+    -a ! -name "$save_homedir_exception" -printf '%T@ %f\0' \
+      | sort -nz | awk '
+                     BEGIN { RS = "\0" }
+                     {
+                       sub(/^[^ ]+ /, "")
+                       if ($0 ~ /^[A-Za-z0-9][A-Za-z0-9_.:+-]*$/) {
+                         print "/home/" $0
+                         exit(0)
+                       }
+                     }
+                   '
 }
 
 while true; do
@@ -49,21 +59,21 @@ while true; do
   fi
   logmsg -p user.info \
          "/home has ${freespace_amount} bytes of free space, expecting ${freespace_min} bytes"
-  if [ "$(get_freespace_amount)" -ge "$freespace_min" ]; then
+  if [ "$freespace_amount" -ge "$freespace_min" ]; then
     logmsg -p user.info '/home has enough free space'
     break
   fi
 
-  oldest_file=$(lookup_oldest_file)
-  if [ -z "$oldest_file" ]; then
+  oldest_homedir=$(lookup_oldest_homedir)
+  if [ -z "$oldest_homedir" ]; then
     logmsg -p user.info \
-           'oldest file could not be found, perhaps there are no files under /home?'
+           'oldest homedir could not be found, perhaps there is nothing under /home?'
     break
   fi
 
   logmsg -p user.info \
-         "not enough free space on /home, removing ${oldest_file}: last modified on $(stat -c %y "$oldest_file" || true)"
-  rm -rf "$oldest_file"
+         "not enough free space on /home, removing ${oldest_homedir}: last modified on '$(stat -c %y "$oldest_homedir" || true)'"
+  rm -rf --one-file-system -- "$oldest_homedir"
 done
 
 exit 0
