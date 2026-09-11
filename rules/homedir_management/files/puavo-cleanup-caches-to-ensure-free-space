@@ -81,10 +81,8 @@ cleanup_caches_under_homedir() {
   return 0
 }
 
-# XXX should be "/usr/lib/puavo-ltsp-client/puavo-check-available-space --sync /home"
-# XXX in Trixie
 get_freespace_amount() {
-  stat -f -c '%S * %a' /home | bc -l
+  /usr/lib/puavo-ltsp-client/puavo-check-available-space --sync /home
 }
 
 lookup_homedirs_oldest_first() {
