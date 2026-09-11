@@ -88,7 +88,7 @@ get_freespace_amount() {
 }
 
 lookup_homedirs_oldest_first() {
-  find /home -maxdepth 1 -mindepth 1 ! -type l \
+  find /home -maxdepth 1 -mindepth 1 -type d \
     -a ! -name "$save_homedir_exception" -printf '%T@ %f\0' \
       | sort -nz | awk '
                      BEGIN { RS = "\0" }
