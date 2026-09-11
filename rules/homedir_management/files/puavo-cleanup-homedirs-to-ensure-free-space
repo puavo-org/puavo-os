@@ -37,10 +37,13 @@ get_freespace_amount() {
   stat -f -c '%S * %a' /home | bc -l
 }
 
-lookup_oldest_file() {
+lookup_oldest_homedir() {
   find /home -maxdepth 1 -mindepth 1 ! -type l \
-    -a ! -name "$save_homedir_exception" -printf '%T@ %p\0' \
-      | sort -nz | grep -zom 1 '.*' | sed 's/[^ ]* //'
+    -a ! -name "$save_homedir_exception" -printf '%T@ %f\0' \
+      | sort -nz | awk '
+                     BEGIN { RS = "\0" }
+                     $2 ~ /^[A-Za-z0-9][A-Za-z0-9_.-]+$/ { print "/home/" $2; exit(0) }
+                   '
 }
 
 while true; do
@@ -52,16 +55,16 @@ while true; do
     break
   fi
 
-  oldest_file=$(lookup_oldest_file)
-  if [ -z "$oldest_file" ]; then
+  oldest_homedir=$(lookup_oldest_homedir)
+  if [ -z "$oldest_homedir" ]; then
     logmsg -p user.info \
-           'oldest file could not be found, perhaps there are no files under /home?'
+           'oldest homedir could not be found, perhaps there is nothing under /home?'
     break
   fi
 
   logmsg -p user.info \
-         "not enough free space on /home, removing ${oldest_file}: last modified on '$(stat -c %y "$oldest_file" || true)'"
-  rm -rf -- "$oldest_file"
+         "not enough free space on /home, removing ${oldest_homedir}: last modified on '$(stat -c %y "$oldest_homedir" || true)'"
+  rm -rf -- "$oldest_homedir"
 done
 
 exit 0
