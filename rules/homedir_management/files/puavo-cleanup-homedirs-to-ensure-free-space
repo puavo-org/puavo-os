@@ -42,7 +42,13 @@ lookup_oldest_homedir() {
     -a ! -name "$save_homedir_exception" -printf '%T@ %f\0' \
       | sort -nz | awk '
                      BEGIN { RS = "\0" }
-                     $2 ~ /^[A-Za-z0-9][A-Za-z0-9_.:+-]*$/ { print "/home/" $2; exit(0) }
+                     {
+                       sub(/^[^ ]+ /, "")
+                       if ($0 ~ /^[A-Za-z0-9][A-Za-z0-9_.:+-]*$/) {
+                         print "/home/" $0
+                         exit(0)
+                       }
+                     }
                    '
 }
 
