@@ -70,7 +70,7 @@ cleanup_caches_under_homedir() {
     fi
 
     if ! setpriv "--reuid=${user_uid}" "--regid=${user_gid}" --init-groups \
-      --inh-caps=-all rm -rf -- "$cache_dir"; then
+      --inh-caps=-all rm -rf --one-file-system -- "$cache_dir"; then
         logmsg -p user.warning "error in removing ${cache_dir}"
         return 1
     fi

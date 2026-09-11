@@ -64,7 +64,7 @@ while true; do
 
   logmsg -p user.info \
          "not enough free space on /home, removing ${oldest_homedir}: last modified on '$(stat -c %y "$oldest_homedir" || true)'"
-  rm -rf -- "$oldest_homedir"
+  rm -rf --one-file-system -- "$oldest_homedir"
 done
 
 exit 0
