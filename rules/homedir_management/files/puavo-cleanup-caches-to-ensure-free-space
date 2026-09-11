@@ -9,7 +9,7 @@ set -f
 # no homedir cleanups on netboot devices
 [ -e /run/puavo/nbd-server ] && exit 0
 
-cache_name_regexp='^[A-Za-z0-9][A-Za-z0-9._-]+$'
+cache_name_regexp='^[A-Za-z0-9][A-Za-z0-9._-]*$'
 
 logmsg() {
   logger -t puavo-cleanup-caches "$@" || true
@@ -92,7 +92,7 @@ lookup_homedirs_oldest_first() {
     -a ! -name "$save_homedir_exception" -printf '%T@ %f\0' \
       | sort -nz | awk '
                      BEGIN { RS = "\0" }
-                     $2 ~ /^[A-Za-z0-9][A-Za-z0-9_.:+-]+$/ { print "/home/" $2 }
+                     $2 ~ /^[A-Za-z0-9][A-Za-z0-9_.:+-]*$/ { print "/home/" $2 }
                    '
 }
 
