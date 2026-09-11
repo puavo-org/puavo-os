@@ -2,6 +2,10 @@
 
 set -eu
 
+# disable pathname expansion as home directory names and cache names
+# are handled as whitespace separated lists
+set -f
+
 # no homedir cleanups on netboot devices
 [ -e /run/puavo/nbd-server ] && exit 0
 
