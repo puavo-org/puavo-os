@@ -6,7 +6,7 @@ set -eu
 [ -e /run/puavo/nbd-server ] && exit 0
 
 logmsg() {
-  logger -t puavo-cleanup-homedirs "$@"
+  logger -t puavo-cleanup-homedirs "$@" || true
 }
 
 ensure_free_space=$(puavo-conf puavo.admin.cleanup.homedirs.ensure_free_space)
