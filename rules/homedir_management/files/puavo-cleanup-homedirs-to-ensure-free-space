@@ -22,7 +22,7 @@ fi
 logmsg -p user.notice 'activating...'
 
 freespace_min=$(puavo-conf puavo.admin.cleanup.homedirs.freespace_min)
-if ! echo "$freespace_min" | grep -Eqx '[0-9]+'; then
+if ! printf %s "$freespace_min" | grep -Eqx '[0-9]+'; then
   logmsg -p user.err \
          'puavo.admin.cleanup.homedirs.freespace_min is not a number'
   exit 1
