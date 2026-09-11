@@ -96,12 +96,13 @@ for cache_name in $cache_name_list; do
   fi
 done
 
+enough_space_msg='(not as much as was expected)'
 for homedir in $(lookup_homedirs_oldest_first); do
   freespace_amount=$(get_freespace_amount)
   logmsg -p user.info \
          "/home has ${freespace_amount} bytes of free space, expecting ${freespace_min} bytes"
   if [ "$freespace_amount" -ge "$freespace_min" ]; then
-    logmsg -p user.info '/home has enough free space'
+    enough_space_msg='(enough)'
     break
   fi
 
@@ -113,3 +114,10 @@ for homedir in $(lookup_homedirs_oldest_first); do
     exit 1
   fi
 done
+
+freespace_amount=$(get_freespace_amount)
+if [ "$freespace_amount" -ge "$freespace_min" ]; then
+  enough_space_msg='(enough)'
+fi
+logmsg -p user.info \
+       "/home has ${freespace_amount} bytes of free space after cache cleanup operation ${enough_space_msg}"
