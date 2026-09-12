@@ -7,9 +7,25 @@ machine=$2
 user=$3
 shift 3
 
-mount -m -t sysfs    /sys     /sys
-mount -m -t proc     /proc    /proc
-mount -m -t devpts   /dev/pts /dev/pts
+# Accept already-mounted mountpoints (e.g. /proc bind-mounted for
+# Rosetta-translated chroots on Apple's container runtime).
+mount -m -t sysfs    /sys     /sys     || mountpoint -q /sys
+mount -m -t proc     /proc    /proc    || mountpoint -q /proc
+mount -m -t devpts   /dev/pts /dev/pts || mountpoint -q /dev/pts
+
+# Hide Apple Rosetta's $HOME/.cache/rosetta leftover from rmdir(1).
+# The wrapper lives in the workspace copy inside this rootfs and is
+# bind-mounted only for this unshare, so the squashfs keeps stock rmdir.
+if [ -f /puavo-os/.aux/rmdir ]; then
+  mkdir -p /run
+  # Copy file contents (not a usrmerge symlink) before overlaying rmdir.
+  if [ ! -f /run/rmdir.real ] || [ -L /run/rmdir.real ]; then
+    cp -fL /usr/bin/rmdir /run/rmdir.real
+    chmod 0755 /run/rmdir.real
+  fi
+  mount --bind /puavo-os/.aux/rmdir /usr/bin/rmdir || true
+fi
+
 hostname "$machine"
 sudo -u "$user" env -u LANGUAGE \
     LANG=C.UTF-8 LC_ALL=C.UTF-8 \
