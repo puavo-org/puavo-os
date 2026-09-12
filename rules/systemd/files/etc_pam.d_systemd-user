@@ -1,1 +1,5 @@
 account required        pam_permit.so
+
+# As the desktop session runs under "systemd --user", rlimits for audio  must be
+# applied here.
+session required        pam_limits.so

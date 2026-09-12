@@ -514,6 +514,14 @@ extrausers_new_group() {
     return 1
   fi
 
+  audio_sgid=$(getent group audio | cut -d: -f3)
+  if [ -z "$audio_sgid" ]; then
+    logmsg warning "group 'audio' not found in /etc/group"
+    return 1
+  fi
+  user_groups="${user_groups}
+audio:${audio_sgid}"
+
   if [ ! -e "$EXTRAUSERS_GROUP_FILE_PATH" ]; then
     logmsg notice "setting up new ${EXTRAUSERS_GROUP_FILE_PATH} file"
     if ! touch "$EXTRAUSERS_GROUP_FILE_PATH" 2>/dev/null; then
@@ -525,9 +533,14 @@ extrausers_new_group() {
   new_group_data="$(
     gawk -F: -v username="$username" \
              -v user_groups="$user_groups" \
+             -v audio_sgid="$audio_sgid" \
              -v minimum_uid_gid="$USER_MINIMUM_UID_GID" '
       # map groups by gid, filter out duplicates,
       # possible adding the user to some groups and removing from others
+
+      function gid_is_allowed(gid) {
+        return (gid >= minimum_uid_gid) || (gid == audio_sgid)
+      }
 
       BEGIN {
 	user_group_count = split(user_groups, user_groups_array, "\n")
@@ -536,7 +549,7 @@ extrausers_new_group() {
 	  newgroup_name = newgroup_info[1]
 	  newgroup_gid  = newgroup_info[2]
 
-          if (newgroup_gid < minimum_gid) { continue }
+          if (!gid_is_allowed(newgroup_gid)) { continue }
 
 	  new_groups_members_by_gid[ newgroup_gid  ] = username
 	  new_groups_names_by_gid[   newgroup_gid  ] = newgroup_name
@@ -547,13 +560,11 @@ extrausers_new_group() {
          NF == 4 \
       && $1 != "" \
       && $2 == "x" \
-      && $3 ~ /^[[:digit:]]+$/ && $3 >= minimum_uid_gid \
+      && $3 ~ /^[[:digit:]]+$/ && gid_is_allowed($3) \
       && $4 != "" {
 	oldgroup_name = $1
 	oldgroup_gid  = $3
 	split($4, oldgroup_members, ",")
-
-        if (oldgroup_gid < minimum_gid) { next }
 
 	if (!(oldgroup_gid in new_groups_names_by_gid) \
           && !(oldgroup_name in new_groups_gid_by_name)) {
