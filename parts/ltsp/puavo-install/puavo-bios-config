@@ -82,7 +82,7 @@ flash_fwupd() {
     hp_select_bios="$(xmllint --xpath "(/BIOS/Rel/@Bin)" "$mainboard_sysid.xml" | cut -d '"' -f 2 \
      | fzf --query "$version" --select-1 --height=9 --layout=reverse-list --color=bg+:#FFFFFF,fg+:#000000
     )" && wget "$hp_ftp_url/$mainboard_sysid/$hp_select_bios" -O "$hp_select_bios" && \
-    check_hash && fwupdtool install-blob "$hp_select_bios")
+    check_hash && fwupdtool install-blob "$hp_select_bios" $param)
 }
 
 
