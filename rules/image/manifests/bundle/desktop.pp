@@ -2,6 +2,7 @@ class image::bundle::desktop {
   include ::accountsservice
   include ::blueman
   include ::bluetooth
+  include ::chrome_webapps
   include ::chromium
   include ::desktop
   include ::desktop_cups

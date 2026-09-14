@@ -63,10 +63,28 @@ proc rule {rulelines} {
   lappend rules [join $nonempty_rule_elems " "]
 }
 
-proc systemgroup {groupname} {
+proc systemgroup_dn {groupname} {
   global ldapsuffix
-  format {group/puavoSystemGroup/member="cn=%s,ou=System Groups,%s"} \
-         $groupname $ldapsuffix
+  format {cn=%s,ou=System Groups,%s} $groupname $ldapsuffix
+}
+
+# check group membership
+proc systemaccount {groupname} {
+  set systemgroup_dn [systemgroup_dn $groupname]
+  format {group/puavoSystemGroup/member="%s"} $systemgroup_dn
+}
+
+# _sr == school restricted, check both account group member and puavo schools
+proc systemaccount_sr {groupname} {
+  set systemgroup_dn [systemgroup_dn $groupname]
+
+  ldapset [
+    format {
+      (([%s]/member & user)/puavoLdapServiceAccessAll & [TRUE])
+        |
+      (([%s]/member & user)/puavoSchool & (this | this/puavoSchool))
+    } $systemgroup_dn $systemgroup_dn
+  ]
 }
 
 proc admins_with_permission {permission} {
@@ -126,9 +144,10 @@ set this_school_admins [ldapset "this/puavoSchool & user/puavoAdminOfSchool"]
 
 # this means: target/what and actor/who must be in the same school
 # and actor/who must also be a teacher
-set this_school_teachers [ldapset \
-  {([teacher,] + this/puavoSchool)
-     & (user/puavoEduPersonAffiliation + [,] + user/puavoSchool)}]
+set this_school_teachers [
+  ldapset {([teacher,] + this/puavoSchool)
+            & (user/puavoEduPersonAffiliation + [,] + user/puavoSchool)}
+]
 
 #
 # RULES
@@ -427,12 +446,12 @@ rule {
 rule {
   [dn exact $Devices]
     [attrs children entry objectClass ou]
-      by $org_owners           read
-      by [dn children $People] read
-      by [dn children $Hosts]  read
-      by [puavo_dn examomatic] read
-      by [systemgroup devices] read
-      by anonymous             auth
+      by $org_owners             read
+      by [dn children $People]   read
+      by [dn children $Hosts]    read
+      by [puavo_dn examomatic]   read
+      by [systemaccount devices] read
+      by anonymous               auth
 }
 
 rule {
@@ -472,11 +491,11 @@ rule {
   # Allow changing device settings for organisation owners and admins
   # who are in the same school as the device.
   [dn children $Devices]
-      by $org_owners           write
-      by $this_school_admins   write
-      by self                  read
-      by [systemgroup devices] read
-      by anonymous             auth
+      by $org_owners                write
+      by $this_school_admins        write
+      by self                       read
+      by [systemaccount_sr devices] read
+      by anonymous                  auth
 }
 
 # rules for ou=Servers,ou=Hosts
@@ -498,11 +517,11 @@ rule {
 rule {
   [dn exact $Servers]
     [attrs children entry objectClass ou]
-      by $org_owners           read
-      by $admins               read
-      by [puavo_dn cert-mgmt]  read
-      by [systemgroup servers] read
-      by anonymous             auth
+      by $org_owners             read
+      by $admins                 read
+      by [puavo_dn cert-mgmt]    read
+      by [systemaccount servers] read
+      by anonymous               auth
 }
 
 rule {
@@ -532,20 +551,20 @@ rule {
 
 rule {
   [dn children $Servers]
-      by $org_owners           write
-      by [systemgroup servers] read
-      by anonymous             auth
+      by $org_owners                write
+      by [systemaccount_sr servers] read
+      by anonymous                  auth
 }
 
 # rules for ou=Hosts specifically
 
 rule {
   [dn exact $Hosts]
-      by $org_owners           read
-      by $admins               read
-      by [dn children $Hosts]  read
-      by [systemgroup devices] read
-      by [systemgroup servers] read
+      by $org_owners             read
+      by $admins                 read
+      by [dn children $Hosts]    read
+      by [systemaccount devices] read
+      by [systemaccount servers] read
 }
 
 # rules for ou=Printers
@@ -553,27 +572,27 @@ rule {
 rule {
   [dn exact $Printers]
     [attrs entry objectClass ou]
-      by $org_owners                 read
-      by [dn children $Hosts]        read
-      by [dn children $People]       read
-      by [systemgroup printerqueues] read
+      by $org_owners                   read
+      by [dn children $Hosts]          read
+      by [dn children $People]         read
+      by [systemaccount printerqueues] read
 }
 
 rule {
   [dn exact $Printers]
     [attrs children]
-      by $org_owners                 write
-      by [dn children $Hosts]        read
-      by [dn children $People]       read
-      by [systemgroup printerqueues] read
+      by $org_owners                   write
+      by [dn children $Hosts]          read
+      by [dn children $People]         read
+      by [systemaccount printerqueues] read
 }
 
 rule {
   [dn children $Printers]
-      by $org_owners                 write
-      by [dn children $Hosts]        read
-      by [dn children $People]       read
-      by [systemgroup printerqueues] read
+      by $org_owners                      write
+      by [dn children $Hosts]             read
+      by [dn children $People]            read
+      by [systemaccount_sr printerqueues] read
 }
 
 # rules for ou=Groups
@@ -590,15 +609,15 @@ rule {
 rule {
   [dn exact $Groups]
     [attrs children entry objectClass ou]
-      by $org_owners                read
-      by [puavo_dn examomatic]      read
-      by [puavo_dn puavo]           read
-      by [puavo_dn statistics]      read
-      by [dn children $People]      read
-      by [dn children $Hosts]       read
-      by [systemgroup getent]       read
-      by [systemgroup nextcloud]    read
-      by [systemgroup puavo2google] read
+      by $org_owners                  read
+      by [puavo_dn examomatic]        read
+      by [puavo_dn puavo]             read
+      by [puavo_dn statistics]        read
+      by [dn children $People]        read
+      by [dn children $Hosts]         read
+      by [systemaccount getent]       read
+      by [systemaccount nextcloud]    read
+      by [systemaccount puavo2google] read
 }
 
 # deny $admins write access to some school attributes
@@ -644,8 +663,8 @@ rule {
   # allow nextcloud user to read some group information
   [dn subtree $Groups]
     [attrs cn displayName entry member memberUid objectClass]
-      by [systemgroup nextcloud] read
-      by *                       none break
+      by [systemaccount_sr nextcloud] read
+      by *                            none break
 }
 
 rule {
@@ -671,13 +690,13 @@ rule {
 rule {
   # Write permissions for those who can manage users.
   [dn subtree $Groups]
-      by $org_owners             write
-      by $admins                 write  # XXX maybe this_school_admins instead?
-      by [puavo_dn puavo]        read
-      by [puavo_dn pw-mgmt]      read
-      by [dn children $People]   read
-      by [dn children $Hosts]    read
-      by [systemgroup getent]    read
+      by $org_owners               write
+      by $admins                   write  # XXX or this_school_admins?
+      by [puavo_dn puavo]          read
+      by [puavo_dn pw-mgmt]        read
+      by [dn children $People]     read
+      by [dn children $Hosts]      read
+      by [systemaccount_sr getent] read
 }
 
 # rules for ou=People
@@ -694,19 +713,19 @@ rule {
 rule {
   [dn exact $People]
     [attrs children entry objectClass ou]
-      by [puavo_dn email-mgmt]      read
-      by [puavo_dn mfa-mgmt]        read
-      by [puavo_dn puavo]           read
-      by [puavo_dn pw-mgmt]         read
-      by [puavo_dn statistics]      read
-      by [systemgroup addressbook]  read
-      by [systemgroup auth]         read
-      by [systemgroup getent]       read
-      by [systemgroup nextcloud]    read
-      by [systemgroup puavo2google] read
-      by [dn children $People]      read
-      by [dn children $Hosts]       read
-      by anonymous                  auth
+      by [puavo_dn email-mgmt]        read
+      by [puavo_dn mfa-mgmt]          read
+      by [puavo_dn puavo]             read
+      by [puavo_dn pw-mgmt]           read
+      by [puavo_dn statistics]        read
+      by [systemaccount addressbook]  read
+      by [systemaccount auth]         read
+      by [systemaccount getent]       read
+      by [systemaccount nextcloud]    read
+      by [systemaccount puavo2google] read
+      by [dn children $People]        read
+      by [dn children $Hosts]         read
+      by anonymous                    auth
 }
 
 rule {
@@ -756,8 +775,8 @@ rule {
            sn                               \
            telephoneNumber                  \
            uid]
-      by [systemgroup addressbook] read
-      by *                         none break
+      by [systemaccount_sr addressbook] read
+      by *                              none break
 }
 
 # some permissions to "auth"
@@ -769,8 +788,8 @@ rule {
            puavoEduPersonAffiliation \
            puavoRemovalRequestTime   \
            uid]
-      by [systemgroup auth] read
-      by *                  none break
+      by [systemaccount_sr auth] read
+      by *                       none break
 }
 
 # some permissions to service "getent"
@@ -795,8 +814,8 @@ rule {
            sn                               \
            uid                              \
            uidNumber]
-      by [systemgroup getent] read
-      by *                    none break
+      by [systemaccount_sr getent] read
+      by *                         none break
 }
 
 # some permissions to "nextcloud"
@@ -816,8 +835,8 @@ rule {
            sn                \
            telephoneNumber   \
            uid]
-      by [systemgroup nextcloud] read
-      by *                       none break
+      by [systemaccount_sr nextcloud] read
+      by *                            none break
 }
 
 # some permissions to "puavo2google"
@@ -839,8 +858,8 @@ rule {
            puavoSchool                         \
            sn                                  \
            uid]
-      by [systemgroup puavo2google] read
-      by *                          none break
+      by [systemaccount_sr puavo2google] read
+      by *                               none break
 }
 
 # rules needed by email-mgmt (email management user)
@@ -1090,17 +1109,17 @@ rule {
   # Allow organisation owners to change many organisation settings,
   # and most other entities to read them.
   [dn]
-      by $org_owners           write
-      by [dn children $People] read
-      by [dn children $Hosts]  read
-      by [puavo_dn kadmin]     read
-      by [puavo_dn kdc]        read
-      by [puavo_dn monitor]    read
-      by [puavo_dn puavo]      read
-      by [puavo_dn statistics] read
-      by [systemgroup getent]  read
-      by [systemgroup orginfo] read
-      by *                     +dsx
+      by $org_owners             write
+      by [dn children $People]   read
+      by [dn children $Hosts]    read
+      by [puavo_dn kadmin]       read
+      by [puavo_dn kdc]          read
+      by [puavo_dn monitor]      read
+      by [puavo_dn puavo]        read
+      by [puavo_dn statistics]   read
+      by [systemaccount getent]  read
+      by [systemaccount orginfo] read
+      by *                       +dsx
 }
 
 #

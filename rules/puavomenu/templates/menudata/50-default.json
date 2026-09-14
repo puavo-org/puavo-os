@@ -1289,6 +1289,9 @@
         "prusaslicer": {
             "tags": "default"
         },
+        "puavo-ti-nspire-webapp": {
+            "tags": "ti_nspire_cx_cas_ss_webapp"
+        },
         "puavo-user-registration": {
             "tags": "user_registration",
             "condition": "user_registration"
@@ -1569,12 +1572,7 @@
             }
         },
         "sweethome3d": {
-            "type": "web",
-            "url": "https://www.sweethome3d.com/SweetHome3D.jnlp",
-            "name": "Sweet Home 3D",
-            "description": "Sweet Home 3D Interior Design Application",
-            "icon": "/usr/share/icons/Papirus/64x64/apps/sweethome3d.svg",
-            "tags": "graphics, education"
+            "tags": "default, graphics, education"
         },
         "system-config-printer": {
             "tags": "default, utility"
@@ -1834,6 +1832,7 @@
                 "org.kde.kcalc",
                 "speedcrunch",
                 "ti_nspire_cx_cas_ss",
+                "puavo-ti-nspire-webapp",
                 "ti5_nspire_cx_cas_ss",
                 "ti5_nspire_cx_cas_ss_personal",
                 "ti6_nspire_cx",
@@ -2112,6 +2111,7 @@
                 "lumidesktop",
                 "io.github.wxmaxima_developers.wxMaxima",
                 "ti_nspire_cx_cas_ss",
+                "puavo-ti-nspire-webapp",
                 "ti5_nspire_cx_cas_ss",
                 "ti5_nspire_cx_cas_ss_personal",
                 "ti6_nspire_cx_cas_ss",
