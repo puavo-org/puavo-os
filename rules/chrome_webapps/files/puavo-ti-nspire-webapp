@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -eu
+
+# this needs User-Agent trickery
+UA='Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36'
+
+exec puavo-chrome-webapp puavo-ti-nspire-webapp           \
+                         https://nspirecxiicas.ti.com/tcc \
+                         --user-agent="$UA"

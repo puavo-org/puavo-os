@@ -1,0 +1,43 @@
+#!/bin/sh
+
+set -eu
+
+if [ ! -x "/usr/bin/google-chrome-stable.puavopkg" ]; then
+  # we could perhaps fall back to Chromium, but that needs to be considered
+  echo 'Google Chrome is not installed' >&2
+  exit 1
+fi
+
+appname="$1"
+url="$2"
+shift; shift
+
+chrome_profile_dir="${XDG_CONFIG_HOME:-${HOME}/.config}/${appname}"
+
+mkdir -p "$chrome_profile_dir"
+
+if [ ! -e "${chrome_profile_dir}/Default/Preferences" ]; then
+  mkdir -p "${chrome_profile_dir}/Default"
+  printf "%s\n" '{"translate":{"enabled":false}}' \
+    > "${chrome_profile_dir}/Default/Preferences"
+fi
+
+chrome_lock="${chrome_profile_dir}/SingletonLock"
+if [ -L "$chrome_lock" ]; then
+  pid=$(readlink "$chrome_lock")
+  pid=${pid##*-}
+  if ! kill -0 "$pid" 2>/dev/null; then
+    rm -f "${chrome_profile_dir}/SingletonCookie" \
+          "${chrome_profile_dir}/SingletonLock"   \
+          "${chrome_profile_dir}/SingletonSocket"
+  fi
+fi
+
+exec google-chrome-stable.puavopkg           \
+     --app="${url}"                          \
+     --class="$appname"                      \
+     --disable-session-crashed-bubble        \
+     --no-default-browser-check              \
+     --no-first-run                          \
+     --user-data-dir="${chrome_profile_dir}" \
+     "$@"
