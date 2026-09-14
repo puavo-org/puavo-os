@@ -1,7 +1,18 @@
-//! Generates one entry per authority from the authority directory. An entry
-//! holds who the authority is and the keys it signs with, and every key is read
-//! here too, since a key slab cannot read would otherwise only be found out on
-//! a machine that refuses to boot.
+//! Generates the components from the floors file, and one entry per
+//! authority from the authority directory.
+//!
+//! The floors file lists one component per line, its name and the oldest
+//! accepted version:
+//!
+//!     grub 20260101
+//!
+//! generates:
+//!
+//!     pub const COMPONENTS: &[Component] =
+//!         &[Component { name: b"grub", minimum_version: 20260101 }];
+//!
+//! An authority entry holds the authority identity and its public keys. Each
+//! key is parsed at build time to detect invalid keys early.
 //!
 //! The directory the build is pointed at holds one subdirectory per authority.
 //! Anything else kept in one, such as what signs with a key, is ignored:
@@ -33,17 +44,84 @@ use proc_macro2::{Literal, TokenStream};
 use quote::quote;
 use rsa::RsaPublicKey;
 use rsa::pkcs1::DecodeRsaPublicKey;
+use time::macros::format_description;
+use time::{Date, OffsetDateTime};
 
 /// Where the authorities come from, and what the files in one are called.
 const DIRECTORY_VARIABLE: &str = "SLAB_VERIFIER_KEYS";
 const IDENTITY_FILE: &str = "authority.guid";
 const KEY_EXTENSION: &str = "der";
 
+/// Where the floors come from, how a floor is written, and how old one may
+/// get.
+const FLOORS_FILE: &str = "floors";
+const FLOOR_FORMAT: &[time::format_description::BorrowedFormatItem<'_>] =
+    format_description!("[year][month][day]");
+const FLOOR_MAXIMUM_AGE_YEARS: u64 = 2;
+const YEAR_IN_FLOOR: u64 = 10000;
+
 fn main() {
     println!("cargo:rerun-if-env-changed={DIRECTORY_VARIABLE}");
 
+    generate_floors();
+
     if env::var_os("CARGO_FEATURE_VERIFIER").is_some() {
         generate_verifier_data();
+    }
+}
+
+/// Generates the components from the floors file.
+fn generate_floors() {
+    let file = Path::new(FLOORS_FILE);
+    watch(file);
+    let written = fs::read_to_string(file)
+        .unwrap_or_else(|error| panic!("failed to read {file:?}: {error}"));
+
+    let today: u64 = OffsetDateTime::now_utc()
+        .format(FLOOR_FORMAT)
+        .unwrap()
+        .parse()
+        .unwrap();
+    let components: Vec<TokenStream> = written
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .map(|line| generate_floor(line, today))
+        .collect();
+    if components.is_empty() {
+        panic!("no floors listed in {file:?}");
+    }
+
+    let table = quote! {
+        pub const COMPONENTS: &[Component] = &[#(#components),*];
+    };
+
+    let output = PathBuf::from(env::var("OUT_DIR").unwrap()).join("floors.rs");
+    fs::write(&output, table.to_string())
+        .unwrap_or_else(|error| panic!("failed to write {output:?}: {error}"));
+}
+
+/// Generates one floor entry from a line of the floors file, refusing a
+/// version that is not a date or has gone stale.
+fn generate_floor(line: &str, today: u64) -> TokenStream {
+    let (name, version) = line
+        .split_once(char::is_whitespace)
+        .unwrap_or_else(|| panic!("malformed floor '{line}'"));
+    let version = version.trim();
+    Date::parse(version, FLOOR_FORMAT).unwrap_or_else(|error| {
+        panic!("floor '{name}' version {version} is not a date: {error}")
+    });
+
+    let version: u64 = version.parse().unwrap();
+    if version < today - FLOOR_MAXIMUM_AGE_YEARS * YEAR_IN_FLOOR {
+        panic!(
+            "floor '{name}' is over {FLOOR_MAXIMUM_AGE_YEARS} years old, raise it in {FLOORS_FILE}"
+        );
+    }
+
+    let name = Literal::byte_string(name.as_bytes());
+    quote! {
+        Component { name: #name, minimum_version: #version }
     }
 }
 

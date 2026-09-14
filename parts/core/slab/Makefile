@@ -16,7 +16,7 @@ build: $(BIN)
 # with the cargo package, which is required by other components.
 # UEFI requires lld-link as linker, which Debian ships in the lld package,
 # rather than bundled with rustc.
-$(BIN): Cargo.lock Cargo.toml build.rs $(SOURCE_FILES)
+$(BIN): Cargo.lock Cargo.toml build.rs floors $(SOURCE_FILES)
 	RUSTC_BOOTSTRAP=1 RUSTFLAGS='-C linker=lld-link' \
 	  SLAB_VERIFIER_KEYS='$(VERIFIER_KEYS)' \
 	  cargo build --release --target $(TARGET) \

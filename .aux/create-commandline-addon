@@ -28,7 +28,7 @@ version_section="${scratch}/version.section"
 
 # Add version for revocation purposes.
 "$(dirname "$0")/add-bootloader-version-section" \
-  --write-section "$version_section" puavo-command-line 1
+  --write-section "$version_section" puavo-command-line
 
 # TODO: Check SBAT
 ukify build \

@@ -29,6 +29,12 @@ build_slab() {
   make -C "$SLAB_DIRECTORY" test-binary
 }
 
+# Prints the revocation floor of a component from the floors file.
+#   $1  component name
+component_floor() {
+  awk -v name="$1" '$1 == name { print $2 }' "${SLAB_DIRECTORY}/floors"
+}
+
 # Builds a real GRUB image to serve as the next stage.
 #   $1  output path
 build_next_stage() {

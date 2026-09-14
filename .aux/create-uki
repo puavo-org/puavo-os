@@ -152,7 +152,7 @@ bootsplash_image="${art_directory}/bootsplash.bmp"
 # Add version for revocation purposes.
 version_section="${tmpdir}/version.section"
 "$(dirname "$0")/add-bootloader-version-section" \
-  --write-section "$version_section" puavo 1
+  --write-section "$version_section" puavo
 
 # NOTE: By default, power off on emergency instead of dropping to shell
 # NOTE: for security.
