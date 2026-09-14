@@ -38,12 +38,13 @@ verifier = [
   "dep:sha2",
 ]
 
-# Used for internal Secure Boot verifier authorities.
+# Used for internal Secure Boot verifier authorities and the floors table.
 [build-dependencies]
 uuid = "1"
 rsa = "0.9"
 quote = "1"
 proc-macro2 = "1"
+time = { version = "0.3", features = ["formatting", "macros", "parsing"] }
 
 [profile.dev]
 panic = "abort"

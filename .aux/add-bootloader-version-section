@@ -3,9 +3,12 @@
 
 The section is the component name padded with zeros, followed by the version.
 It is placed at the end of the loaded image, so it never overlaps with another section.
+
+The version defaults to the build date as YYYYMMDD.
 """
 
 import argparse
+import datetime
 import struct
 import subprocess
 import tempfile
@@ -22,6 +25,12 @@ def build_section(name, version):
     if len(name_bytes) > NAME_LENGTH:
         raise SystemExit("the component name is too long to be embedded")
     return name_bytes.ljust(NAME_LENGTH, b"\x00") + struct.pack(">Q", version)
+
+
+def build_date_version():
+    """Today in UTC as a YYYYMMDD integer."""
+    today = datetime.datetime.now(datetime.timezone.utc)
+    return int(today.strftime("%Y%m%d"))
 
 
 def add_section(efi_file, section_contents):
@@ -55,7 +64,13 @@ def main():
     )
     parser.add_argument("efi_file", nargs="?")
     parser.add_argument("name")
-    parser.add_argument("version", type=int)
+    parser.add_argument(
+        "version",
+        nargs="?",
+        type=int,
+        default=build_date_version(),
+        help="defaults to the build date as YYYYMMDD",
+    )
     arguments = parser.parse_args()
 
     section_contents = build_section(arguments.name, arguments.version)

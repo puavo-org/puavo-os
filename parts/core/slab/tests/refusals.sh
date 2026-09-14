@@ -15,7 +15,7 @@ COUNTER_INDEX=0x01514B00
 FAILED=0
 
 # Case 1: a next stage below the minimum. A copy of slab stamped as grub
-# version 0, below the grub minimum of 1, stands in for an old next stage. It
+# version 0, below the grub floor, stands in for an old next stage. It
 # is refused before it is ever loaded, so its contents do not matter.
 below_minimum="$WORK/below-minimum"
 mkdir -p "$below_minimum"
@@ -31,7 +31,7 @@ output=$(boot_qemu "$state" "$disk")
 swtpm_stop
 rm -rf "$state"
 assert_contains "below-minimum next stage refused" "$output" \
-  "next stage version 0 below minimum 1, refusing"
+  "next stage version 0 below minimum $(component_floor grub), refusing"
 assert_absent "below-minimum next stage not chainloaded" "$output" \
   "chainloading next stage"
 

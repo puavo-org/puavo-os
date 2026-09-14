@@ -56,7 +56,7 @@ make_test_image() {
     --output "$WORK/$1.efi" "$WORK/$1.unsigned.efi" >/dev/null
 }
 make_test_image unversioned
-make_test_image at-minimum grub 1
+make_test_image at-minimum grub "$(component_floor grub)"
 make_test_image below-minimum grub 0
 
 # An image not signed by any DB certificate. Verify must refuse it through the
@@ -102,7 +102,7 @@ assert_contains "an image with no version was allowed" "$output" \
 assert_contains "an image at the minimum was allowed" "$output" \
   "at-minimum image loaded"
 assert_contains "an image below the minimum was refused by slab" "$output" \
-  "image version 0 below minimum 1, refusing"
+  "image version 0 below minimum $(component_floor grub), refusing"
 assert_absent "an image below the minimum was not loaded" "$output" \
   "below-minimum image loaded"
 assert_contains "an unsigned image was refused by the firmware check" \

@@ -2,8 +2,7 @@
 //!
 //! The list is carried rather than read from a signed file, so the firmware
 //! Secure Boot check on this image vouches for it and no signature code is
-//! needed. Bumping revocation means a new build with a higher `LIST_VERSION`
-//! and shipping it.
+//! needed. Bumping revocation means a new build with a higher LIST_VERSION.
 
 /// Fixed width of a component name, matching the version section.
 pub const NAME_LENGTH: usize = 128;
@@ -20,12 +19,8 @@ pub struct Component {
     pub minimum_version: u64,
 }
 
-/// The per component minimum versions enforced on the next stage.
-pub const COMPONENTS: &[Component] = &[
-    Component { name: b"grub", minimum_version: 1 },
-    Component { name: b"puavo", minimum_version: 1 },
-    Component { name: b"puavo-command-line", minimum_version: 1 },
-];
+// The per component minimum versions to be enforced.
+include!(concat!(env!("OUT_DIR"), "/floors.rs"));
 
 /// Splits a version section into the component name and its version.
 /// Returns `None` when the section is too short to hold them.
