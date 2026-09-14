@@ -10,6 +10,8 @@ depends() {
 }
 
 install() {
+  # Install GNU timeout, because busybox lacks options used in
+  # dracut 99shutdown.
   inst_multiple /sbin/blkid \
     /sbin/fsck \
     /sbin/fsck.ext2 \
@@ -28,6 +30,7 @@ install() {
     $(which jq) \
     $(which losetup) \
     $(which tail) \
+    $(which timeout) \
     $(which veritysetup)
 
   # The root filesystem image is opened through dm-verity
@@ -52,6 +55,7 @@ install() {
   inst_hook pre-pivot 90 "${moddir}/puavo-rootmount.sh"
   inst_hook pre-pivot 91 "${moddir}/puavo-plymouth.sh"
   inst_hook cleanup 20 "${moddir}/puavo-nbd-server.sh"
+  inst_hook pre-shutdown 10 "${moddir}/puavo-release-root.sh"
 
   # Plymouth themes support displaying an image at runtime.
   # The initramfs filesystem is read-only,
