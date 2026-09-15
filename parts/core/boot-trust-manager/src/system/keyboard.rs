@@ -2,7 +2,7 @@ use std::process::Command;
 
 use log::{debug, warn};
 
-use crate::utils::efi;
+use crate::system::efi;
 
 const LOADKEYS: &str = "/usr/bin/loadkeys";
 
@@ -62,7 +62,7 @@ fn load(keymap: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utils::efi::{self, testing::FakeEfiProvider};
+    use crate::system::efi::{self, testing::FakeEfiProvider};
     use serial_test::serial;
 
     fn with_configured_keymap(keymap: Option<&str>) {
