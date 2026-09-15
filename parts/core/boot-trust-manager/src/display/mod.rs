@@ -10,6 +10,7 @@ use crate::{
 
 pub mod console;
 pub mod plymouth;
+pub mod recovery_qr;
 
 /// How long to wait after showing a message with Plymouth?
 const DISPLAY_STOP_DURATION: u64 = 1000;

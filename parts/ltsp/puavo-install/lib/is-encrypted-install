@@ -27,7 +27,7 @@ if ! jq_output=$(
         [
           .blockdevices[]
             | select(.type == "disk")
-            | .children[]
+            | .children[]?
             | select(.fstype == "crypto_LUKS")
             | .children[]?
             | .mountpoints[]?

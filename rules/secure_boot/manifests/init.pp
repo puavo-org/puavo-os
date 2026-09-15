@@ -9,5 +9,11 @@ class secure_boot {
       ensure  => directory,
       recurse => true,
       source  => 'puppet:///modules/secure_boot/db';
+
+    "${base_directory}/db.esl":
+      source => 'puppet:///modules/secure_boot/db.esl';
+
+    "${base_directory}/built":
+      source => 'puppet:///modules/secure_boot/built';
   }
 }

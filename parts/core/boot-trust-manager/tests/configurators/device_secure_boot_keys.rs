@@ -7,7 +7,7 @@ use std::{
 use serial_test::serial;
 use tempfile::TempDir;
 
-use puavo_boot_trust_manager::{
+use boot_trust_manager::{
     configurators::device_secure_boot_keys::install_keys,
     devices::boot_vault::BootVaultResources,
 };

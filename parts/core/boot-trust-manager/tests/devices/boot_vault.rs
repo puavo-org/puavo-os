@@ -1,13 +1,14 @@
 use std::path::PathBuf;
+use std::process::Command;
 
 use serial_test::serial;
 
 use crate::common::{display::TestDisplay, fixture_directory, luks, tpm};
-use puavo_boot_trust_manager::{
+use boot_trust_manager::{
     configurators::enrollment::EnrollmentConfigurator,
     devices::boot_vault::{BootVault, BootVaultUnlockMethod},
     display::UserDisplay,
-    utils::luks_tpm_token_manager::LuksTpmTokenManager,
+    luks::tokens::LuksTpmTokenManager,
 };
 
 fn setup() -> luks::TestImages {
@@ -21,7 +22,7 @@ fn display() -> Box<dyn UserDisplay> {
 
 /// Helper to set up loop device for primary partition
 fn setup_primary_loop(images: &luks::TestImages) -> String {
-    let primary_loop = std::process::Command::new("losetup")
+    let primary_loop = Command::new("losetup")
         .args(["--find", "--show", &images.primary])
         .output()
         .expect("Failed to set up loop device for primary");
@@ -94,9 +95,7 @@ fn resources_read_write_property() {
     vault.mount(&PathBuf::from(&images.vault), &*display()).unwrap();
 
     let resources = vault.resources();
-    resources
-        .write_property("test-property", "test-value".to_string())
-        .unwrap();
+    resources.write_property("test-property", "test-value").unwrap();
 
     let value = resources.read_property("test-property").unwrap();
     assert_eq!(value, Some("test-value".to_string()));

@@ -21,5 +21,8 @@ echo "==> network next stage"
 echo "==> shim lock"
 "$TESTS_DIRECTORY/shim-lock.sh"
 
+echo "==> measurements"
+"$TESTS_DIRECTORY/measurements.sh"
+
 echo "==> counter semantics"
 "$TESTS_DIRECTORY/counter-semantics.sh"

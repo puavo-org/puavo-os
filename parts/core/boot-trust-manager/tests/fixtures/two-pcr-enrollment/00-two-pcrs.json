@@ -2,6 +2,9 @@
   "name": "two-pcr-enrollment",
   "version": 1,
   "policy": {
-    "tpm2-pcrs": ["16:sha256", "23:sha256"]
+    "tpm2-pcrs": {
+      "16:sha256": null,
+      "23:sha256": null
+    }
   }
 }

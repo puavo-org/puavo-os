@@ -1,4 +1,8 @@
-use std::{fs, path::PathBuf, process::Command};
+use std::{
+    fs, mem,
+    path::{Path, PathBuf},
+    process::Command,
+};
 
 use log::{debug, error, info, warn};
 
@@ -13,15 +17,15 @@ use crate::{
     },
     display::{UserDisplay, choose_display},
     error::PuavoError,
-    utils::{
+    luks::{tokens::LuksTpmTokenManager, unlock_info},
+    system::{
         efi,
         locale::{self, Strings},
-        luks_tpm_token_manager::LuksTpmTokenManager,
         mount::{MountGuard, unmount},
-        reboot, tpm,
+        reboot,
         udev::filesystem_type,
-        unlock_info,
     },
+    tpm,
 };
 
 /// LUKS device name for the root device
@@ -168,9 +172,8 @@ impl BootTrustManager {
             warn!("Failed to clear TPM dictionary lockout: {}", error);
         }
 
-        // Configurators may request a reboot upon exit. For example,
-        // Secure Boot updates require resealing on the next reboot,
-        // and user interaction during that window is undesirable.
+        // Configurators may request a reboot upon exit
+        // (e.g. Secure Boot update).
         if reboot::is_requested() {
             let _ = display.show_message(locale::strings().rebooting);
         }
@@ -217,7 +220,7 @@ impl BootTrustManager {
         // EFI partition is automatically unmounted here
     }
 
-    fn install_locale(efi_mountpoint: &PathBuf) {
+    fn install_locale(efi_mountpoint: &Path) {
         let locale_value =
             locale::read_locale_from_grub_environment(efi_mountpoint);
         locale::set_strings(Strings::for_locale(locale_value));
@@ -383,8 +386,8 @@ impl BootTrustManager {
         info!("Boot vault mounted at {}", VAULT_MOUNTPOINT);
 
         // Prevent automatic cleanup by forgetting the resources
-        std::mem::forget(efi_mount);
-        std::mem::forget(boot_vault);
+        mem::forget(efi_mount);
+        mem::forget(boot_vault);
 
         Ok(VAULT_MOUNTPOINT.into())
     }

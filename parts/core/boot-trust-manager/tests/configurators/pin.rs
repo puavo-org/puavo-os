@@ -1,14 +1,15 @@
 use std::path::PathBuf;
+use std::process::Command;
 
 use serial_test::serial;
 use zeroize::Zeroizing;
 
 use crate::common::{display::TestDisplay, efi, luks, tpm};
-use puavo_boot_trust_manager::{
+use boot_trust_manager::{
     configurators::{Configurator, pin::PinConfigurator},
     devices::boot_vault::BootVault,
     display::UserDisplay,
-    utils::luks_tpm_token_manager::LuksTpmTokenManager,
+    luks::tokens::LuksTpmTokenManager,
 };
 
 fn setup() -> luks::TestImages {
@@ -23,7 +24,7 @@ fn display() -> Box<dyn UserDisplay> {
 
 /// Helper to set up loop device for primary partition
 fn setup_primary_loop(images: &luks::TestImages) -> String {
-    let primary_loop = std::process::Command::new("losetup")
+    let primary_loop = Command::new("losetup")
         .args(["--find", "--show", &images.primary])
         .output()
         .expect("Failed to set up loop device for primary");

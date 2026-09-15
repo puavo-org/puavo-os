@@ -5,7 +5,7 @@ use udev::Device;
 
 use crate::{
     devices::block_device::BlockDevice, error::PuavoError,
-    utils::udev::device_from_device_node_path,
+    system::udev::device_from_device_node_path,
 };
 
 /// Represents the EFI boot device for the current boot.

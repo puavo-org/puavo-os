@@ -1,0 +1,103 @@
+#!/bin/sh
+# Captures what a boot of Microsoft signed shim measured, under the variables
+# the firmware ships with. A certificate made for the run is added to the
+# database, so that shim accepts the measurements binary.
+#
+#   $1  capture directory, a temporary one when absent
+set -u
+
+SCRIPTS_DIRECTORY="$(cd "$(dirname "$0")" && pwd)"
+REPOSITORY_ROOT="$(git -C "${SCRIPTS_DIRECTORY}" rev-parse --show-toplevel)"
+SLAB_DIRECTORY="${REPOSITORY_ROOT}/parts/core/slab"
+BINARY_DIRECTORY="${SLAB_DIRECTORY}/target/x86_64-unknown-uefi/debug"
+MEASUREMENTS="${BINARY_DIRECTORY}/measurements.efi"
+
+OVMF_CODE=/usr/share/OVMF/OVMF_CODE_4M.secboot.fd
+OVMF_VARIABLES=/usr/share/OVMF/OVMF_VARS_4M.ms.fd
+SHIM=/usr/lib/shim/shimx64.efi.signed
+
+# Seconds to wait for a boot. The machine powers itself off well before this.
+BOOT_TIMEOUT=90
+
+CAPTURE="${1:-$(mktemp -d)}"
+GUID="d4a2e1c0-1111-2222-3333-444455556666"
+
+WORK=$(mktemp -d)
+STATE=$(mktemp -d)
+cleanup() {
+  [ -n "${SWTPM_PROCESS_ID:-}" ] && kill "${SWTPM_PROCESS_ID}" 2>/dev/null
+  rm -rf "${WORK}" "${STATE}"
+}
+trap cleanup EXIT
+
+make -C "${SLAB_DIRECTORY}" measurements
+
+# Shim requires an SBAT section. It is placed after the last section of the
+# image.
+image_base=$(objdump -p "${MEASUREMENTS}" | awk '/^ImageBase/ { print $2 }')
+image_size=$(objdump -p "${MEASUREMENTS}" | awk '/^SizeOfImage/ { print $2 }')
+sbat_address=$(printf '%#x' $((0x${image_base} + 0x${image_size})))
+objcopy --add-section .sbat="${SCRIPTS_DIRECTORY}/sbat.csv" \
+  --change-section-vma .sbat="${sbat_address}" \
+  --set-section-flags .sbat=contents,alloc,load,readonly,data \
+  "${MEASUREMENTS}" "${WORK}/measurements.efi"
+
+openssl req -x509 -newkey rsa:4096 -nodes -keyout "${WORK}/db.key" \
+  -out "${WORK}/db.crt" -subj "/CN=Capture Measurements/" -days 3650 \
+  2>/dev/null
+
+# The certificate of the run is added beside the Microsoft ones in the variable
+# store.
+virt-fw-vars -i "${OVMF_VARIABLES}" -o "${STATE}/vars.fd" \
+  --add-db "${GUID}" "${WORK}/db.crt" --secure-boot >/dev/null
+
+sbsign --key "${WORK}/db.key" --cert "${WORK}/db.crt" \
+  --output "${WORK}/measurements.signed.efi" "${WORK}/measurements.efi" \
+  >/dev/null
+
+# Shim loads the next stage from its own directory, so the measurements binary
+# is placed there.
+esp="${WORK}/esp.img"
+dd if=/dev/zero of="${esp}" bs=1M count=64 status=none
+mkfs.vfat -F32 "${esp}" >/dev/null
+mmd -i "${esp}" ::/EFI ::/EFI/BOOT
+mcopy -i "${esp}" "${SHIM}" ::/EFI/BOOT/BOOTX64.EFI
+mcopy -i "${esp}" "${WORK}/measurements.signed.efi" ::/EFI/BOOT/grubx64.efi
+
+disk="${WORK}/disk.img"
+truncate -s 68M "${disk}"
+sgdisk -o -n 1:2048:+64M -t 1:ef00 -c 1:ESP "${disk}" >/dev/null
+dd if="${esp}" of="${disk}" bs=512 seek=2048 conv=notrunc status=none
+
+swtpm socket --tpm2 --tpmstate dir="${STATE}" \
+  --ctrl type=unixio,path="${STATE}/sock" --flags startup-clear &
+SWTPM_PROCESS_ID=$!
+sleep 1
+
+output=$(timeout "${BOOT_TIMEOUT}" qemu-system-x86_64 \
+  -machine q35,accel=kvm:tcg -m 256 \
+  -drive if=pflash,format=raw,readonly=on,file="${OVMF_CODE}" \
+  -drive if=pflash,format=raw,file="${STATE}/vars.fd" \
+  -drive format=raw,file="${disk}" \
+  -chardev socket,id=chrtpm,path="${STATE}/sock" \
+  -tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-crb,tpmdev=tpm0 \
+  -display none -serial stdio -no-reboot </dev/null 2>&1)
+
+mkdir -p "${CAPTURE}"
+
+# The console output has CRLF line endings and shim's own messages. The
+# capture is between the two marker lines.
+printf '%s\n' "${output}" | tr -d '\r' \
+  | awk '/^measurements complete$/ { exit }
+         printing { print }
+         /^measurements begin$/ { printing = 1 }' \
+  > "${CAPTURE}/measurements"
+
+cat > "${CAPTURE}/README" <<EOF
+The capture holds the boot measurements the tests compare against. Captured
+by tests/scripts/capture-microsoft-boot, Microsoft signed shim under the
+variables the firmware ships with, then the measurements binary.
+EOF
+
+printf '%s\n' "${output}" | tr -d '\r'
+echo "capture written to ${CAPTURE}"

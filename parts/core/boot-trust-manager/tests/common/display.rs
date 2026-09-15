@@ -1,7 +1,7 @@
 use std::cell::{Cell, RefCell};
 
-use puavo_boot_trust_manager::display::UserDisplay;
-use puavo_boot_trust_manager::error::PuavoError;
+use boot_trust_manager::display::UserDisplay;
+use boot_trust_manager::error::PuavoError;
 use zeroize::Zeroizing;
 
 /// A test display that can be configured with sequences of responses.

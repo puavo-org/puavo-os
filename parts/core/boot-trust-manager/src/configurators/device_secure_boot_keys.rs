@@ -12,7 +12,7 @@ use crate::{
     devices::boot_vault::{BootVault, BootVaultResources},
     display::UserDisplay,
     error::PuavoError,
-    utils::luks_tpm_token_manager::LuksTpmTokenManager,
+    luks::tokens::LuksTpmTokenManager,
 };
 
 /// Userspace location for the device-specific Secure Boot key and

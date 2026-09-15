@@ -1,13 +1,14 @@
 #!/bin/sh
 set -eu
 
-if [ "$#" -ne 2 ]; then
-  echo "Usage: $0 <boot-vault-mountpoint> <revocation-list>" >&2
+if [ "$#" -ne 3 ]; then
+  echo "Usage: $0 <boot-vault-mountpoint> <revocation-list> <date>" >&2
   exit 1
 fi
 
 boot_vault_mountpoint=$1
 revocation_list=$2
+signed_at=$3
 
 kek_private_key="${boot_vault_mountpoint}/kek.priv"
 
@@ -20,8 +21,19 @@ done
 
 # Remove the immutable attribute from efivarfs entries for dbx.
 for entry in /sys/firmware/efi/efivars/dbx-*; do
-  [ -e "$entry" ] && chattr -i "$entry" 2>/dev/null || true
+  if [ -e "$entry" ]; then
+    chattr -i "$entry" 2>/dev/null || true
+  fi
 done
 
-# Append the revocation list to dbx.
-efi-updatevar -a -f "$revocation_list" -k "$kek_private_key" dbx
+kek_certificate="${boot_vault_mountpoint}/kek.pem"
+
+signed_update=$(mktemp /tmp/dbx.auth.XXXXXX)
+trap 'rm -f "$signed_update"' EXIT
+
+sign-efi-sig-list -t "$signed_at" \
+  -k "$kek_private_key" -c "$kek_certificate" \
+  dbx "$revocation_list" "$signed_update"
+
+# Replace dbx with the whole list.
+efi-updatevar -f "$signed_update" dbx

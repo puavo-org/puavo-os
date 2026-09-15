@@ -1,0 +1,15 @@
+#!/bin/sh
+# Captures the TPM event logs of the boots the tests are designed against.
+set -eu
+
+SCRIPTS_DIRECTORY="$(cd "$(dirname "$0")" && pwd)"
+TESTS_DIRECTORY="$(cd "${SCRIPTS_DIRECTORY}/.." && pwd)"
+REPOSITORY_ROOT="$(git -C "${SCRIPTS_DIRECTORY}" rev-parse --show-toplevel)"
+SLAB_DIRECTORY="${REPOSITORY_ROOT}/parts/core/slab"
+FIXTURES="${TESTS_DIRECTORY}/fixtures/secure-boot"
+
+echo "==> slab boot"
+sh "${SLAB_DIRECTORY}/tests/measurements.sh" "${FIXTURES}/slab-boot"
+
+echo "==> Microsoft shim boot"
+"${SCRIPTS_DIRECTORY}/capture-microsoft-boot" "${FIXTURES}/microsoft-boot"

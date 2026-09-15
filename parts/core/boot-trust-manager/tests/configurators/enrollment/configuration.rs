@@ -1,10 +1,12 @@
+use std::fs;
 use std::path::PathBuf;
+use std::process::Command;
 
-use puavo_boot_trust_manager::{
+use boot_trust_manager::{
     boot_trust_manager::BootTrustManager,
     configurators::{Configurator, enrollment::EnrollmentConfigurator},
     devices::boot_vault::BootVault,
-    utils::luks_tpm_token_manager::LuksTpmTokenManager,
+    luks::tokens::LuksTpmTokenManager,
 };
 use serial_test::serial;
 use zeroize::Zeroizing;
@@ -159,7 +161,7 @@ fn run_configurators_enrolls_only_boot_vault() {
     assert!(!configurators.is_empty(), "Expected at least one configurator");
 
     // Set up loop device for primary partition
-    let primary_loop = std::process::Command::new("losetup")
+    let primary_loop = Command::new("losetup")
         .args(["--find", "--show", &images.primary])
         .output()
         .expect("Failed to set up loop device for primary");
@@ -206,8 +208,7 @@ fn run_configurators_enrolls_only_boot_vault() {
 fn empty_enrollment_directory_returns_no_configurators() {
     let images = setup();
     let empty_dir = format!("{}/empty-enrollment", images.directory);
-    std::fs::create_dir_all(&empty_dir)
-        .expect("Failed to create empty directory");
+    fs::create_dir_all(&empty_dir).expect("Failed to create empty directory");
 
     let configurators = EnrollmentConfigurator::from_directory(&empty_dir)
         .expect("Failed to load from empty directory");
@@ -260,7 +261,11 @@ fn loads_multiple_enrollment_configurations() {
     assert_eq!(first.name, "first-enrollment");
     assert_eq!(first.version, 1);
     assert_eq!(
-        first.policy.specific_pcrs_expressions,
+        first
+            .policy
+            .specific_pcrs
+            .as_ref()
+            .map(|pcrs| pcrs.keys().cloned().collect::<Vec<String>>()),
         Some(vec!["7:sha256".to_string()])
     );
     assert!(first.policy.public_key_pcrs_expressions.is_empty());
@@ -269,7 +274,11 @@ fn loads_multiple_enrollment_configurations() {
     assert_eq!(second.name, "second-enrollment");
     assert_eq!(second.version, 2);
     assert_eq!(
-        second.policy.specific_pcrs_expressions,
+        second.policy.specific_pcrs.as_ref().map(|pcrs| pcrs
+            .keys()
+            .cloned()
+            .collect::<Vec<String>>(
+        )),
         Some(vec!["8:sha256".to_string()])
     );
     assert!(second.policy.public_key_pcrs_expressions.is_empty());
@@ -278,7 +287,11 @@ fn loads_multiple_enrollment_configurations() {
     assert_eq!(third.name, "third-enrollment");
     assert_eq!(third.version, 3);
     assert_eq!(
-        third.policy.specific_pcrs_expressions,
+        third
+            .policy
+            .specific_pcrs
+            .as_ref()
+            .map(|pcrs| pcrs.keys().cloned().collect::<Vec<String>>()),
         Some(vec!["11:sha256".to_string()])
     );
     assert_eq!(

@@ -241,6 +241,9 @@ rootfs-image: check-buildhost $(rootfs_dir) $(image_dir)
 	    '$(rootfs_dir).var_cache_backup/'
 	$(_sudo) .aux/set-image-release '$(rootfs_dir)' \
 	    '$(_image_file)' '$(release_name)'
+	$(_sudo) .aux/check-secure-boot-database \
+	    'rules/secure_boot/files/db' \
+	    '$(rootfs_dir)/etc/puavo-secure-boot/db.esl'
 	$(_sudo) .aux/create-uki-files '$(rootfs_dir)/boot' \
 	    '$(rootfs_dir)/puavo-os/config/' '$(image_class)' '$(_image_file)'
 	$(_sudo) .aux/sign-bootloaders '$(rootfs_dir)' '$(rootfs_dir)/puavo-os/config/boot_keys/'

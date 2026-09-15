@@ -89,6 +89,6 @@ pub trait BlockDevice {
             )
         };
 
-        if result == 0 { Ok(()) } else { Err(std::io::Error::last_os_error()) }
+        if result == 0 { Ok(()) } else { Err(io::Error::last_os_error()) }
     }
 }

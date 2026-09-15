@@ -17,14 +17,12 @@ use crate::{
         unlock_restrictions::UnlockRestrictions,
     },
     display::UserDisplay,
+    display::recovery_qr,
     error::PuavoError,
-    utils::{
-        keyboard, locale,
-        luks_tpm_token_manager::{LuksTpmTokenManager, MAX_TOKENS},
-        mount::unmount,
-        recovery_qr, tpm,
-        udev::device_from_device_node_path,
-    },
+    luks::tokens::{LuksTpmTokenManager, MAX_TOKENS},
+    secure_boot::update::EnrolledDatabase,
+    system::{keyboard, locale, mount::unmount, udev::device_from_device_node_path},
+    tpm,
 };
 
 /// Relative path (within the EFI partition) to the boot vault image.
@@ -58,8 +56,8 @@ pub const VAULT_FILESYSTEM_TYPE: &str = "ext4";
 pub const VAULT_RECOVERY_KEY: &str = "recovery.key";
 const PCR_STATE_FILENAME: &str = "pcr.state";
 const UNLOCK_RESTRICTIONS_FILENAME: &str = "unlock.restrictions.json";
-const DB_VERSION_PROPERTY: &str = "db.version";
-const DBX_VERSION_PROPERTY: &str = "dbx.version";
+
+const ENROLLED_DATABASE_PROPERTY: &str = "enrolled.json";
 
 const PK_PRIVATE_KEY_FILENAME: &str = "pk.priv";
 const PK_CERTIFICATE_FILENAME: &str = "pk.pem";
@@ -699,39 +697,36 @@ impl BootVaultResources {
         self.mountpoint.join(SECURE_BOOT_CERTIFICATE_FILENAME)
     }
 
-    /// Read the installed Secure Boot db version from the boot vault.
-    ///
-    /// Returns `0` when no version has been recorded yet.
-    pub fn db_version(&self) -> Result<u32, PuavoError> {
-        self.read_version(DB_VERSION_PROPERTY)
+    /// The database enrolled for the named Secure Boot variable, or None when
+    /// none was enrolled.
+    pub fn enrolled_database(
+        &self,
+        name: &str,
+    ) -> Result<Option<EnrolledDatabase>, PuavoError> {
+        let property = format!("{name}.{ENROLLED_DATABASE_PROPERTY}");
+
+        let Some(recorded) = self.read_property(&property)? else {
+            return Ok(None);
+        };
+
+        serde_json::from_str(&recorded)
+            .map(Some)
+            .map_err(|_| PuavoError::PropertyParseError(property))
     }
 
-    /// Persist the installed Secure Boot db version in the boot vault.
-    pub fn set_db_version(&self, version: u32) -> Result<(), PuavoError> {
-        self.write_property(DB_VERSION_PROPERTY, version.to_string())
-    }
+    /// Records the database enrolled for a Secure Boot variable.
+    pub fn set_enrolled_database(
+        &self,
+        name: &str,
+        enrolled: &EnrolledDatabase,
+    ) -> Result<(), PuavoError> {
+        let recorded = serde_json::to_string(enrolled)
+            .map_err(PuavoError::EnrollmentStateError)?;
 
-    /// Read the installed Secure Boot dbx version from the boot vault.
-    ///
-    /// Returns `0` when no version has been recorded yet.
-    pub fn dbx_version(&self) -> Result<u32, PuavoError> {
-        self.read_version(DBX_VERSION_PROPERTY)
-    }
-
-    /// Persist the installed Secure Boot dbx version in the boot vault.
-    pub fn set_dbx_version(&self, version: u32) -> Result<(), PuavoError> {
-        self.write_property(DBX_VERSION_PROPERTY, version.to_string())
-    }
-
-    /// Read a version property, returning `0` when absent.
-    fn read_version(&self, key: &str) -> Result<u32, PuavoError> {
-        match self.read_property(key)? {
-            Some(value) => value
-                .trim()
-                .parse::<u32>()
-                .map_err(|_| PuavoError::PropertyParseError(key.to_string())),
-            None => Ok(0),
-        }
+        self.write_property(
+            &format!("{name}.{ENROLLED_DATABASE_PROPERTY}"),
+            recorded,
+        )
     }
 
     /// Save unlock restrictions to the boot vault.

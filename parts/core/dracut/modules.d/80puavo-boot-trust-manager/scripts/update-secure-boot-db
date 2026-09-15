@@ -1,19 +1,18 @@
 #!/bin/sh
 set -eu
 
-if [ "$#" -ne 2 ]; then
-  echo "Usage: $0 <boot-vault-mountpoint> <efi-signature-list>" >&2
+if [ "$#" -ne 3 ]; then
+  echo "Usage: $0 <boot-vault-mountpoint> <efi-signature-list> <date>" >&2
   exit 1
 fi
 
 boot_vault_mountpoint=$1
 efi_signature_list=$2
+signed_at=$3
 
 kek_private_key="${boot_vault_mountpoint}/kek.priv"
-kek_certificate="${boot_vault_mountpoint}/kek.pem"
-device_certificate="${boot_vault_mountpoint}/secure-boot.pem"
 
-for file in "$kek_private_key" "$kek_certificate" "$device_certificate" "$efi_signature_list"; do
+for file in "$kek_private_key" "$efi_signature_list"; do
   if [ ! -f "$file" ]; then
     echo "error: required file not found: ${file}" >&2
     exit 2
@@ -22,17 +21,23 @@ done
 
 # Remove the immutable attribute from efivarfs entries for db.
 for entry in /sys/firmware/efi/efivars/db-*; do
-  [ -e "$entry" ] && chattr -i "$entry" 2>/dev/null || true
+  if [ -e "$entry" ]; then
+    chattr -i "$entry" 2>/dev/null || true
+  fi
 done
 
-# Sign the EFI signature list with the KEK to produce an authenticated variable update.
+kek_certificate="${boot_vault_mountpoint}/kek.pem"
+
 signed_update=$(mktemp /tmp/db.auth.XXXXXX)
 trap 'rm -f "$signed_update"' EXIT
 
-sign-efi-sig-list -a -k "$kek_private_key" -c "$kek_certificate" db "$efi_signature_list" "$signed_update"
+# The firmware rejects an update whose timestamp is not later than the stored
+# one. The build date of the database is the same on every device, unlike the
+# clock.
+sign-efi-sig-list -t "$signed_at" \
+  -k "$kek_private_key" -c "$kek_certificate" \
+  db "$efi_signature_list" "$signed_update"
 
-# Enroll the device certificate, replacing db contents entirely.
-efi-updatevar -c "$device_certificate" -k "$kek_private_key" db
-
-# Append the new signed list to db.
-efi-updatevar -a -f "$signed_update" db
+# Replace db with the whole list, so the variable holds exactly the signed
+# bytes.
+efi-updatevar -f "$signed_update" db

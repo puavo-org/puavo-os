@@ -1,3 +1,5 @@
+use std::env;
+
 pub mod display;
 pub mod efi;
 pub mod luks;
@@ -7,7 +9,7 @@ pub const TEST_ROOT: &str = "/tmp/boot-trust-manager-test-root";
 
 pub fn tests_directory() -> String {
     let current_directory =
-        std::env::current_dir().expect("Failed to get current directory");
+        env::current_dir().expect("Failed to get current directory");
     format!("{}/tests", current_directory.display())
 }
 

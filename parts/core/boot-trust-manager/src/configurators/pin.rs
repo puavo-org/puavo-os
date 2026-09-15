@@ -6,7 +6,8 @@ use crate::{
     devices::boot_vault::{BootVault, BootVaultUnlockMethod},
     display::UserDisplay,
     error::PuavoError,
-    utils::{efi, locale, luks_tpm_token_manager::LuksTpmTokenManager},
+    luks::tokens::LuksTpmTokenManager,
+    system::{efi, locale},
 };
 
 /// Reason for PIN configurator activation
@@ -196,7 +197,7 @@ impl Configurator for PinConfigurator {
         // This avoids testing tokens, which could cause TPM lockout issues.
         boot_vault.set_enrollment_required(true);
 
-        info!("PIN change staged, enrollment required");
+        info!("PIN change pending, enrollment required");
         Ok(())
     }
 

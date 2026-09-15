@@ -5,8 +5,7 @@ use log::{error, info, warn};
 
 use crate::{
     configurators::Configurator, devices::boot_vault::BootVault,
-    display::UserDisplay, error::PuavoError,
-    utils::luks_tpm_token_manager::LuksTpmTokenManager,
+    display::UserDisplay, error::PuavoError, luks::tokens::LuksTpmTokenManager,
 };
 
 /// Path to the server signing public key. When

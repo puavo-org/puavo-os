@@ -9,8 +9,7 @@ secure_boot_directory="/etc/puavo-secure-boot"
 db_private_key="${output_directory}/secure-boot.priv"
 db_pem="${output_directory}/secure-boot.pem"
 db_auth="${output_directory}/db.auth"
-db_version="${output_directory}/db.version"
-dbx_version="${output_directory}/dbx.version"
+db_enrolled="${output_directory}/db.enrolled.json"
 
 # Device-specific Platform Key (PK)
 pk_private_key="${output_directory}/pk.priv"
@@ -52,20 +51,23 @@ cleanup() { rm -rf "$scratch"; }
 trap cleanup EXIT INT TERM
 guid='7cb44677-9bb9-4504-bb8f-923def5fa3b1'
 
-# The device DB and the DB signature list fragments combine into the
-# enrolled DB
+# The enrolled DB is the device certificate followed by the image database.
 db_esl="${scratch}/db.esl"
 cert-to-efi-sig-list -g "$guid" "$db_pem" "$db_esl"
-db_esl_fragment_found=false
-for db_esl_fragment in "${secure_boot_directory}"/db/*.esl; do
-  [ -f "$db_esl_fragment" ] || continue
-  cat "$db_esl_fragment" >> "$db_esl"
-  db_esl_fragment_found=true
-done
-if [ "$db_esl_fragment_found" != true ]; then
-  echo "error: no DB signature list fragments in ${secure_boot_directory}/db" >&2
+image_db_esl="${secure_boot_directory}/db.esl"
+
+if [ ! -f "$image_db_esl" ]; then
+  echo "error: no Secure Boot database at ${image_db_esl}" >&2
   exit 1
 fi
+
+built_file="${secure_boot_directory}/built"
+if [ ! -f "$built_file" ]; then
+  echo "error: no Secure Boot database date at ${built_file}" >&2
+  exit 1
+fi
+
+cat "$image_db_esl" >> "$db_esl"
 
 # Build signature list for the device KEK
 kek_esl="${scratch}/KEK.esl"
@@ -75,12 +77,28 @@ cert-to-efi-sig-list -g "$guid" "$kek_pem" "$kek_esl"
 pk_esl="${scratch}/PK.esl"
 cert-to-efi-sig-list -g "$guid" "$pk_pem" "$pk_esl"
 
-sign-efi-sig-list -k "$kek_private_key" -c "$kek_pem" db "$db_esl" "$db_auth"
-sign-efi-sig-list -k "$pk_private_key" -c "$pk_pem" KEK "$kek_esl" "$kek_auth"
-sign-efi-sig-list -k "$pk_private_key" -c "$pk_pem" PK "$pk_esl" "$pk_auth"
+# The firmware rejects an update whose timestamp is not later than the stored
+# one, so the date comes from the database, not from the clock of this machine.
+built=$(cat "$built_file")
+case $built in
+  [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]) ;;
+  *)
+    echo "error: '${built}' in ${built_file} is not a build date in the form YYYYMMDDHHMMSS" >&2
+    exit 1
+    ;;
+esac
+signed_at=$(echo "$built" \
+  | sed -E 's/(....)(..)(..)(..)(..)(..)/\1-\2-\3 \4:\5:\6/')
 
-# Save the DB and DBX version
-printf %s 1 > "$db_version"
-printf %s 1 > "$dbx_version"
+sign-efi-sig-list -t "$signed_at" -k "$kek_private_key" -c "$kek_pem" \
+  db "$db_esl" "$db_auth"
+sign-efi-sig-list -t "$signed_at" -k "$pk_private_key" -c "$pk_pem" \
+  KEK "$kek_esl" "$kek_auth"
+sign-efi-sig-list -t "$signed_at" -k "$pk_private_key" -c "$pk_pem" \
+  PK "$pk_esl" "$pk_auth"
+
+# The enrolled database, read by the boot trust manager to detect a newer one.
+printf '{"digest":"%s","built":%s}\n' \
+  "$(sha256sum "$image_db_esl" | cut -d' ' -f1)" "$built" > "$db_enrolled"
 
 echo "successfully created device Secure Boot keys"
