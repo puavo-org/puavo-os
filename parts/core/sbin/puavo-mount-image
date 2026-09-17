@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+# Mount an image file read-only on a new loop device.
+#
+# A plain read-only mount of the file reuses a loop device that is
+# already attached to it. That device may be held exclusively by
+# another user (e.g. verity), and then the mount fails. A new loop
+# device has no holder.
+#
+# Usage: puavo-mount-image <image> <mountpoint>
+
+set -eu
+
+if [ $# -ne 2 ]; then
+  echo "Usage: $(basename "$0") <image> <mountpoint>" >&2
+  exit 1
+fi
+
+image=$1
+mountpoint=$2
+
+device=$(losetup --read-only --find --show "$image")
+
+if ! mount -o ro "$device" "$mountpoint"; then
+  losetup --detach "$device"
+  exit 1
+fi

@@ -1,0 +1,23 @@
+#!/bin/sh
+#
+# Unmount an image mounted with puavo-mount-image and free its loop
+# device. A mount that is not on a loop device is only unmounted.
+#
+# Usage: puavo-unmount-image <mountpoint>
+
+set -eu
+
+if [ $# -ne 1 ]; then
+  echo "Usage: $(basename "$0") <mountpoint>" >&2
+  exit 1
+fi
+
+mountpoint=$1
+
+device=$(findmnt --noheadings --output SOURCE "$mountpoint")
+
+umount "$mountpoint"
+
+case "$device" in
+  /dev/loop*) losetup --detach "$device" ;;
+esac

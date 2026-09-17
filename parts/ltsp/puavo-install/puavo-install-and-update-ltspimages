@@ -992,8 +992,8 @@ run_image_preinst_hook() {
   # this should do at least grub configuration update
 
   mkdir -p "${images_dir}/mnt"
-  umount -f "${images_dir}/mnt" 2>/dev/null || true
-  mount -o ro "$imagepath" "${images_dir}/mnt"
+  puavo-unmount-image "${images_dir}/mnt" 2>/dev/null || true
+  puavo-mount-image "$imagepath" "${images_dir}/mnt"
 
   if [ -n "$hosttype" ]; then
     "${images_dir}/mnt/${puavoinstall_libdir}/puavo-image-preinst" \
@@ -1002,7 +1002,7 @@ run_image_preinst_hook() {
     "${images_dir}/mnt/${puavoinstall_libdir}/puavo-image-preinst"
   fi
 
-  umount "${images_dir}/mnt" || true
+  puavo-unmount-image "${images_dir}/mnt" || true
 }
 
 set_image_as_default_image() {

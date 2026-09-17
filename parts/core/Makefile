@@ -42,6 +42,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/hooks
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/scripts
 	mkdir -p $(DESTDIR)/var/lib/puavo
+	mkdir -p $(DESTDIR)$(sbindir)
 
 .PHONY : install
 install : $(install-subdirs) installdirs
@@ -61,6 +62,7 @@ install : $(install-subdirs) installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-core \
 		lib/puavo-get-boot-disks \
 		lib/puavo-install-uki-commandline-addon
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) sbin/*
 	ln -fns ../scripts/setup_btrfs_quotas \
 		$(DESTDIR)$(sysconfdir)/puavo-conf/hooks/puavo.image.overlay
 

@@ -31,7 +31,7 @@ on_exit()
     set +eu
 
     if [ -n "${mount_point}" ]; then
-        umount "${mount_point}" || {
+        puavo-unmount-image "${mount_point}" || {
             umount_exitval=$?
             if [ $exitval -eq 0 ]; then
                 exitval=$umount_exitval
@@ -127,7 +127,7 @@ fi
 
 mount_point=$(mktemp -d)
 
-mount -o loop,ro "$image_filepath" "$mount_point"
+puavo-mount-image "$image_filepath" "$mount_point"
 
 rm -rf "${image_boot_dir}.tmp"
 cp -RT "${mount_point}/boot" "${image_boot_dir}.tmp"

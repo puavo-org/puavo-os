@@ -47,11 +47,11 @@ cleanup() {
 
   sync || true # Ensure ESP writes are fully transferred before unmount.
   umount /boot/efi 2>/dev/null || true
-  umount "$image_mountpoint" 2>/dev/null || true
+  puavo-unmount-image "$image_mountpoint" 2>/dev/null || true
 }
 trap cleanup INT TERM EXIT
 
-mount -o ro "$image_path" "$image_mountpoint" 1>/dev/null
+puavo-mount-image "$image_path" "$image_mountpoint"
 
 # Load the image name without suffix for determining the installation location
 image_name_file="${image_mountpoint}/etc/puavo-image/name"
