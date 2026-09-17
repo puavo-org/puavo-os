@@ -35,6 +35,7 @@ on_exit()
     umount ${umountverbose_G} "${tmpdir_G}/dev"
     umount ${umountverbose_G} "${tmpdir_G}/sys"
     umount ${umountverbose_G} "${tmpdir_G}"
+    [ -n "${device_G}" ] && losetup --detach "${device_G}"
     rmdir ${rmdirverbose_G} "${tmpdir_G}"
 
     return ${exitval}
@@ -51,6 +52,7 @@ imgfile_G=
 mountverbose_G=
 rmdirverbose_G=
 tmpdir_G=
+device_G=
 umountverbose_G=
 
 while [ $# -gt 0 ]; do
@@ -102,7 +104,10 @@ trap on_exit EXIT
 
 tmpdir_G=$(mktemp -d)
 
-mount ${mountverbose_G} -o loop "${imgfile_G}" "${tmpdir_G}"
+# Use a new loop device. A plain mount reuses one already attached to
+# the image, and that one may be held exclusively (e.g. by verity).
+device_G=$(losetup --read-only --find --show "${imgfile_G}")
+mount ${mountverbose_G} -o ro "${device_G}" "${tmpdir_G}"
 mount ${mountverbose_G} -o bind /dev "${tmpdir_G}/dev"
 mount ${mountverbose_G} -o bind /dev/pts "${tmpdir_G}/dev/pts"
 mount ${mountverbose_G} -o bind /proc "${tmpdir_G}/proc"

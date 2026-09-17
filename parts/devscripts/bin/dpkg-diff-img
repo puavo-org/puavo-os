@@ -31,11 +31,13 @@ on_exit()
 
         if [ -n "${img2_chroot}" ]; then
             umount "${img2_chroot}"
+            losetup --detach "${img2_device}"
             rmdir "${img2_chroot}"
         fi
 
         if [ -n "${img1_chroot}" ]; then
             umount "${img1_chroot}"
+            losetup --detach "${img1_device}"
             rmdir "${img1_chroot}"
         fi
 
@@ -99,20 +101,26 @@ img2=$2
 
 img1_chroot=
 img2_chroot=
+img1_device=
+img2_device=
 
 img1_dpkg_list=
 img2_dpkg_list=
 
 trap on_exit EXIT
 
+# Use a new loop device. A plain mount reuses one already attached to
+# the image, and that one may be held exclusively (e.g. by verity).
 img1_chroot=$(mktemp -d)
-mount -oro "${img1}" "${img1_chroot}"
+img1_device=$(losetup --read-only --find --show "${img1}")
+mount -oro "${img1_device}" "${img1_chroot}"
 
 img1_dpkg_list=$(mktemp)
 chroot "${img1_chroot}" dpkg -l | tail -n+6 | awk '{printf "%s %s\n", $2, $3}' >"${img1_dpkg_list}"
 
 img2_chroot=$(mktemp -d)
-mount -oro "${img2}" "${img2_chroot}"
+img2_device=$(losetup --read-only --find --show "${img2}")
+mount -oro "${img2_device}" "${img2_chroot}"
 
 img2_dpkg_list=$(mktemp)
 chroot "${img2_chroot}" dpkg -l | tail -n+6 | awk '{printf "%s %s\n", $2, $3}' >"${img2_dpkg_list}"
