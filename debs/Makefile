@@ -20,7 +20,7 @@ else
   _pkgs_extraports := collabora
   _pkgs_parts      := puavo-ds puavo-os
   _pkgs_ports      := cups cups-filters facter gnome-control-center \
-                      gnome-shell gtk+3.0 gtk4 hooktftp hpuefi \
+                      gnome-shell gtk+3.0 gtk4 hooktftp hpuefi icedtea-web \
                       libpam-ccreds linux-default linux-modern mutter \
                       veyon wsmancli
 

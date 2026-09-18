@@ -1,0 +1,47 @@
+diff -ruN icedtea-web.0/netx/net/sourceforge/jnlp/tools/JarCertVerifier.java icedtea-web.1/netx/net/sourceforge/jnlp/tools/JarCertVerifier.java
+--- icedtea-web.0/netx/net/sourceforge/jnlp/tools/JarCertVerifier.java	2021-10-27 23:13:18.000000000 +0300
++++ icedtea-web.1/netx/net/sourceforge/jnlp/tools/JarCertVerifier.java	2026-09-18 12:23:27.296932483 +0300
+@@ -28,6 +28,7 @@
+ import java.io.File;
+ import java.io.IOException;
+ import java.io.InputStream;
++import java.lang.reflect.Method;
+ import java.security.CodeSigner;
+ import java.security.KeyStore;
+ import java.security.cert.CertPath;
+@@ -610,9 +611,7 @@
+                 NetscapeCertTypeExtension extn = new NetscapeCertTypeExtension(
+                         encoded);
+ 
+-                Boolean val = (Boolean) extn
+-                        .get(NetscapeCertTypeExtension.OBJECT_SIGNING);
+-                if (!val) {
++                if (!hasObjectSigningExtension(extn)) {
+                     if (bad != null) {
+                         bad[2] = true;
+                     } else {
+@@ -625,6 +624,24 @@
+         }
+     }
+ 
++    private static boolean hasObjectSigningExtension(
++            NetscapeCertTypeExtension extn) throws IOException {
++        // method return type of "NetscapeCertTypeExtension.get()"
++        // has changed from Boolean to boolean with Java 21
++        try {
++            final Method getMethod =
++                    NetscapeCertTypeExtension.class.getDeclaredMethod(
++                            "get", String.class);
++            final Object result = getMethod.invoke(
++                    extn,
++                    NetscapeCertTypeExtension.OBJECT_SIGNING);
++            return Boolean.TRUE.equals(result);
++        } catch (Exception e) {
++            OutputController.getLogger().log(OutputController.Level.ERROR_ALL, e);
++            return false;
++        }
++    }
++
+     /**
+      * Returns if all jars are signed.
+      * 
