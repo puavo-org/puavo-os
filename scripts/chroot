@@ -1,0 +1,37 @@
+#!/bin/sh
+
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Copyright (C) Opinsys Oy 2026
+
+# Rosetta-aware chroot wrapper.
+#
+# Apple's "container" tool runs amd64 containers inside an arm64 VM using
+# Rosetta translation.  Translated binaries open /proc/self/exe at exec
+# time, which fails inside a chroot unless /proc is mounted there.  This
+# wrapper bind-mounts /proc into the chroot target before delegating to
+# the real chroot.  The mount is intentionally left in place, so that
+# subsequent "unshare --root" calls (which exec their command after
+# chrooting, before anything inside can mount /proc) work as well.
+#
+# This wrapper must shadow the real chroot: debootstrap runs chroot with
+# PATH=/sbin:/usr/sbin:/bin:/usr/bin, so the builder image installs this
+# script as /usr/sbin/chroot and keeps the coreutils binary as
+# /usr/sbin/chroot.real.
+
+set -eu
+
+real_chroot=/usr/sbin/chroot.real
+if [ ! -x "${real_chroot}" ]; then
+  echo "chroot: wrapper could not find the real chroot binary" >&2
+  exit 127
+fi
+
+[ $# -ge 2 ] || exec "${real_chroot}" "$@"
+
+target=$1
+
+if [ -d "${target}/proc" ] && ! mountpoint -q "${target}/proc" 2>/dev/null; then
+  mount --bind /proc "${target}/proc" 2>/dev/null || true
+fi
+
+exec "${real_chroot}" "$@"
