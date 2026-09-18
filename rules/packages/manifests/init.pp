@@ -763,6 +763,7 @@ class packages {
     , 'exfat-fuse'
     , 'flameshot'
     , 'fuse3'
+    , 'fuse-overlayfs'    # the old ekapeli puavo-pkg needs this
     , 'gnome-network-displays'
     , 'ideviceinstaller'
     , 'idevicerestore'
@@ -782,7 +783,6 @@ class packages {
     , 'tlp'
     , 'ubertooth'
     , 'unace'
-    # , 'unionfs-fuse'    # Ekapeli might need this.    # XXX missing from Trixie
     , 'wimtools'
     , 'wmctrl'
     , 'xinput'
@@ -799,6 +799,7 @@ class packages {
     , 'ca-certificates-java'
     , 'chromium'
     , 'chromium-l10n'
+    , 'icedtea-netx'
     , 'openjdk-21-jdk'
     , 'openjdk-21-jre'
     , 'php-cli'
