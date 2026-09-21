@@ -10,6 +10,7 @@ require 'fileutils'
 require 'highline/import'
 require 'ldap'
 require 'open3'
+require 'optparse'
 
 def parse_erb(basename)
   ldif_template = File.read("/usr/share/puavo-ds-ext/templates/#{ basename }")
@@ -45,21 +46,32 @@ end
 
 abort('This script must be run as root.') unless Process.euid == 0
 
-use_the_force = false
+options = {}
+OptionParser.new do |opts|
+  opts.on('--force') { options[:force] = true }
+  opts.on('--setup') { options[:setup] = true }
+end.parse!
 
-@binddn = 'uid=admin,o=puavo'
-@master_server = HighLine.ask('Master server: ')
-@bindpw = HighLine.ask("#{ @binddn } password: ") { |q| q.echo = '*' }
+Puavo_basedir = '/etc/puavo/ldap'
+Puavo_ds_ext_dir = '/var/lib/puavo-ds-ext'
 
-puavo_basedir = '/etc/puavo/ldap'
-puavo_ds_ext_dir = '/var/lib/puavo-ds-ext'
-FileUtils.mkdir_p(puavo_basedir)
-File.write("#{ puavo_basedir }/dn",       "#{ @binddn }\n")
-File.write("#{ puavo_basedir }/master",   "#{ @master_server }\n")
-File.write("#{ puavo_basedir }/password", "#{ @bindpw }\n", perm: 0o600)
+if options[:setup] then
+  @binddn = 'uid=admin,o=puavo'
+  @master_server = HighLine.ask('Master server: ')
+  @bindpw = HighLine.ask("#{ @binddn } password: ") { |q| q.echo = '*' }
 
-FileUtils.mkdir_p(puavo_ds_ext_dir)
-slapadd_ldif_path = "#{ puavo_ds_ext_dir }/ldap_cn_config.ldif"
+  FileUtils.mkdir_p(Puavo_basedir)
+  File.write("#{ Puavo_basedir }/dn",       "#{ @binddn }\n")
+  File.write("#{ Puavo_basedir }/master",   "#{ @master_server }\n")
+  File.write("#{ Puavo_basedir }/password", "#{ @bindpw }\n", perm: 0o600)
+else
+  @binddn        = IO.read("#{ Puavo_basedir }/dn").chomp
+  @bindpw        = IO.read("#{ Puavo_basedir }/password").chomp
+  @master_server = IO.read("#{ Puavo_basedir }/master").chomp
+end
+
+FileUtils.mkdir_p(Puavo_ds_ext_dir)
+slapadd_ldif_path = "#{ Puavo_ds_ext_dir }/ldap_cn_config.ldif"
 tmp_slapadd_ldif_path = "#{ slapadd_ldif_path }.tmp"
 
 directories_to_create = []
@@ -142,7 +154,7 @@ File.open(tmp_slapadd_ldif_path, 'w', perm: 0o600) do |ldiffile|
   end
 end
 
-unless use_the_force then
+unless options[:force] then
   begin
     if FileUtils.compare_file(slapadd_ldif_path, tmp_slapadd_ldif_path) then
       puts('No changes, doing nothing')
