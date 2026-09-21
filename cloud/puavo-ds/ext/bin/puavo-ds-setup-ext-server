@@ -33,7 +33,7 @@ def run!(*command)
     warn(stderr)
   end
 
-  raise "Command terminated by signal #{status.termsig}" if status.signaled?
+  raise "Command terminated by signal #{ status.termsig }" if status.signaled?
   raise "Command failed with exit status #{ status.exitstatus }"
 end
 
@@ -53,7 +53,7 @@ abort('This script must be run as root.') unless Process.euid == 0
 Tempfile.create('ldif') do |tempfile|
   directories_to_create = []
 
-  conn = LDAP::Conn.new(host = @master_server, port = 389)
+  conn = LDAP::Conn.new(@master_server, 389)
   conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
   conn.start_tls
 
@@ -96,17 +96,22 @@ Tempfile.create('ldif') do |tempfile|
       end
     end
 
+    raise 'No namingContexts received' if suffixes.empty?
+
     rid = 1
 
     suffixes.each do |suffix|
       @suffix = suffix
+
+      raise 'Too many syncrepl databases' if rid > 999
       @rid = rid
       rid += 1
-      raise 'Too many syncrepl databases' if rid > 999
 
+      matchcount = 0
       conn.search('cn=config', LDAP::LDAP_SCOPE_SUBTREE,
                   "(&(objectClass=olcDatabaseConfig)(olcSuffix=#{ @suffix }))"
       ) do |e|
+        matchcount += 1
         @directory = "/var/lib/ldap/#{ @suffix }"
         tempfile.puts( parse_erb('slave_database.ldif.erb') )
         e.vals('olcAccess').each do |acl|
@@ -117,8 +122,12 @@ Tempfile.create('ldif') do |tempfile|
         directories_to_create << @directory
       end
 
+      raise "No database found for suffix #{ @suffix }" if matchcount == 0
+      raise "Multiple databases found for suffix #{ @suffix }" if matchcount > 1
+
       tempfile.puts
     end
+
   end
 
   tempfile.close
