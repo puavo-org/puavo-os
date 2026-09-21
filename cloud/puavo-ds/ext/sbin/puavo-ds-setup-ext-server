@@ -10,7 +10,6 @@ require 'fileutils'
 require 'highline/import'
 require 'ldap'
 require 'open3'
-require 'tempfile'
 
 def parse_erb(basename)
   ldif_template = File.read("/usr/share/puavo-ds-ext/templates/#{ basename }")
@@ -46,13 +45,26 @@ end
 
 abort('This script must be run as root.') unless Process.euid == 0
 
+use_the_force = false
+
 @binddn = 'uid=admin,o=puavo'
 @master_server = HighLine.ask('Master server: ')
 @bindpw = HighLine.ask("#{ @binddn } password: ") { |q| q.echo = '*' }
 
-Tempfile.create('ldif') do |tempfile|
-  directories_to_create = []
+puavo_basedir = '/etc/puavo/ldap'
+puavo_ds_ext_dir = '/var/lib/puavo-ds-ext'
+FileUtils.mkdir_p(puavo_basedir)
+File.write("#{ puavo_basedir }/dn",       "#{ @binddn }\n")
+File.write("#{ puavo_basedir }/master",   "#{ @master_server }\n")
+File.write("#{ puavo_basedir }/password", "#{ @bindpw }\n", perm: 0o600)
 
+FileUtils.mkdir_p(puavo_ds_ext_dir)
+slapadd_ldif_path = "#{ puavo_ds_ext_dir }/ldap_cn_config.ldif"
+tmp_slapadd_ldif_path = "#{ slapadd_ldif_path }.tmp"
+
+directories_to_create = []
+
+File.open(tmp_slapadd_ldif_path, 'w', perm: 0o600) do |ldiffile|
   conn = LDAP::Conn.new(@master_server, 389)
   conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
   conn.start_tls
@@ -61,33 +73,33 @@ Tempfile.create('ldif') do |tempfile|
 
   conn.bind(@binddn, @bindpw) do
     conn.search('cn=config', LDAP::LDAP_SCOPE_BASE, '(objectClass=*)') do |e|
-      tempfile.puts("dn: #{ e.dn }")
+      ldiffile.puts("dn: #{ e.dn }")
 
       e.attrs.each do |attr|
         e.vals(attr).each do |value|
-          tempfile.puts("#{ attr }: #{ value }")
+          ldiffile.puts("#{ attr }: #{ value }")
         end
       end
 
-      tempfile.puts
+      ldiffile.puts
     end
 
     conn.search('cn=schema,cn=config',
                 LDAP::LDAP_SCOPE_SUBTREE,
                 '(objectClass=*)') do |e|
-      tempfile.puts("dn: #{ e.dn }")
+      ldiffile.puts("dn: #{ e.dn }")
 
       e.attrs.each do |attr|
         e.vals(attr).each do |value|
-          tempfile.puts("#{ attr }: #{ value }")
+          ldiffile.puts("#{ attr }: #{ value }")
         end
       end
 
-      tempfile.puts
+      ldiffile.puts
     end
 
-    tempfile.puts( parse_erb('modules.ldif.erb') )
-    tempfile.puts
+    ldiffile.puts( parse_erb('modules.ldif.erb') )
+    ldiffile.puts
 
     conn.search('', LDAP::LDAP_SCOPE_BASE, '(objectClass=*)',
                 ['namingContexts']) do |e|
@@ -113,41 +125,49 @@ Tempfile.create('ldif') do |tempfile|
       ) do |e|
         matchcount += 1
         @directory = "/var/lib/ldap/#{ @suffix }"
-        tempfile.puts( parse_erb('slave_database.ldif.erb') )
+        ldiffile.puts( parse_erb('slave_database.ldif.erb') )
         e.vals('olcAccess').each do |acl|
-          tempfile.puts("olcAccess: #{ acl }")
+          ldiffile.puts("olcAccess: #{ acl }")
         end
 
-        tempfile.puts
+        ldiffile.puts
         directories_to_create << @directory
       end
 
       raise "No database found for suffix #{ @suffix }" if matchcount == 0
       raise "Multiple databases found for suffix #{ @suffix }" if matchcount > 1
 
-      tempfile.puts
+      ldiffile.puts
     end
-
   end
-
-  tempfile.close
-
-  run!('service', 'slapd', 'stop')
-
-  clear_directory('/etc/ldap/slapd.d')
-  clear_directory('/var/lib/ldap')
-
-  directories_to_create.each do |dir|
-    FileUtils.mkdir_p(dir)
-    FileUtils.chown('openldap', 'openldap', dir)
-    FileUtils.chmod(0o750, dir)
-  end
-
-  run!('slapadd', '-F', '/etc/ldap/slapd.d/', '-l', tempfile.path,
-                  '-b', 'cn=config')
-
-  FileUtils.chown_R('openldap', 'openldap', '/etc/ldap/slapd.d')
-  FileUtils.chown_R('openldap', 'openldap', '/var/lib/ldap')
-
-  run!('service', 'slapd', 'start')
 end
+
+unless use_the_force then
+  begin
+    if FileUtils.compare_file(slapadd_ldif_path, tmp_slapadd_ldif_path) then
+      puts('No changes, doing nothing')
+      exit(0)
+    end
+  rescue Errno::ENOENT
+  end
+end
+
+run!('service', 'slapd', 'stop')
+
+clear_directory('/etc/ldap/slapd.d')
+clear_directory('/var/lib/ldap')
+
+directories_to_create.each do |dir|
+  FileUtils.mkdir_p(dir)
+  FileUtils.chown('openldap', 'openldap', dir)
+  FileUtils.chmod(0o750, dir)
+end
+
+run!('slapadd', '-F', '/etc/ldap/slapd.d/', '-l', tmp_slapadd_ldif_path,
+                '-b', 'cn=config')
+FileUtils.chown_R('openldap', 'openldap', '/etc/ldap/slapd.d')
+FileUtils.chown_R('openldap', 'openldap', '/var/lib/ldap')
+
+run!('service', 'slapd', 'start')
+
+FileUtils.mv(tmp_slapadd_ldif_path, slapadd_ldif_path)
