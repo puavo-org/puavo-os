@@ -7,9 +7,9 @@
 
 require 'erb'
 require 'fileutils'
+require 'highline/import'
 require 'ldap'
-require 'readline'
-require 'shellwords'
+require 'open3'
 require 'tempfile'
 
 def parse_erb(basename)
@@ -17,21 +17,24 @@ def parse_erb(basename)
   ERB.new(ldif_template, trim_mode: '%<>').result
 end
 
-def run!(*command, ok_statuses: [0])
-  system(*command)
+def run!(*command)
+  stdout, stderr, status = Open3.capture3(*command)
+  return stdout if status.success?
 
-  status = $?
-  raise "Could not execute command: #{ command.shelljoin }" if status.nil?
-  return if ok_statuses.include?(status.exitstatus)
+  warn("Command failed: #{ command.join(' ') }")
 
-  raise "Command failed with exit status #{ status.exitstatus }:" \
-           + "#{ command.shelljoin }"
-end
-
-def chown_children(directory, user, group)
-  Dir.children(directory).each do |entry|
-    FileUtils.chown_R(user, group, File.join(directory, entry))
+  unless stdout.empty? then
+    warn('--- stdout ---')
+    warn(stdout)
   end
+
+  unless stderr.empty? then
+    warn('--- stderr ---')
+    warn(stderr)
+  end
+
+  raise "Command terminated by signal #{status.termsig}" if status.signaled?
+  raise "Command failed with exit status #{ status.exitstatus }"
 end
 
 def clear_directory(directory)
@@ -44,32 +47,19 @@ end
 abort('This script must be run as root.') unless Process.euid == 0
 
 @binddn = 'uid=admin,o=puavo'
+@master_server = HighLine.ask('Master server: ')
+@bindpw = HighLine.ask("#{ @binddn } password: ") { |q| q.echo = '*' }
 
-puts('Master server:')
-@master_server = Readline.readline('> ', true)
+Tempfile.create('ldif') do |tempfile|
+  directories_to_create = []
 
-puts("#{ @binddn } password:")
-@bindpw = Readline.readline('> ', true)
+  conn = LDAP::Conn.new(host = @master_server, port = 389)
+  conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
+  conn.start_tls
 
-run!('service', 'slapd', 'stop')
+  suffixes = []
 
-# killall exits with status 1 if there was no matching process.  That is
-# harmless here: the purpose is simply to make sure no slapd is left running.
-run!('killall', '-9', 'slapd', ok_statuses: [0, 1])
-
-clear_directory('/etc/ldap/slapd.d')
-clear_directory('/var/lib/ldap')
-
-tempfile = Tempfile.open('ldif')
-
-conn = LDAP::Conn.new(host = @master_server, port = 389)
-conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
-conn.start_tls
-
-suffixes = []
-
-conn.bind(@binddn, @bindpw) do
-  begin
+  conn.bind(@binddn, @bindpw) do
     conn.search('cn=config', LDAP::LDAP_SCOPE_BASE, '(objectClass=*)') do |e|
       tempfile.puts("dn: #{ e.dn }")
 
@@ -110,8 +100,9 @@ conn.bind(@binddn, @bindpw) do
 
     suffixes.each do |suffix|
       @suffix = suffix
-      @rid = format('%03d', rid)
+      @rid = rid
       rid += 1
+      raise 'Too many syncrepl databases' if rid > 999
 
       conn.search('cn=config', LDAP::LDAP_SCOPE_SUBTREE,
                   "(&(objectClass=olcDatabaseConfig)(olcSuffix=#{ @suffix }))"
@@ -123,28 +114,31 @@ conn.bind(@binddn, @bindpw) do
         end
 
         tempfile.puts
-        FileUtils.mkdir_p(@directory)
-        FileUtils.chown('openldap', 'openldap', @directory)
-        FileUtils.chmod(0o750, @directory)
+        directories_to_create << @directory
       end
 
       tempfile.puts
     end
-  rescue StandardError => e
-    warn "ERROR: #{ e }"
-    raise
   end
+
+  tempfile.close
+
+  run!('service', 'slapd', 'stop')
+
+  clear_directory('/etc/ldap/slapd.d')
+  clear_directory('/var/lib/ldap')
+
+  directories_to_create.each do |dir|
+    FileUtils.mkdir_p(dir)
+    FileUtils.chown('openldap', 'openldap', dir)
+    FileUtils.chmod(0o750, dir)
+  end
+
+  run!('slapadd', '-F', '/etc/ldap/slapd.d/', '-l', tempfile.path,
+                  '-b', 'cn=config')
+
+  FileUtils.chown_R('openldap', 'openldap', '/etc/ldap/slapd.d')
+  FileUtils.chown_R('openldap', 'openldap', '/var/lib/ldap')
+
+  run!('service', 'slapd', 'start')
 end
-
-puts(tempfile.path)
-tempfile.close
-
-run!('slapadd', '-F', '/etc/ldap/slapd.d/', '-l', tempfile.path,
-                '-b', 'cn=config')
-
-chown_children('/etc/ldap/slapd.d', 'openldap', 'openldap')
-chown_children('/var/lib/ldap', 'openldap', 'openldap')
-
-run!('service', 'slapd', 'start')
-
-tempfile.unlink

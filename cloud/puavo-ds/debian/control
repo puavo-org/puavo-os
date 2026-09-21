@@ -12,6 +12,7 @@ Depends: ${misc:Depends},
  ${shlibs:Depends},
  ldap-utils,
  ruby,
+ ruby-highline,
  ruby-ldap,
  slapd
 Recommends: rng-tools
