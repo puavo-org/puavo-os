@@ -5,80 +5,104 @@
 # and database data. Data is written to local database.
 #
 
-require "erb"
-require 'tempfile'
+require 'erb'
 require 'fileutils'
+require 'ldap'
 require 'readline'
-require "ldap"
+require 'shellwords'
+require 'tempfile'
 
 def parse_erb(basename)
   ldif_template = File.read("/usr/share/puavo-ds-ext/templates/#{ basename }")
-  ldif = ERB.new(ldif_template, trim_mode: '%<>')
-
-#  tempfile = Tempfile.open(basename)
-#  tempfile.puts ldif.result
-#  tempfile.close
-  
-#  tempfile
-  ldif.result
+  ERB.new(ldif_template, trim_mode: '%<>').result
 end
 
-@binddn = "uid=admin,o=Puavo"
+def run!(*command, ok_statuses: [0])
+  system(*command)
 
-puts "Master server:"
+  status = $?
+  raise "Could not execute command: #{ command.shelljoin }" if status.nil?
+  return if ok_statuses.include?(status.exitstatus)
+
+  raise "Command failed with exit status #{ status.exitstatus }:" \
+           + "#{ command.shelljoin }"
+end
+
+def chown_children(directory, user, group)
+  Dir.children(directory).each do |entry|
+    FileUtils.chown_R(user, group, File.join(directory, entry))
+  end
+end
+
+def clear_directory(directory)
+  FileUtils.mkdir_p(directory)
+  Dir.children(directory).each do |entry|
+    FileUtils.rm_rf( File.join(directory, entry) )
+  end
+end
+
+abort('This script must be run as root.') unless Process.euid == 0
+
+@binddn = 'uid=admin,o=puavo'
+
+puts('Master server:')
 @master_server = Readline.readline('> ', true)
 
-@binddn = "uid=admin,o=puavo"
-puts "#{@binddn} password:"
+puts("#{ @binddn } password:")
 @bindpw = Readline.readline('> ', true)
 
-`service slapd stop`
-`killall -9 slapd`
-FileUtils.mkdir_p '/etc/ldap/slapd.d'
-`rm -rf /etc/ldap/slapd.d/* /var/lib/ldap/*`
+run!('service', 'slapd', 'stop')
 
-tempfile = Tempfile.open("ldif")
+# killall exits with status 1 if there was no matching process.  That is
+# harmless here: the purpose is simply to make sure no slapd is left running.
+run!('killall', '-9', 'slapd', ok_statuses: [0, 1])
 
-conn = LDAP::Conn.new(host=@master_server, port=389)
+clear_directory('/etc/ldap/slapd.d')
+clear_directory('/var/lib/ldap')
+
+tempfile = Tempfile.open('ldif')
+
+conn = LDAP::Conn.new(host = @master_server, port = 389)
 conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
 conn.start_tls
 
-suffixes = Array.new
+suffixes = []
 
 conn.bind(@binddn, @bindpw) do
   begin
-    conn.search("cn=config", LDAP::LDAP_SCOPE_BASE, "(objectClass=*)") do |e|
-      tempfile.puts "dn: #{e.dn}"
+    conn.search('cn=config', LDAP::LDAP_SCOPE_BASE, '(objectClass=*)') do |e|
+      tempfile.puts("dn: #{ e.dn }")
 
       e.attrs.each do |attr|
         e.vals(attr).each do |value|
-          tempfile.puts "#{attr}: #{value}"
+          tempfile.puts("#{ attr }: #{ value }")
         end
       end
 
       tempfile.puts
     end
 
-    conn.search("cn=schema,cn=config", LDAP::LDAP_SCOPE_SUBTREE, "(objectClass=*)") do |e|
-      tempfile.puts "dn: #{e.dn}"
+    conn.search('cn=schema,cn=config',
+                LDAP::LDAP_SCOPE_SUBTREE,
+                '(objectClass=*)') do |e|
+      tempfile.puts("dn: #{ e.dn }")
 
       e.attrs.each do |attr|
         e.vals(attr).each do |value|
-          tempfile.puts "#{attr}: #{value}"
+          tempfile.puts("#{ attr }: #{ value }")
         end
       end
 
       tempfile.puts
     end
 
-    tempfile.puts parse_erb("modules.ldif.erb")
+    tempfile.puts( parse_erb('modules.ldif.erb') )
     tempfile.puts
 
-    conn.search("", LDAP::LDAP_SCOPE_BASE, "(objectClass=*)", ["namingContexts"]) do |e|
-      e.get_values("namingContexts").each do |suffix|
-        if !suffix.eql?("o=puavo")
-          suffixes << suffix
-        end
+    conn.search('', LDAP::LDAP_SCOPE_BASE, '(objectClass=*)',
+                ['namingContexts']) do |e|
+      e.get_values('namingContexts').each do |suffix|
+        suffixes << suffix unless suffix.eql?('o=puavo')
       end
     end
 
@@ -86,40 +110,41 @@ conn.bind(@binddn, @bindpw) do
 
     suffixes.each do |suffix|
       @suffix = suffix
+      @rid = format('%03d', rid)
+      rid += 1
 
-      conn.search("cn=config", LDAP::LDAP_SCOPE_SUBTREE, "(&(objectClass=olcDatabaseConfig)(olcSuffix=#{ @suffix }))") do |e|
-        tmp_rid = "%03i" % rid
-        rid = rid+1
-        @rid = rid
-
-        @directory = "/var/lib/ldap/#{@suffix}"
-
-        tempfile.puts parse_erb("slave_database.ldif.erb")
-
-        e.vals("olcAccess").each do |acl|
-          tempfile.puts "olcAccess: #{acl}"
+      conn.search('cn=config', LDAP::LDAP_SCOPE_SUBTREE,
+                  "(&(objectClass=olcDatabaseConfig)(olcSuffix=#{ @suffix }))"
+      ) do |e|
+        @directory = "/var/lib/ldap/#{ @suffix }"
+        tempfile.puts( parse_erb('slave_database.ldif.erb') )
+        e.vals('olcAccess').each do |acl|
+          tempfile.puts("olcAccess: #{ acl }")
         end
 
         tempfile.puts
-
-        `mkdir -p #{@directory}`
-        `chown openldap:openldap #{@directory}`
-        `chmod 0750 #{@directory}`
+        FileUtils.mkdir_p(@directory)
+        FileUtils.chown('openldap', 'openldap', @directory)
+        FileUtils.chmod(0o750, @directory)
       end
 
-      tempfile.puts ""
+      tempfile.puts
     end
-  rescue Exception => e
-    puts "ERROR: #{e}"
+  rescue StandardError => e
+    warn "ERROR: #{ e }"
+    raise
   end
 end
-puts "#{tempfile.path}"
 
-tempfile.close(false)
+puts(tempfile.path)
+tempfile.close
 
-`slapadd -F /etc/ldap/slapd.d/ -l #{tempfile.path} -b cn=config`
-`chown -R openldap:openldap /etc/ldap/slapd.d`
-`chown -R openldap:openldap /var/lib/ldap/*`
-`service slapd start`
+run!('slapadd', '-F', '/etc/ldap/slapd.d/', '-l', tempfile.path,
+                '-b', 'cn=config')
+
+chown_children('/etc/ldap/slapd.d', 'openldap', 'openldap')
+chown_children('/var/lib/ldap', 'openldap', 'openldap')
+
+run!('service', 'slapd', 'start')
 
 tempfile.unlink
