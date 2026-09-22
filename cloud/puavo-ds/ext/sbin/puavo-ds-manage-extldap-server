@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # This script connects to LDAP master and reads all its configuration
-# and database data. Data is written to local database.
+# and database data.  Data is written to local database.
 #
 
 require 'erb'
@@ -45,15 +45,38 @@ def setup_and_clear_directory(directory)
   end
 end
 
-abort('This script must be run as root.') unless Process.euid == 0
-
 options = {}
 OptionParser.new do |opts|
-  opts.on('--force')      { options[:force]      = true }
-  opts.on('--initialize') { options[:initialize] = true }
-  opts.on('--setup')      { options[:setup]      = true }
-  opts.on('--update')     { options[:update]     = true }
+  opts.banner = """Usage: #{ File.basename(__FILE__) } [options]
+
+Setup extldap slave server.  Server syncs data from master server
+for all organisations.  Either --initialize or --update must always
+be specified.
+
+"""
+
+  opts.on('--force', 'do things even when nothing needs to be done') do
+    options[:force] = true
+  end
+  opts.on('-h', '--help', 'show this message') { warn(opts); exit(0) }
+  opts.on('--initialize', 'destroy LDAP data and setup from scratch') do
+    options[:initialize] = true
+  end
+  opts.on('--setup', 'setup credentials and master server') do
+    options[:setup] = true
+  end
+  opts.on('--update', 'update schema and ACLs only') do
+    options[:update] = true
+  end
 end.parse!
+
+abort('Either --initialize or --update must be specified') \
+  unless options[:initialize] || options[:update]
+
+abort('Can not specify both --initialize and --update') \
+  if options[:initialize] && options[:update]
+
+abort('This script must be run as root.') unless Process.euid == 0
 
 Puavo_basedir = '/etc/puavo/ldap'
 Puavo_ds_ext_dir = '/var/lib/puavo-ds-ext'
@@ -78,9 +101,6 @@ else
     abort('could not read setup, run with --setup first')
   end
 end
-
-abort('Either --initialize or --update must be specified') \
-  unless options[:initialize] || options[:update]
 
 FileUtils.mkdir_p(Puavo_ds_ext_dir)
 slapadd_ldif_path = "#{ Puavo_ds_ext_dir }/ldap_cn_config.ldif"
