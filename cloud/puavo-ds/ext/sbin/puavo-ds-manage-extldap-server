@@ -200,7 +200,7 @@ run!('service', 'slapd', 'stop')
 
 begin
   FileUtils.rm_rf(Slapd_d_backup_dir)
-  FileUtils.mv(Slapd_d_dir, Slapd_d_backup_dir) if File.exists?(Slapd_d_dir)
+  FileUtils.mv(Slapd_d_dir, Slapd_d_backup_dir) if File.exist?(Slapd_d_dir)
 
   begin
     setup_and_clear_directory(Slapd_d_dir)
@@ -217,9 +217,11 @@ begin
     FileUtils.chown_R('openldap', 'openldap', '/etc/ldap/slapd.d')
     FileUtils.chown_R('openldap', 'openldap', '/var/lib/ldap')
   rescue StandardError => e
-    FileUtils.rm_rf(Slapd_d_dir)
-    FileUtils.mv(Slapd_d_backup_dir, Slapd_d_dir)
-    raise e
+    if File.exist?(Slapd_d_backup_dir) then
+      FileUtils.rm_rf(Slapd_d_dir)
+      FileUtils.mv(Slapd_d_backup_dir, Slapd_d_dir)
+    end
+    raise
   end
 
   FileUtils.mv(tmp_slapadd_ldif_path, slapadd_ldif_path)
