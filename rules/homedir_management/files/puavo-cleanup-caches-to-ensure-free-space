@@ -65,17 +65,23 @@ cleanup_caches_under_homedir() {
       continue
     fi
 
-    if [ ! -d "$cache_dir" ]; then
-      continue
-    fi
+    # check if there is something for us to delete
+    [ -d "$cache_dir" ] || continue
+    find "$cache_dir" -mindepth 1 -maxdepth 1 -print -quit | grep -q . \
+      || continue
 
+    # Delete everything under $cache_dir but preserve it.  One reason
+    # for this is that we do not want to update actual homedir modified
+    # timestamp, because that would make it look like the home directory
+    # is in active use.
     if ! setpriv "--reuid=${user_uid}" "--regid=${user_gid}" --clear-groups \
-      --inh-caps=-all rm -rf --one-file-system -- "$cache_dir"; then
+      --inh-caps=-all find "$cache_dir" -xdev -mindepth 1 -delete; then
         logmsg -p user.warning "error in removing ${cache_dir}"
         return 1
     fi
 
-    logmsg -p user.info "removed cache directory ${cache_dir}"
+    logmsg -p user.info \
+           "removed everything under cache directory ${cache_dir}"
   done
 
   return 0
