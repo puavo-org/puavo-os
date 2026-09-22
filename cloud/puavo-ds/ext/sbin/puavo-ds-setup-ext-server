@@ -37,8 +37,9 @@ def run!(*command)
   raise "Command failed with exit status #{ status.exitstatus }"
 end
 
-def clear_directory(directory)
+def setup_and_clear_directory(directory)
   FileUtils.mkdir_p(directory)
+  FileUtils.chmod(0o750, directory)
   Dir.children(directory).each do |entry|
     FileUtils.rm_rf( File.join(directory, entry) )
   end
@@ -48,12 +49,16 @@ abort('This script must be run as root.') unless Process.euid == 0
 
 options = {}
 OptionParser.new do |opts|
-  opts.on('--force') { options[:force] = true }
-  opts.on('--setup') { options[:setup] = true }
+  opts.on('--force')      { options[:force]      = true }
+  opts.on('--initialize') { options[:initialize] = true }
+  opts.on('--setup')      { options[:setup]      = true }
+  opts.on('--update')     { options[:update]     = true }
 end.parse!
 
 Puavo_basedir = '/etc/puavo/ldap'
 Puavo_ds_ext_dir = '/var/lib/puavo-ds-ext'
+Slapd_d_dir = '/etc/ldap/slapd.d'
+Slapd_d_backup_dir = "#{ Slapd_d_dir }.backup"
 
 if options[:setup] then
   @binddn = 'uid=admin,o=puavo'
@@ -65,10 +70,17 @@ if options[:setup] then
   File.write("#{ Puavo_basedir }/master",   "#{ @master_server }\n")
   File.write("#{ Puavo_basedir }/password", "#{ @bindpw }\n", perm: 0o600)
 else
-  @binddn        = IO.read("#{ Puavo_basedir }/dn").chomp
-  @bindpw        = IO.read("#{ Puavo_basedir }/password").chomp
-  @master_server = IO.read("#{ Puavo_basedir }/master").chomp
+  begin
+    @binddn        = IO.read("#{ Puavo_basedir }/dn").chomp
+    @bindpw        = IO.read("#{ Puavo_basedir }/password").chomp
+    @master_server = IO.read("#{ Puavo_basedir }/master").chomp
+  rescue StandardError => e
+    abort('could not read setup, run with --setup first')
+  end
 end
+
+abort('Either --initialize or --update must be specified') \
+  unless options[:initialize] || options[:update]
 
 FileUtils.mkdir_p(Puavo_ds_ext_dir)
 slapadd_ldif_path = "#{ Puavo_ds_ext_dir }/ldap_cn_config.ldif"
@@ -154,7 +166,7 @@ File.open(tmp_slapadd_ldif_path, 'w', perm: 0o600) do |ldiffile|
   end
 end
 
-unless options[:force] then
+unless options[:force] || options[:initialize] then
   begin
     if FileUtils.compare_file(slapadd_ldif_path, tmp_slapadd_ldif_path) then
       puts('No changes, doing nothing')
@@ -166,20 +178,31 @@ end
 
 run!('service', 'slapd', 'stop')
 
-clear_directory('/etc/ldap/slapd.d')
-clear_directory('/var/lib/ldap')
+begin
+  FileUtils.rm_rf(Slapd_d_backup_dir)
+  FileUtils.mv(Slapd_d_dir, Slapd_d_backup_dir) if File.exists?(Slapd_d_dir)
 
-directories_to_create.each do |dir|
-  FileUtils.mkdir_p(dir)
-  FileUtils.chown('openldap', 'openldap', dir)
-  FileUtils.chmod(0o750, dir)
+  begin
+    setup_and_clear_directory(Slapd_d_dir)
+    setup_and_clear_directory('/var/lib/ldap') if options[:initialize]
+
+    directories_to_create.each do |dir|
+      FileUtils.mkdir_p(dir)
+      FileUtils.chown('openldap', 'openldap', dir)
+      FileUtils.chmod(0o750, dir)
+    end
+
+    run!('slapadd', '-F', '/etc/ldap/slapd.d', '-l', tmp_slapadd_ldif_path,
+                    '-b', 'cn=config')
+    FileUtils.chown_R('openldap', 'openldap', '/etc/ldap/slapd.d')
+    FileUtils.chown_R('openldap', 'openldap', '/var/lib/ldap')
+  rescue StandardError => e
+    FileUtils.rm_rf(Slapd_d_dir)
+    FileUtils.mv(Slapd_d_backup_dir, Slapd_d_dir)
+    raise e
+  end
+
+  FileUtils.mv(tmp_slapadd_ldif_path, slapadd_ldif_path)
+ensure
+  run!('service', 'slapd', 'start')
 end
-
-run!('slapadd', '-F', '/etc/ldap/slapd.d/', '-l', tmp_slapadd_ldif_path,
-                '-b', 'cn=config')
-FileUtils.chown_R('openldap', 'openldap', '/etc/ldap/slapd.d')
-FileUtils.chown_R('openldap', 'openldap', '/var/lib/ldap')
-
-run!('service', 'slapd', 'start')
-
-FileUtils.mv(tmp_slapadd_ldif_path, slapadd_ldif_path)
