@@ -10,8 +10,7 @@ install-dirs:
 	mkdir -p $(DESTDIR)/$(datarootdir)/puavo-ds-ext/templates
 
 install: install-dirs
-	install -m 755 -t $(DESTDIR)$(sbindir) sbin/puavo-ds-setup-ext-server \
-	    sbin/puavo-ds-update-ext-server
+	install -m 755 -t $(DESTDIR)$(sbindir) sbin/puavo-ds-manage-extldap-server
 	install -m 744 -t $(DESTDIR)$(datarootdir)/puavo-ds-ext/templates templates/modules.ldif.erb
 	install -m 744 -t $(DESTDIR)$(datarootdir)/puavo-ds-ext/templates templates/slave_database.ldif.erb
 
