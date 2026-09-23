@@ -1,36 +1,20 @@
 class image::exam {
   include ::apt::no_install_recommends
-  include ::dracut
   include ::exammode::standalone
-  include ::kernels
-  include ::locales
+  include ::image::bundle::core
   include ::packages
   include ::plymouth
-  include ::systemd
 
   Package <|
-       tag   == 'tag_firmware_free'
-    or tag   == 'tag_firmware_nonfree'
-    or tag   == 'tag_kernel'
-    or title == 'gnome-keyring'
+       title == 'gnome-keyring'
     or title == 'network-manager'
-    or title == 'plocate'
-    or title == 'plymouth-themes'
-    or title == 'puavo-conf'
-    or title == 'puavo-core'
     or title == 'puavo-exammode'
-    or title == 'puavo-pam'
-    or title == 'puavo-pkg'
+    or title == 'plymouth-themes'
     or title == 'wpasupplicant'
-    or title == 'xserver-xorg-core'
-    or title == 'xserver-xorg-input-all'
-    or title == 'xserver-xorg-video-all'
   |>
 
   ::plymouth::set_default_theme {
     'spinner':
       require => Package['plymouth-themes'];
   }
-
-  Kernels::Install_kernel <| title == 'default' |>
 }
