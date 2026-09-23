@@ -131,7 +131,6 @@ class packages {
     , 'iperf'
     , 'jc'
     , 'jq'
-    , 'libengine-pkcs11-openssl'        # for puavo-hsm
     , 'linssid'
     , 'lm-sensors'
     , 'lshw'
@@ -144,6 +143,7 @@ class packages {
     , 'ncdu'
     , 'nmap'
     , 'nvme-cli'
+    , 'openssl'
     , 'plocate'
     , 'powertop'
     , 'procps'
@@ -154,6 +154,7 @@ class packages {
     , 'pwman3'
     , 'read-edid'
     , 'rsnapshot'
+    , 'rsync'
     , 'rsyslog'
     , 'ruby-eventmachine'
     , 'ruby-faye-websocket'
@@ -839,6 +840,22 @@ class packages {
       extra_packages => [ 'linux-modules-7.1.8+deb13-amd64' ],
       package_name   => 'linux-binary-unsigned-7.1.8+deb13-amd64',
       version        => '7.1.8+deb13-amd64';
+  }
+
+  # special packages for "hsm"-image
+  @package {
+    [ 'cabextract'
+    , 'cmake'
+    , 'efitools'
+    , 'exfatprogs'
+    , 'gcc-arm-none-eabi'
+    , 'libengine-pkcs11-openssl'
+    , 'libstdc++-arm-none-eabi-newlib'
+    , 'opensc'
+    , 'pkg-config'
+    , 'ssss' ]:
+      ensure => present,
+      tag    => [ 'tag_puavo_hsm' ];
   }
 
   # various contrib/non-free stuff, firmwares and such
