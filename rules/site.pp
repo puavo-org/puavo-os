@@ -8,7 +8,7 @@ case $::puavoruleset {
     include ::users                     # early so that this has an effect
 
     case $::puavoimage_class {
-      'exam': {
+      'exam', 'hsm': {
         include ::apt::no_install_recommends
       }
     }
@@ -23,4 +23,5 @@ case $::puavoruleset {
 
   'allinone': { include ::image::allinone }
   'exam':     { include ::image::exam     }
+  'hsm':      { include ::image::hsm      }
 }

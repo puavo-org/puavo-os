@@ -5,7 +5,7 @@ PUAVO_ROOTFS		?= $(PUAVO_BUILDS_BASEDIR)/imagebuilds
 PUAVO_SQUID_CACHE_DIR	?= $(PUAVO_BUILDS_BASEDIR)/var_spool_squid
 
 # Public, configurable variables
-all_image_classes       := allinone exam
+all_image_classes       := allinone exam hsm
 debootstrap_mirror	:= http://httpredir.debian.org/debian/
 debootstrap_suite	:= trixie
 default_image_class	:= allinone
