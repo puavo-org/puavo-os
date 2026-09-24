@@ -10,6 +10,14 @@ use crate::tpm::{self, CommandError};
 use uefi::boot::{self, ScopedProtocol};
 use uefi::proto::tcg::v2::Tcg;
 
+/// How many versions behind the floor the list may be and still boot. The floor
+/// comes from the TPM monotonic counter, not from the slab build, so booting an
+/// older slab never lowers it.
+#[cfg(feature = "allow-previous-revocation-list")]
+const VERSIONS_BEHIND_ALLOWED: u64 = 1;
+#[cfg(not(feature = "allow-previous-revocation-list"))]
+const VERSIONS_BEHIND_ALLOWED: u64 = 0;
+
 /// NV index holding the revocation counter.
 const COUNTER_INDEX: u32 = 0x0151_4B00;
 /// NV index holding the base, the counter value the device started from.
@@ -71,7 +79,7 @@ pub fn enforce(tcg: &mut Tcg) {
     debug!("counter {counter}, base {base}");
     debug!("floor {floor}, list version {list_version}");
 
-    if list_version < floor {
+    if list_version + VERSIONS_BEHIND_ALLOWED < floor {
         security_violation!(
             "this device could not start because its startup software is too old, please contact your administrator"
         );

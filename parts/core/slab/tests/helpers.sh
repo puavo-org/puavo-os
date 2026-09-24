@@ -42,6 +42,16 @@ build_slab() {
   fi
 }
 
+# Builds the debug binary without the default features and prints its path.
+# It has its own target directory, so the binary of build_slab stays.
+#   $1  target directory
+build_without_defaults() {
+  CARGO_TARGET_DIR="$1" cargo build --no-default-features \
+    --manifest-path "$SLAB_DIRECTORY/Cargo.toml" \
+    --target x86_64-unknown-uefi --bin slab >&2
+  echo "$1/x86_64-unknown-uefi/debug/slab.efi"
+}
+
 # Prints the revocation floor of a component from the floors file.
 #   $1  component name
 component_floor() {

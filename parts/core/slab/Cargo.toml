@@ -33,6 +33,13 @@ rsa = { version = "0.9", default-features = false, features = ["sha2"], optional
 sha2 = { version = "0.10", default-features = false, optional = true }
 
 [features]
+default = ["allow-previous-revocation-list"]
+
+# Boot with a revocation list one version behind the floor. The floor comes
+# from the TPM monotonic counter, not from the slab build, so booting an older
+# slab never lowers it.
+allow-previous-revocation-list = []
+
 verifier = [
   "dep:authenticode",
   "dep:cms",

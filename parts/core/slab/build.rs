@@ -1,9 +1,11 @@
 //! Generates the list version and the components from the configuration, and
 //! one entry per authority from the authority directory.
 //!
-//! The version file holds the logical revocation version, raised for each
-//! revocation. The SLAB_LIST_VERSION_OVERRIDE environment variable replaces
-//! it in test builds, and a release build refuses it.
+//! The version file holds the logical revocation version. Raise it by one for
+//! regular bumps. In case of major revocations, raise it by two, if the build
+//! allows lists exactly one version behind. The SLAB_LIST_VERSION_OVERRIDE
+//! environment variable replaces it in test builds, and a release build
+//! refuses it.
 //!
 //! The floors file lists one component per line, its name and the oldest
 //! accepted version:
