@@ -24,22 +24,33 @@ NEXT_STAGE_MARKER="next stage configuration reached"
 # this, so it only bites a case where nothing boots.
 BOOT_TIMEOUT=90
 
-# The NV index of the counter.
+# The NV indices of the counter and the base.
 COUNTER_INDEX=0x01514B00
+BASE_INDEX=0x01514B01
 
 # Ports of a swtpm that tpm2-tools talk to.
 SERVER_PORT=2321
 CONTROL_PORT=2322
 
 # Builds the debug slab binary through the Makefile.
+#   $1  revocation list version, optional, defaults to the configured one
 build_slab() {
-  make -C "$SLAB_DIRECTORY" test-binary
+  if [ -n "${1:-}" ]; then
+    SLAB_LIST_VERSION_OVERRIDE="$1" make -C "$SLAB_DIRECTORY" test-binary
+  else
+    make -C "$SLAB_DIRECTORY" test-binary
+  fi
 }
 
 # Prints the revocation floor of a component from the floors file.
 #   $1  component name
 component_floor() {
   awk -v name="$1" '$1 == name { print $2 }' "${SLAB_DIRECTORY}/config/floors"
+}
+
+# Prints the list version in the configuration.
+configured_version() {
+  cat "${SLAB_DIRECTORY}/config/version"
 }
 
 # Builds a real GRUB image to serve as the next stage.
@@ -91,6 +102,12 @@ swtpm_stop() {
 nv_value() {
   printf '%d' "0x$(tpm2_nvread "$1" --size=8 \
     | od --address-radix=n --format=x1 | tr --delete ' \n')"
+}
+
+# Prints the recorded list version, how far the counter is above the
+# base. Needs a swtpm started for tpm2-tools.
+slab_version() {
+  echo $(($(nv_value "$COUNTER_INDEX") - $(nv_value "$BASE_INDEX")))
 }
 
 # Increments the counter, which raises the floor. Needs a swtpm started for
