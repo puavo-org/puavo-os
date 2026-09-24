@@ -2,7 +2,8 @@
 //! one entry per authority from the authority directory.
 //!
 //! The version file holds the logical revocation version, raised for each
-//! revocation.
+//! revocation. The SLAB_LIST_VERSION_OVERRIDE environment variable replaces
+//! it in test builds, and a release build refuses it.
 //!
 //! The floors file lists one component per line, its name and the oldest
 //! accepted version:
@@ -58,6 +59,8 @@ const KEY_EXTENSION: &str = "der";
 /// The files the list version and the floors are read from, the date format
 /// of a floor, and the maximum age of a floor.
 const VERSION_FILE: &str = "config/version";
+const VERSION_OVERRIDE_VARIABLE: &str = "SLAB_LIST_VERSION_OVERRIDE";
+const RELEASE_PROFILE: &str = "release";
 const FLOORS_FILE: &str = "config/floors";
 const FLOOR_FORMAT: &[time::format_description::BorrowedFormatItem<'_>] =
     format_description!("[year][month][day]");
@@ -66,6 +69,7 @@ const YEAR_IN_FLOOR: u64 = 10000;
 
 fn main() {
     println!("cargo:rerun-if-env-changed={DIRECTORY_VARIABLE}");
+    println!("cargo:rerun-if-env-changed={VERSION_OVERRIDE_VARIABLE}");
 
     generate_version();
     generate_floors();
@@ -75,14 +79,23 @@ fn main() {
     }
 }
 
-/// Generates the list version from the version file.
+/// Generates the list version from the override variable when set, and from
+/// the version file otherwise. Refuses the override in a release build.
 fn generate_version() {
     let file = Path::new(VERSION_FILE);
     watch(file);
-    let written = fs::read_to_string(file)
-        .unwrap_or_else(|error| panic!("failed to read {file:?}: {error}"));
+    let written = match env::var(VERSION_OVERRIDE_VARIABLE) {
+        Ok(version) => {
+            if env::var("PROFILE").unwrap() == RELEASE_PROFILE {
+                panic!("{VERSION_OVERRIDE_VARIABLE} is for test builds only");
+            }
+            version
+        }
+        Err(_) => fs::read_to_string(file)
+            .unwrap_or_else(|error| panic!("failed to read {file:?}: {error}")),
+    };
     let version: u64 = written.trim().parse().unwrap_or_else(|error| {
-        panic!("{file:?} does not hold a version: {error}")
+        panic!("'{written}' is not a list version: {error}")
     });
 
     let constant = quote! {

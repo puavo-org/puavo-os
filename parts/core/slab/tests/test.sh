@@ -24,5 +24,8 @@ echo "==> shim lock"
 echo "==> measurements"
 "$TESTS_DIRECTORY/measurements.sh"
 
+echo "==> high list version"
+"$TESTS_DIRECTORY/high-list-version.sh"
+
 echo "==> counter semantics"
 "$TESTS_DIRECTORY/counter-semantics.sh"
