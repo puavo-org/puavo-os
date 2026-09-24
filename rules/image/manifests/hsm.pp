@@ -12,6 +12,7 @@ class image::hsm {
     or title == 'libusb-1.0-0-dev'
     or title == 'openssl'
     or title == 'plymouth-themes'
+    or title == 'puavo-ltsp-client'
     or title == 'puavo-ltsp-install'
     or title == 'rsync'
     or title == 'ssss'
