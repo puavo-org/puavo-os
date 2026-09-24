@@ -24,6 +24,9 @@ echo "==> shim lock"
 echo "==> measurements"
 "$TESTS_DIRECTORY/measurements.sh"
 
+echo "==> previous revocation list"
+"$TESTS_DIRECTORY/previous-revocation-list.sh"
+
 echo "==> high list version"
 "$TESTS_DIRECTORY/high-list-version.sh"
 
