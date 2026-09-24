@@ -3,6 +3,7 @@ class image::bundle::core {
   include ::kernels
   include ::locales
   include ::packages
+  include ::puavo_conf
   include ::secure_boot
   include ::systemd
 
