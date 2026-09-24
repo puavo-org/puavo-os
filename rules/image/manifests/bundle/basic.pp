@@ -5,21 +5,18 @@ class image::bundle::basic {
   include ::disable_drrs_conditionally
   include ::disable_hp_accel_module
   include ::docker
-  include ::dracut
   include ::extra_boot_scripts
   include ::gdm
   include ::grub
   include ::handle_utmp_logs
   include ::hwquirks
+  include ::image::bundle::core
   include ::infotv
-  include ::kernels
-  include ::locales
   include ::motd
   include ::munin
   include ::ncurses
   include ::nightly_updates
   include ::nss
-  include ::packages
   include ::pam
   include ::plymouth
   include ::puavo_bash_completions
@@ -27,12 +24,10 @@ class image::bundle::basic {
   include ::puavomenu
   include ::puavo_shutdown
   include ::rpcgssd
-  include ::secure_boot
   include ::ssh_client
   include ::ssh_server
   include ::sysctl
   include ::syslog
-  include ::systemd
   include ::tlp
   include ::tmux
   include ::udev
