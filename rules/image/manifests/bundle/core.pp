@@ -20,5 +20,8 @@ class image::bundle::core {
     or title == 'xserver-xorg-video-all'
   |>
 
-  Kernels::Install_kernel <| title == 'default' |>
+  Kernels::Install_kernel <|
+       title == 'default'
+    or title == 'modern'
+  |>
 }
