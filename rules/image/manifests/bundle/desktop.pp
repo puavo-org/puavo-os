@@ -22,6 +22,7 @@ class image::bundle::desktop {
   include ::network_manager
   include ::nextcloud
   include ::password_expiration
+  include ::packages::compat_32bit
   include ::packages::languages::de
   include ::packages::languages::en
   include ::packages::languages::fi

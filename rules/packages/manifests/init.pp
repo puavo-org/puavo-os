@@ -1,7 +1,6 @@
 class packages {
   require ::apt::multiarch
   include ::packages::backports
-  include ::packages::compat_32bit
   include ::packages::fasttrack
   include ::packages::pinned
   include ::packages::purged
