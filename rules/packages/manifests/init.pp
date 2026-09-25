@@ -851,6 +851,7 @@ class packages {
     , 'libengine-pkcs11-openssl'
     , 'libstdc++-arm-none-eabi-newlib'
     , 'opensc'
+    , 'pcscd'
     , 'pkg-config'
     , 'ssss' ]:
       ensure => present,
