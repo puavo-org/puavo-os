@@ -13,6 +13,7 @@ class image::hsm {
     or title == 'openssl'
     or title == 'pcscd'
     or title == 'plymouth-themes'
+    or title == 'puavo-kps'
     or title == 'puavo-ltsp-client'
     or title == 'puavo-ltsp-install'
     or title == 'rsync'
