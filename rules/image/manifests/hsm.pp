@@ -7,7 +7,9 @@ class image::hsm {
   Package <|
        tag   == 'tag_puavo_hsm'
     or title == 'cryptsetup'
+    or title == 'efibootmgr'
     or title == 'expect'
+    or title == 'fwupd'
     or title == 'jq'
     or title == 'libusb-1.0-0-dev'
     or title == 'openssl'
