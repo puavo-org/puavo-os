@@ -1,1 +1,2 @@
 account required        pam_permit.so
+session required        pam_limits.so
