@@ -1,15 +1,19 @@
 #!/bin/sh
 set -eu
 
+if [ "$#" -ne 1 ]; then
+  echo "Usage: $0 <key-directory>" >&2
+  exit 1
+fi
+
+keys_directory=$1
+
 # Verify Secure Boot prerequisites
 /usr/lib/puavo-ltsp-install/puavo-prepare-secure-boot
 
-images_directory="/images"
-addons_directory="${images_directory}/boot/addons"
-
-db_auth="${addons_directory}/db.auth"
-kek_auth="${addons_directory}/kek.auth"
-pk_auth="${addons_directory}/pk.auth"
+db_auth="${keys_directory}/db.auth"
+kek_auth="${keys_directory}/kek.auth"
+pk_auth="${keys_directory}/pk.auth"
 
 panic() {
   printf "%b\n" "error: $1" >&2

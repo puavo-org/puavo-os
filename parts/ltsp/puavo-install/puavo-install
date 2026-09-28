@@ -465,7 +465,7 @@ install_localbootdevice() {
   fi
 
   echo 'Setting up Secure Boot...'
-  /usr/lib/puavo-ltsp-install/puavo-setup-secure-boot
+  /usr/lib/puavo-ltsp-install/puavo-setup-secure-boot /images/boot/addons
 
   setup_state "$puavo_hosttype"
 
