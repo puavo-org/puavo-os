@@ -27,6 +27,8 @@ impl EfiProvider for TestEfiProvider {
         false
     }
 
+    fn clear_secure_boot_update_request(&self) {}
+
     fn is_pin_change_requested(&self) -> bool {
         self.pin_change_requested.load(Ordering::SeqCst)
     }
