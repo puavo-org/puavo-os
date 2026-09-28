@@ -11,7 +11,8 @@ use crate::{
     devices::{
         block_device::{BlockDevice, GenericBlockDevice},
         boot_vault::{
-            BootVault, VAULT_LUKS_DEVICE_NAME, VAULT_MOUNTPOINT, VAULT_PATH,
+            BootVault, BootVaultUnlockMethod, VAULT_LUKS_DEVICE_NAME,
+            VAULT_MOUNTPOINT, VAULT_PATH,
         },
         efi_boot_device::EFIBootDevice,
     },
@@ -112,7 +113,15 @@ impl BootTrustManager {
         primary_partition_manager: LuksTpmTokenManager,
         configurators: Vec<Box<dyn Configurator>>,
     ) -> Result<(), PuavoError> {
-        if !efi::is_secure_boot_enabled() {
+        // After a recovery key unlock the configurators run even without
+        // Secure Boot, so the device can be reconfigured. The configurators
+        // that need Secure Boot check it themselves.
+        if !efi::is_secure_boot_enabled()
+            && !matches!(
+                boot_vault.unlock_method(),
+                Some(BootVaultUnlockMethod::RecoveryKey)
+            )
+        {
             info!("Secure Boot is disabled, skipping configuration...");
             return Ok(());
         }

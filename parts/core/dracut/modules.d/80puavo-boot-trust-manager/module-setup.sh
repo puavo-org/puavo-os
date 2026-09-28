@@ -18,6 +18,8 @@ install() {
                   /usr/bin/efi-updatevar \
                   /usr/bin/efi-readvar \
                   /usr/bin/sign-efi-sig-list \
+                  /usr/bin/cert-to-efi-sig-list \
+                  /usr/bin/sha256sum \
                   /usr/bin/chattr \
                   /usr/bin/loadkeys \
                   /usr/bin/openssl \
@@ -26,7 +28,8 @@ install() {
     # A full reconfiguration writes the Secure Boot keys of the device with
     # the same scripts as the installer.
     inst_multiple /usr/lib/puavo-ltsp-install/puavo-setup-secure-boot \
-                  /usr/lib/puavo-ltsp-install/puavo-prepare-secure-boot
+                  /usr/lib/puavo-ltsp-install/puavo-prepare-secure-boot \
+                  /usr/lib/puavo-ltsp-install/puavo-update-device-db
 
     # Install the command-line manager's key load and what it runs
     inst_multiple /usr/lib/puavo-core/puavo-command-line-manager-load \

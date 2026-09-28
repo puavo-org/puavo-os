@@ -2,12 +2,12 @@ use log::{debug, info, warn};
 use zeroize::Zeroizing;
 
 use crate::{
-    configurators::Configurator,
+    configurators::{Configurator, enrollment},
     devices::boot_vault::{BootVault, BootVaultUnlockMethod},
     display::UserDisplay,
     error::PuavoError,
     luks::tokens::LuksTpmTokenManager,
-    system::{efi, locale},
+    system::{efi, locale, reboot, secure_boot},
 };
 
 /// Reason for PIN configurator activation
@@ -27,6 +27,16 @@ enum PinPromptOutcome {
     Remove,
     /// User cancelled the operation.
     Cancelled,
+}
+
+/// What the user decided about a full reconfiguration.
+enum Reconfiguration {
+    /// Go ahead, the firmware is in Setup Mode.
+    Proceed,
+    /// Change nothing.
+    Declined,
+    /// Restart, so the Secure Boot keys can be cleared in the firmware setup.
+    RebootForSetupMode,
 }
 
 /// Minimum number of characters required for a PIN.
@@ -124,6 +134,48 @@ impl PinConfigurator {
             return Ok(PinPromptOutcome::NewPin(new_pin));
         }
     }
+
+    /// Asks whether to do a full reconfiguration. When the firmware is not
+    /// in Setup Mode, also asks whether to restart.
+    fn ask_reconfiguration(
+        display: &dyn UserDisplay,
+    ) -> Result<Reconfiguration, PuavoError> {
+        let strings = locale::strings();
+
+        let _ = display.clear();
+        if !display.ask_yes_no(strings.reconfiguration_question)? {
+            info!("User declined the reconfiguration");
+            return Ok(Reconfiguration::Declined);
+        }
+
+        // The Secure Boot keys can only be written in Setup Mode.
+        if efi::is_in_setup_mode() {
+            return Ok(Reconfiguration::Proceed);
+        }
+
+        if display.ask_yes_no(strings.setup_mode_reboot_question)? {
+            return Ok(Reconfiguration::RebootForSetupMode);
+        }
+
+        Ok(Reconfiguration::Declined)
+    }
+
+    /// Writes the Secure Boot keys of this device to the firmware and adds a
+    /// temporary enrollment for the next boot. Requests a restart.
+    fn reconfigure(boot_vault: &BootVault) -> Result<(), PuavoError> {
+        let mountpoint = boot_vault.resources().mountpoint();
+
+        secure_boot::update_database(mountpoint)?;
+        secure_boot::enroll_keys(mountpoint)?;
+        enrollment::add_reset_enrollment()?;
+
+        // Writing the platform key turns Secure Boot on. The firmware
+        // measures the new state only after a restart.
+        reboot::request();
+
+        info!("Secure Boot keys of this device written");
+        Ok(())
+    }
 }
 
 impl Configurator for PinConfigurator {
@@ -180,18 +232,40 @@ impl Configurator for PinConfigurator {
             efi::clear_pin_change_request();
         }
 
-        // Prompt for new PIN
-        let new_pin =
-            match self.prompt_for_new_pin(display).map_err(|error| {
-                PuavoError::PinConfigurationError(error.to_string())
-            })? {
-                PinPromptOutcome::NewPin(pin) => Some(pin),
-                PinPromptOutcome::Remove => None,
-                PinPromptOutcome::Cancelled => return Ok(()),
-            };
+        // After a recovery key unlock, offer a full reconfiguration first.
+        // The PIN is asked in any case, since the disk is enrolled again.
+        let reconfigured = match reason {
+            PinChangeReason::EfiVariableRequest => false,
+            PinChangeReason::RecoveryKeyUnlock => {
+                match Self::ask_reconfiguration(display)? {
+                    Reconfiguration::RebootForSetupMode => {
+                        info!("Restarting so the keys can be cleared");
+                        reboot::request();
+                        return Ok(());
+                    }
+                    Reconfiguration::Declined => false,
+                    Reconfiguration::Proceed => {
+                        Self::reconfigure(boot_vault).map_err(|error| {
+                            PuavoError::PinConfigurationError(error.to_string())
+                        })?;
+                        true
+                    }
+                }
+            }
+        };
 
-        // Update the PIN state of boot vault
-        boot_vault.set_pin(new_pin);
+        match self.prompt_for_new_pin(display).map_err(|error| {
+            PuavoError::PinConfigurationError(error.to_string())
+        })? {
+            PinPromptOutcome::NewPin(pin) => boot_vault.set_pin(Some(pin)),
+            PinPromptOutcome::Remove => boot_vault.set_pin(None),
+            // After a reconfiguration the disk must be enrolled again, so
+            // cancelling here means no PIN rather than no change.
+            PinPromptOutcome::Cancelled if reconfigured => {
+                boot_vault.set_pin(None)
+            }
+            PinPromptOutcome::Cancelled => return Ok(()),
+        }
 
         // Signal that TPM enrollment is required.
         // This avoids testing tokens, which could cause TPM lockout issues.
@@ -208,7 +282,106 @@ impl Configurator for PinConfigurator {
 
 #[cfg(test)]
 mod tests {
-    use super::{MIN_PIN_LENGTH, PinValidation, validate_pin};
+    use std::{cell::RefCell, collections::VecDeque};
+
+    use serial_test::serial;
+
+    use super::{
+        MIN_PIN_LENGTH, PinConfigurator, PinValidation, Reconfiguration,
+        validate_pin,
+    };
+    use crate::{
+        display::UserDisplay,
+        error::PuavoError,
+        system::efi::{self, testing::FakeEfiProvider},
+    };
+    use zeroize::Zeroizing;
+
+    /// A display that answers the yes/no questions from a script.
+    struct ScriptedDisplay {
+        answers: RefCell<VecDeque<bool>>,
+    }
+
+    impl ScriptedDisplay {
+        fn new(answers: &[bool]) -> Self {
+            Self { answers: RefCell::new(answers.iter().copied().collect()) }
+        }
+    }
+
+    impl UserDisplay for ScriptedDisplay {
+        fn ask_password(
+            &self,
+            _prompt: &str,
+        ) -> Result<Zeroizing<String>, PuavoError> {
+            unreachable!("these tests only answer questions")
+        }
+
+        fn ask_yes_no(&self, _prompt: &str) -> Result<bool, PuavoError> {
+            Ok(self
+                .answers
+                .borrow_mut()
+                .pop_front()
+                .expect("more questions than the script answers"))
+        }
+
+        fn show_message(&self, _text: &str) -> Result<(), PuavoError> {
+            Ok(())
+        }
+
+        fn clear(&self) -> Result<(), PuavoError> {
+            Ok(())
+        }
+    }
+
+    /// Sets whether the fake firmware is in Setup Mode.
+    fn firmware(setup_mode: bool) {
+        efi::set_provider(Box::new(FakeEfiProvider {
+            setup_mode,
+            ..Default::default()
+        }));
+    }
+
+    /// Returns the decision for the specified answers.
+    fn decide(setup_mode: bool, answers: &[bool]) -> Reconfiguration {
+        firmware(setup_mode);
+        let decision = PinConfigurator::ask_reconfiguration(
+            &ScriptedDisplay::new(answers),
+        )
+        .unwrap();
+        efi::reset_provider();
+
+        decision
+    }
+
+    #[test]
+    #[serial]
+    fn reconfiguration_in_setup_mode_goes_ahead() {
+        assert!(matches!(decide(true, &[true]), Reconfiguration::Proceed));
+    }
+
+    #[test]
+    #[serial]
+    fn declined_reconfiguration_changes_nothing() {
+        assert!(matches!(decide(true, &[false]), Reconfiguration::Declined));
+    }
+
+    #[test]
+    #[serial]
+    fn reconfiguration_outside_setup_mode_offers_a_restart() {
+        assert!(matches!(
+            decide(false, &[true, true]),
+            Reconfiguration::RebootForSetupMode
+        ));
+    }
+
+    #[test]
+    #[serial]
+    fn declined_restart_changes_nothing() {
+        assert!(matches!(
+            decide(false, &[true, false]),
+            Reconfiguration::Declined
+        ));
+    }
 
     #[test]
     fn accepts_ascii_alphanumeric_pin() {
