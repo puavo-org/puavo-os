@@ -160,7 +160,7 @@ case "$hosttype" in
     kernel_arguments="${kernel_arguments} hostname=${hostname} preempt=full"
     ;;
   laptop)
-    kernel_arguments='iomem=relaxed hostname=${hostname} preempt=full puavo.service.tlp.enabled=true'
+    kernel_arguments="iomem=relaxed hostname=${hostname} preempt=full puavo.service.tlp.enabled=true"
     ;;
   unregistered)
     kernel_arguments='iomem=relaxed puavo.service.tlp.enabled=true'
