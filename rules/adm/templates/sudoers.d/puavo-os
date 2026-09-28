@@ -1,3 +1,8 @@
+# do not log this command as it is triggered by "df"-alias (in Bash)
+# for admins
+Cmnd_Alias BTRFSQGROUPSHOW = /usr/bin/btrfs qgroup show -re /.puavo
+Defaults!BTRFSQGROUPSHOW !log_allowed, !log_input, !log_output
+
 # Puavo OS admins may gain root privileges without password
 puavo-os ALL=(ALL) NOPASSWD: ALL
 %<%= scope.lookupvar('adm::common_group') %> ALL=(ALL) NOPASSWD: ALL

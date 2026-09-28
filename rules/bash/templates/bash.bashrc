@@ -83,7 +83,7 @@ if [ "$(id -u)" = 0 ] || (groups | fgrep -qw puavo-os); then
       echo 'Quotas in Puavo OS:'
       echo '==================='
       echo
-      sudo -n btrfs qgroup show -re /.puavo
+      sudo -n /usr/bin/btrfs qgroup show -re /.puavo
     fi
   }
 
