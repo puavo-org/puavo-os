@@ -174,6 +174,12 @@ impl Configurator for PrepareSecureBootUpdateConfigurator {
         boot_vault: &mut BootVault,
         _primary_partition: &mut LuksTpmTokenManager,
     ) -> Result<bool, PuavoError> {
+        // No update is prepared while Secure Boot is disabled.
+        if !efi::is_secure_boot_enabled() {
+            debug!("Secure Boot is disabled, so no update is prepared");
+            return Ok(false);
+        }
+
         if !efi::is_secure_boot_update_allowed() {
             debug!(
                 "This device is not permitted to enroll a Secure Boot database"

@@ -346,12 +346,12 @@ impl LuksTpmTokenManager {
             arguments.push("--wipe-slot=tpm2".to_string());
         }
 
-        if !bindings.pcr_expressions.is_empty() {
-            arguments.push(format!(
-                "--tpm2-pcrs={}",
-                bindings.pcr_expressions.join("+")
-            ));
-        }
+        // Always passed, because without the option systemd-cryptenroll
+        // binds PCR 7 by default.
+        arguments.push(format!(
+            "--tpm2-pcrs={}",
+            bindings.pcr_expressions.join("+")
+        ));
 
         // A public key is used only together with PCRs it signs.
         match public_key_path {

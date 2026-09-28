@@ -81,6 +81,7 @@ install : installdirs
 		lib/puavo-read-recovery-bundle \
 		lib/puavo-reset \
 		lib/puavo-setup-secure-boot \
+		lib/puavo-update-device-db \
 		lib/puavo-torrent-updated \
 		lib/puavo-torrent-download-complete \
 		lib/puavo-write-boot-keymap \

@@ -9,6 +9,13 @@ use crate::error::PuavoError;
 pub const PUAVO_VENDOR: Uuid =
     Uuid::from_u128(0x7cb44677_9bb9_4504_bb8f_923def5fa3b1);
 
+/// Vendor GUID of the UEFI global variables.
+const EFI_GLOBAL_VENDOR: Uuid =
+    Uuid::from_u128(0x8be4df61_93ca_11d2_aa0d_00e098032b8c);
+
+/// UEFI variable holding the platform key. It is empty in Setup Mode.
+const PLATFORM_KEY_VARIABLE: &str = "PK";
+
 /// EFI variable name for requesting a PIN change from the OS
 const PIN_CHANGE_REQUEST_VARIABLE: &str = "PuavoPinChangeRequest";
 
@@ -48,6 +55,9 @@ pub fn read_variable(vendor: Uuid, name: &str) -> Result<Vec<u8>, PuavoError> {
 pub trait EfiProvider: Send + Sync {
     /// Check if Secure Boot is enabled.
     fn is_secure_boot_enabled(&self) -> bool;
+
+    /// Check if the firmware is in Setup Mode.
+    fn is_in_setup_mode(&self) -> bool;
 
     /// Check if a PIN change has been requested via EFI variable.
     fn is_pin_change_requested(&self) -> bool;
@@ -145,6 +155,16 @@ impl EfiProvider for SystemEfiProvider {
             .unwrap_or(false)
     }
 
+    fn is_in_setup_mode(&self) -> bool {
+        match read_variable(EFI_GLOBAL_VENDOR, PLATFORM_KEY_VARIABLE) {
+            Ok(contents) => contents.is_empty(),
+            Err(error) => {
+                warn!("Failed to read the platform key: {}", error);
+                false
+            }
+        }
+    }
+
     fn is_pin_change_requested(&self) -> bool {
         Self::read_bool_variable(PIN_CHANGE_REQUEST_VARIABLE)
     }
@@ -212,6 +232,11 @@ pub fn clear_secure_boot_update_request() {
     with_provider(|provider| provider.clear_secure_boot_update_request())
 }
 
+/// Check whether the firmware is in Setup Mode.
+pub fn is_in_setup_mode() -> bool {
+    with_provider(|provider| provider.is_in_setup_mode())
+}
+
 /// Check if a PIN change has been requested via EFI variable.
 pub fn is_pin_change_requested() -> bool {
     with_provider(|provider| provider.is_pin_change_requested())
@@ -240,6 +265,7 @@ pub mod testing {
     /// Configurable EFI provider shared by the library unit tests.
     pub struct FakeEfiProvider {
         pub secure_boot_enabled: bool,
+        pub setup_mode: bool,
         pub pin_change_requested: bool,
         pub secure_boot_update_allowed: bool,
         pub sbat_raise_requested: AtomicBool,
@@ -251,6 +277,7 @@ pub mod testing {
         fn default() -> Self {
             Self {
                 secure_boot_enabled: false,
+                setup_mode: false,
                 pin_change_requested: false,
                 secure_boot_update_allowed: false,
                 sbat_raise_requested: AtomicBool::new(false),
@@ -263,6 +290,10 @@ pub mod testing {
     impl EfiProvider for FakeEfiProvider {
         fn is_secure_boot_enabled(&self) -> bool {
             self.secure_boot_enabled
+        }
+
+        fn is_in_setup_mode(&self) -> bool {
+            self.setup_mode
         }
 
         fn is_pin_change_requested(&self) -> bool {

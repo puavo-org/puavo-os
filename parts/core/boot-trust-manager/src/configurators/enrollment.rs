@@ -15,7 +15,7 @@ use crate::{
     hashing::Hashed,
     luks::tokens::{Bindings, LuksTpmEnrollmentPolicy, LuksTpmTokenManager},
     secure_boot::chain::SystemDevice,
-    system::locale,
+    system::{efi, locale},
     tpm::read_pcrs_as_string,
 };
 
@@ -26,6 +26,24 @@ const CONFIGURATION_BASE_DIRECTORY: &str = "/etc/puavo/enrollment";
 pub const GENERATED_CONFIGURATION_DIRECTORY: &str = "/run/puavo/enrollment";
 
 const STATE_FILENAME: &str = "enrollment.state.json";
+
+/// Enrollment used for one boot after a reconfiguration. It binds no Secure
+/// Boot state, because the new state is measured only after a restart.
+const RESET_ENROLLMENT_PATH: &str = "/etc/puavo/reset/enrollment.json";
+
+/// Adds the reset enrollment to the enrollments of this boot. They are kept
+/// in a temporary directory, so it is used for one boot only.
+pub fn add_reset_enrollment() -> Result<(), PuavoError> {
+    let source = Path::new(RESET_ENROLLMENT_PATH);
+    let directory = Path::new(GENERATED_CONFIGURATION_DIRECTORY);
+    fs::create_dir_all(directory)?;
+
+    let target = directory.join("reset.json");
+    info!("Adding {:?} to the enrollments of this boot", source);
+    fs::copy(source, &target)?;
+
+    Ok(())
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone, Hash)]
 pub struct EnrollmentItemConfiguration {
@@ -457,6 +475,13 @@ impl Configurator for EnrollmentConfigurator {
         if boot_vault.is_enrollment_required() {
             info!("Enrollment is explicitly required");
             return Ok(true);
+        }
+
+        // The enrollments bind the Secure Boot state, so they are skipped
+        // while Secure Boot is disabled.
+        if !efi::is_secure_boot_enabled() {
+            info!("Skipping enrollments, because Secure Boot is disabled");
+            return Ok(false);
         }
 
         if !matches!(
