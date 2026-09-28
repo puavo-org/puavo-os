@@ -195,7 +195,8 @@ impl Configurator for PrepareSecureBootUpdateConfigurator {
             return Ok(false);
         }
 
-        Ok(self.next_update(boot_vault.resources())?.is_some())
+        // Activate even with nothing to enroll, so the request is cleared.
+        Ok(true)
     }
 
     fn configure(
@@ -204,10 +205,18 @@ impl Configurator for PrepareSecureBootUpdateConfigurator {
         _primary_partition: &mut LuksTpmTokenManager,
         display: &dyn UserDisplay,
     ) -> Result<(), PuavoError> {
+        let resources = boot_vault.resources().clone();
+
+        if self.next_update(&resources)?.is_none() {
+            info!("Every shipped Secure Boot database is enrolled");
+            efi::clear_secure_boot_update_request();
+            return Ok(());
+        }
+
         let _ = display
             .show_message(locale::strings().preparing_secure_boot_update);
 
-        self.prepare(&boot_vault.resources().clone())
+        self.prepare(&resources)
     }
 
     fn name(&self) -> &'static str {

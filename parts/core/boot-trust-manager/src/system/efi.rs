@@ -15,8 +15,8 @@ const PIN_CHANGE_REQUEST_VARIABLE: &str = "PuavoPinChangeRequest";
 /// EFI variable name for the keymap the boot prompts read keys with
 const BOOT_KEYMAP_VARIABLE: &str = "PuavoBootKeymap";
 
-/// EFI variable name for controlling whether the device is allowed to perform
-/// Secure Boot database updates.
+/// EFI variable name for requesting Secure Boot database updates. It is
+/// cleared once every shipped database is enrolled.
 const SECURE_BOOT_UPDATE_VARIABLE: &str = "PuavoSecureBootUpdate";
 
 /// EFI variable name for the recovery bundle.
@@ -54,6 +54,9 @@ pub trait EfiProvider: Send + Sync {
 
     /// Whether this device is permitted to enroll a Secure Boot database.
     fn is_secure_boot_update_allowed(&self) -> bool;
+
+    /// Clear the Secure Boot database update request.
+    fn clear_secure_boot_update_request(&self);
 
     /// Clear the PIN change request EFI variable.
     fn clear_pin_change_request(&self);
@@ -150,6 +153,10 @@ impl EfiProvider for SystemEfiProvider {
         Self::read_bool_variable(SECURE_BOOT_UPDATE_VARIABLE)
     }
 
+    fn clear_secure_boot_update_request(&self) {
+        Self::clear_variable(SECURE_BOOT_UPDATE_VARIABLE)
+    }
+
     fn clear_pin_change_request(&self) {
         Self::clear_variable(PIN_CHANGE_REQUEST_VARIABLE)
     }
@@ -198,6 +205,11 @@ pub fn is_secure_boot_enabled() -> bool {
 /// Check if Secure Boot updates are permitted on this device.
 pub fn is_secure_boot_update_allowed() -> bool {
     with_provider(|provider| provider.is_secure_boot_update_allowed())
+}
+
+/// Clear the Secure Boot database update request.
+pub fn clear_secure_boot_update_request() {
+    with_provider(|provider| provider.clear_secure_boot_update_request())
 }
 
 /// Check if a PIN change has been requested via EFI variable.
@@ -260,6 +272,8 @@ pub mod testing {
         fn is_secure_boot_update_allowed(&self) -> bool {
             self.secure_boot_update_allowed
         }
+
+        fn clear_secure_boot_update_request(&self) {}
 
         fn clear_pin_change_request(&self) {}
 
