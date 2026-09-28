@@ -148,6 +148,12 @@ preferred_boot_image=$(printf %s "$host_bootparams" | jq -r .preferred_boot_imag
 [ "$kernel_arguments" = "null" ] && kernel_arguments=''
 [ "$kernel_version"   = "null" ] && kernel_version=''
 
+# we should not boot laptops with "laptop"-profile,
+# use a distinct profile instead
+if [ "$hosttype" = 'laptop' ]; then
+  hosttype='laptop-netboot'
+fi
+
 if [ -z "$kernel_arguments" ]; then
   kernel_arguments='quiet splash'
 fi
@@ -159,7 +165,7 @@ case "$hosttype" in
   fatclient)
     kernel_arguments="${kernel_arguments} hostname=${hostname} preempt=full"
     ;;
-  laptop)
+  laptop-netboot)
     kernel_arguments="iomem=relaxed hostname=${hostname} preempt=full puavo.service.tlp.enabled=true"
     ;;
   unregistered)
