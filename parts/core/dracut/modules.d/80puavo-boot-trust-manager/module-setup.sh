@@ -16,10 +16,17 @@ install() {
                   /usr/sbin/cryptsetup         \
                   /usr/sbin/puavo-boot-trust-manager \
                   /usr/bin/efi-updatevar \
+                  /usr/bin/efi-readvar \
                   /usr/bin/sign-efi-sig-list \
                   /usr/bin/chattr \
                   /usr/bin/loadkeys \
-                  /usr/bin/openssl
+                  /usr/bin/openssl \
+                  /usr/bin/grep
+
+    # A full reconfiguration writes the Secure Boot keys of the device with
+    # the same scripts as the installer.
+    inst_multiple /usr/lib/puavo-ltsp-install/puavo-setup-secure-boot \
+                  /usr/lib/puavo-ltsp-install/puavo-prepare-secure-boot
 
     # Install Secure Boot update scripts
     inst "${moddir}/scripts/update-secure-boot-db" \
