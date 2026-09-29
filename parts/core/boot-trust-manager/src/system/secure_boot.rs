@@ -27,7 +27,7 @@ pub fn update(
 
     if !output.status.success() {
         return Err(PuavoError::ShellError(format!(
-            "{} refused: {}",
+            "{} failed: {}",
             command,
             String::from_utf8_lossy(&output.stderr)
         )));

@@ -95,7 +95,7 @@ impl LuksTpmEnrollmentPolicy {
         for (register, chain) in pcrs {
             let Some(chain) = chain else {
                 // Without a chain the tool reads the current PCR value.
-                debug!("{register} is bound to whatever it holds now");
+                debug!("{register} is bound to its current value");
                 pcr_expressions.push(register.clone());
                 continue;
             };
@@ -110,11 +110,11 @@ impl LuksTpmEnrollmentPolicy {
         }
 
         debug!(
-            "The policy binds {:?}, and {} the state this machine is in",
+            "The policy binds {:?} and {} the current state",
             pcr_expressions,
             match describes_current_state {
-                true => "describes",
-                false => "does not describe",
+                true => "matches",
+                false => "does not match",
             }
         );
 

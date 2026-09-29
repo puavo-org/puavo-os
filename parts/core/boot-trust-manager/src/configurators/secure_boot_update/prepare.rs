@@ -53,7 +53,7 @@ impl PrepareSecureBootUpdateConfigurator {
             SecureBootDatabaseUpdate::read_all(Path::new(DATABASE_DIRECTORY))?;
 
         if updates.is_empty() {
-            debug!("This image carries no Secure Boot database");
+            debug!("This image has no Secure Boot database");
             return Ok(Vec::new());
         }
 
@@ -153,7 +153,7 @@ impl PrepareSecureBootUpdateConfigurator {
             );
         } else {
             info!(
-                "{written} enrollment(s) stand for the state after the {} update",
+                "{written} enrollment(s) written for the state after the {} update",
                 update.variable().name()
             );
         }
