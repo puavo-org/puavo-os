@@ -11,8 +11,8 @@ OVMF_CODE=/usr/share/OVMF/OVMF_CODE_4M.fd
 OVMF_CODE_SECURE_BOOT=/usr/share/OVMF/OVMF_CODE_4M.secboot.fd
 OVMF_VARIABLES=/usr/share/OVMF/OVMF_VARS_4M.fd
 
-# Fixed FAT identifiers, so a generated next stage configuration can name the
-# filesystem it searches for by UUID.
+# Fixed FAT identifiers, so a generated next stage configuration can find its
+# filesystem by UUID.
 VOLUME_ID=12345678
 FILESYSTEM_UUID=1234-5678
 
@@ -21,7 +21,7 @@ FILESYSTEM_UUID=1234-5678
 NEXT_STAGE_MARKER="next stage configuration reached"
 
 # Seconds to wait for a boot. A booting case powers the machine off well before
-# this, so it only bites a case where nothing boots.
+# this, so the timeout only matters when nothing boots.
 BOOT_TIMEOUT=90
 
 # Builds the debug slab binary through the Makefile.

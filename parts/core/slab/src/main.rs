@@ -1,7 +1,7 @@
 // First stage bootloader. Firmware loads it first. It enforces a TPM
 // anti-rollback floor and then chainloads the next stage. The revocation list
-// is embedded, so the firmware Secure Boot check on this image vouches for the
-// list and no signature code is needed for it.
+// is embedded in this image, so the firmware Secure Boot check of the image
+// also covers the list and no signature code is needed for it.
 #![no_main]
 #![no_std]
 
@@ -38,9 +38,8 @@ fn main() -> Status {
         shutdown();
     }
 
-    // A device without a TPM has no counter to enforce and no sealed disk to
-    // protect, so the boot continues. A present but broken or tampered TPM
-    // still refuses, inside enforce.
+    // Without a TPM there is no counter and no sealed disk, so the boot
+    // continues. A broken or tampered TPM still stops the boot in enforce.
     match rollback::open_tcg() {
         Some(mut tcg) => rollback::enforce(&mut tcg),
         None => {

@@ -29,14 +29,14 @@
 //!  +----------------------------------------------------------+
 //! ```
 //!
-//! 1. Digest A equals A', so the signature is about this file
-//! 2. The digest of eContent equals B', so B is about that content
-//! 3. S verifies over B with one of the keys built in here
-//! 4. That key says which authority approved the file
+//! 1. Digest A equals A', so the signature covers this file
+//! 2. The digest of eContent equals B', so B covers that content
+//! 3. S verifies over B with one of the built-in keys
+//! 4. That key tells which authority approved the file
 //!
-//! Read upwards: a key we hold signed the attributes, the attributes commit to
-//! the content, and the content commits to the file. Only checks 3 and 4 do any
-//! cryptography, the first two compare stored bytes.
+//! Together: a built-in key signed the attributes, the attributes hold the
+//! digest of the content, and the content holds the digest of the file. Only
+//! checks 3 and 4 use cryptography, the first two compare stored bytes.
 
 mod records;
 
@@ -64,14 +64,14 @@ use rsa::signature::Verifier;
 use sha2::{Digest, Sha256};
 use uefi::Guid;
 
-/// Someone whose signature is accepted here, and the keys they sign with.
+/// An authority whose signatures are accepted, and its public keys.
 struct Authority {
     identity: [u8; 16],
     keys: &'static [&'static [u8]],
 }
 
-/// An authority that approved an image, and the bit that says whether it has
-/// been recorded yet.
+/// An authority that approved an image, and its bit in the set of recorded
+/// authorities.
 struct Approval {
     authority: &'static Authority,
     bit: usize,
@@ -87,8 +87,8 @@ const _: () = assert!(
 );
 static RECORDED: AtomicUsize = AtomicUsize::new(0);
 
-/// Where the image expects to be placed in memory, which belongs in the record
-/// of an image the machine is asked to run. Zero when the image does not specify.
+/// Returns the preferred load address of the image, for the image load event.
+/// Returns zero when the image cannot be parsed.
 fn link_time_address(image: &[u8]) -> u64 {
     PeFile64::parse(image)
         .map(|view| view.nt_headers().optional_header.image_base())
@@ -111,8 +111,8 @@ pub fn describe() {
 }
 
 /// Returns whether one of the built-in keys accepts the image.
-/// An image that is accepted is recorded together with the authority
-/// behind it, and a decision that cannot be recorded is refused.
+/// An accepted image is measured into the TPM together with its authority.
+/// If the measurement fails, the image is rejected.
 pub fn trusts(image: &[u8], device_path: &[u8]) -> bool {
     let Ok(view) = PeFile64::parse(image) else {
         error!("the image is not readable as a program, refusing");
@@ -130,8 +130,8 @@ pub fn trusts(image: &[u8], device_path: &[u8]) -> bool {
         }
     };
 
-    // An image may carry several signatures, so each is tried until one is
-    // approved by a built-in authority. The rest are then left unexamined.
+    // An image may have several signatures, so try each until a built-in
+    // authority approves one. The rest are not checked.
     for attribute_certificate in signatures {
         let attribute_certificate = match attribute_certificate {
             Ok(attribute_certificate) => attribute_certificate,
@@ -194,7 +194,7 @@ fn approving_authority(
         return None;
     };
 
-    // Verify the signed attributes has the expected content type.
+    // Verify the signed attributes have the expected content type.
     match approved_content_type(signer) {
         Some(content_type) if content_type == SPC_INDIRECT_DATA_OBJID => {}
         Some(_) => {
@@ -209,7 +209,7 @@ fn approving_authority(
 
     // Check 2:
     // The messageDigest attribute of signedAttrs against the whole
-    // eContent, which is what ties those attributes to file contents.
+    // eContent. This binds the attributes to the file contents.
     let Some(approved) = approved_digest(signer) else {
         verification!("the signature does not say what the signer approved");
         return None;
@@ -219,8 +219,8 @@ fn approving_authority(
         return None;
     }
 
-    // Convert signedAttrs to DER, which puts back its natural SET OF tag, the
-    // form the signature was made over.
+    // Encode signedAttrs as DER with its SET OF tag, because the signature was
+    // made over that form.
     let approval = match signer.signed_attrs.as_ref().map(Encode::to_der) {
         Some(Ok(approval)) => approval,
         Some(Err(error)) => {
@@ -245,7 +245,7 @@ fn approving_authority(
     authority_that_signed(&approval, &signature)
 }
 
-/// The authority whose key made the approval, if one of them here did.
+/// Returns the built-in authority whose key made the signature, if any.
 fn authority_that_signed(
     approval: &[u8],
     signature: &Signature,
@@ -263,8 +263,8 @@ fn authority_that_signed(
                 .verify(approval, signature)
                 .is_ok()
             {
-                // The shift stays in range because the assertion above
-                // keeps the table no longer than there are bits to shift by.
+                // The shift is in range, because the assertion above limits
+                // the table to the number of bits in usize.
                 return Some(Approval { authority, bit: 1 << index });
             }
         }
@@ -322,8 +322,8 @@ fn approved_content_type(signer: &SignerInfo) -> Option<ObjectIdentifier> {
     }
 }
 
-/// Records the whole decision: who authorised the image and the image itself.
-/// Returns whether recording process behaved expectedly.
+/// Records the authority that approved the image and the image itself.
+/// Returns whether both were recorded.
 fn record(approval: &Approval, image: &[u8], device_path: &[u8]) -> bool {
     if !record_authority(approval) {
         security_violation!(
@@ -338,10 +338,10 @@ fn record(approval: &Approval, image: &[u8], device_path: &[u8]) -> bool {
     true
 }
 
-/// Extends the ID of the specified authority into PCR 7, if this is the first time.
+/// Extends the authority identity into PCR 7, unless it is already recorded.
 fn record_authority(approval: &Approval) -> bool {
-    // Only a record that was written is remembered as written, so a failure
-    // here leaves the next image to try again.
+    // An authority is marked recorded only after a successful write, so after
+    // a failure the next image tries again.
     if RECORDED.load(Ordering::Relaxed) & approval.bit != 0 {
         verification!("the authority is already recorded");
         return true;

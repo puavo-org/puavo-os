@@ -15,9 +15,9 @@ macro_rules! debug {
     };
 }
 
-/// Prints one step of deciding about an image. Steps are indented under the
-/// line that announces the decision, so what belongs to which decision can be
-/// told apart when several images are decided about in one boot.
+/// Prints one step of an image verification. Steps are indented under the
+/// line that starts the verification, so the steps of different images can be
+/// told apart.
 macro_rules! verification {
     ($($arg:tt)*) => {
         debug!("  {}", format_args!($($arg)*))
@@ -78,7 +78,7 @@ pub fn pause_before_handoff() {
     }
 }
 
-/// A read error is treated as off.
+/// Returns whether the debug variable exists. A read error counts as off.
 fn detect() -> bool {
     VENDORS.iter().any(|vendor| {
         runtime::variable_exists(VARIABLE, vendor).unwrap_or(false)

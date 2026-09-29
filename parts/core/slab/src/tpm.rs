@@ -14,7 +14,7 @@ use uefi::proto::tcg::{EventType, PcrIndex};
 use zerocopy::byteorder::network_endian::{U16, U32, U64};
 use zerocopy::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
-// Part 2, structure tags (TPM_ST): whether a command carries an auth session.
+// Part 2, structure tags (TPM_ST): whether a command has an auth session.
 const TPM_ST_SESSIONS: u16 = 0x8002;
 const TPM_ST_NO_SESSIONS: u16 = 0x8001;
 // Part 2, reserved handles: the password session and the owner hierarchy.
@@ -46,7 +46,7 @@ const BASE_ATTRIBUTES: u32 = 0x0204_0004;
 const WRITE_STCLEAR_BIT: u32 = 0x0000_4000;
 const NO_DA_BIT: u32 = 0x0200_0000;
 
-// TPM_NT value for a counter, carried in attribute bits four to seven.
+// TPM_NT value for a counter, stored in attribute bits four to seven.
 const TPM_NT_COUNTER: u32 = 1;
 
 const NV_TYPE_SHIFT: u32 = 4;
@@ -57,12 +57,12 @@ const NAME_ALGORITHM_SHA256: u16 = 0x000B;
 // Both the counter and the base hold an eight byte value.
 const NV_DATA_SIZE: u16 = 8;
 
-// PCR that the machine records the images it loads into. Only something that
-// decides about images has anything to record there.
+// PCR that the firmware measures loaded images into. Slab uses it only with
+// the verifier feature.
 #[cfg(feature = "verifier")]
 pub const PCR_4: u32 = 4;
 
-// PCR that the disk binds and the base is extended into.
+// PCR that the disk key is sealed to and the base is extended into.
 pub const PCR_7: u32 = 7;
 
 // The log data of the base extension event.
@@ -228,7 +228,7 @@ impl ReadCommand {
 }
 
 /// TPM2_NV_ReadPublic. No authorization, so the no-sessions tag (Part 3). The
-/// response carries the public area, including the TPMA_NV attribute bits.
+/// response contains the public area, including the TPMA_NV attribute bits.
 #[derive(IntoBytes, Immutable)]
 #[repr(C)]
 struct ReadPublicCommand {
@@ -404,9 +404,8 @@ pub fn write_lock(tcg: &mut Tcg, index: u32) -> CommandResult<()> {
     submit(tcg, IndexCommand::new(NV_WRITE_LOCK, index).as_bytes())?.check()
 }
 
-/// One thing to add to the machine's account of the boot. What the log carries
-/// and what the register is extended with are separate, because they are not
-/// always the same bytes.
+/// One event to measure into a PCR and the event log. The logged data and the
+/// hashed data are separate, because they are not always the same bytes.
 pub struct Extension<'a> {
     pub pcr: u32,
     pub event_type: EventType,
@@ -415,8 +414,8 @@ pub struct Extension<'a> {
     pub flags: HashLogExtendEventFlags,
 }
 
-/// Extends the base into PCR 7. This pins the base and records this stage in
-/// the sealed state.
+/// Extends the base into PCR 7, so a changed base changes the PCR 7 value the
+/// disk key is sealed to.
 pub fn extend_base(tcg: &mut Tcg, base: u64) -> CommandResult<()> {
     extend(
         tcg,
@@ -430,9 +429,9 @@ pub fn extend_base(tcg: &mut Tcg, base: u64) -> CommandResult<()> {
     )
 }
 
-/// Hashes and logs one addition through the TCG2 protocol, so the event log
-/// stays replayable. See the TCG EFI Protocol specification,
-/// EFI_TCG2_PROTOCOL.HashLogExtendEvent, for what the flags ask for.
+/// Hashes, logs and extends one event through the TCG2 protocol, so the event
+/// log can be replayed. See the TCG EFI Protocol specification,
+/// EFI_TCG2_PROTOCOL.HashLogExtendEvent, for the meaning of the flags.
 pub fn extend(tcg: &mut Tcg, addition: Extension) -> CommandResult<()> {
     let event = PcrEventInputs::new_in_box(
         PcrIndex(addition.pcr),

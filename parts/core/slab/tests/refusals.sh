@@ -15,8 +15,8 @@ COUNTER_INDEX=0x01514B00
 FAILED=0
 
 # Case 1: a next stage below the minimum. A copy of slab stamped as grub
-# version 0, below the grub floor, stands in for an old next stage. It
-# is refused before it is ever loaded, so its contents do not matter.
+# version 0, below the grub floor, is used as an old next stage. It
+# is refused before it is loaded, so its contents do not matter.
 below_minimum="$WORK/below-minimum"
 mkdir -p "$below_minimum"
 stale_stage="$below_minimum/grubx64.efi"
@@ -35,8 +35,8 @@ assert_contains "below-minimum next stage refused" "$output" \
 assert_absent "below-minimum next stage not chainloaded" "$output" \
   "chainloading next stage"
 
-# Case 2: a slab older than the floor. Boot once so slab self defines and
-# raises the counter to the list version, then bump the counter out of band so
+# Case 2: a slab older than the floor. Boot once so slab defines the indices
+# and raises the counter to the list version. Then bump the counter directly so
 # the floor rises above this slab's list version, and boot again.
 old_slab="$WORK/old-slab"
 mkdir -p "$old_slab"

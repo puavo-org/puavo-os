@@ -1,5 +1,5 @@
 //! The TPM based anti-rollback implementation.
-//! Reads monotonic counter and a base, refuses
+//! Reads a monotonic counter and a base, and refuses
 //! next stage bootloaders below the minimum versions.
 //! Raises the version to match the embedded list version.
 
@@ -22,16 +22,16 @@ pub fn open_tcg() -> Option<ScopedProtocol<Tcg>> {
     boot::open_protocol_exclusive::<Tcg>(handle).ok()
 }
 
-/// Enforces the rollback floor, then raises and locks the counter to this
-/// the list version built in. Any failure that cannot be proven safe shuts the
-/// machine down rather than continuing the boot.
+/// Enforces the rollback floor, then raises the counter to the built-in list
+/// version and locks it. Any failure that cannot be proven safe shuts the
+/// machine down.
 pub fn enforce(tcg: &mut Tcg) {
     let (base, counter) = match ensure_indices(tcg) {
         Some(values) => values,
         None => shutdown(),
     };
 
-    // Pin the base and record this stage in PCR 7.
+    // Extend the base into PCR 7, so a changed base changes PCR 7.
     if let Err(error) = tpm::extend_base(tcg, base) {
         error_with_tpm_code("failed to extend the base into PCR 7", error);
         shutdown();
@@ -42,8 +42,8 @@ pub fn enforce(tcg: &mut Tcg) {
         }
     }
 
-    // Only a counter cannot be lowered, so an index of another type at this
-    // handle must not be trusted as the floor.
+    // Only a counter index cannot be lowered. Do not trust an index of any
+    // other type at this handle as the floor.
     match tpm::is_counter(tcg, COUNTER_INDEX) {
         Ok(true) => {}
         Ok(false) => {
@@ -93,9 +93,9 @@ pub fn enforce(tcg: &mut Tcg) {
 }
 
 /// Reads the base and counter. Defines both when both are absent.
-/// If exactly one is absent, the mapping is inconsistent, so it refuses.
-/// A define sets the base to the current counter, so on an enrolled
-/// device the floor can never end up lower, without PCR change.
+/// Returns `None` if only one of them exists.
+/// Defining sets the base to the current counter, so on an enrolled
+/// device the floor cannot be lowered without changing PCR 7.
 fn ensure_indices(tcg: &mut Tcg) -> Option<(u64, u64)> {
     let base = tpm::read_value(tcg, BASE_INDEX);
     let counter = tpm::read_value(tcg, COUNTER_INDEX);
@@ -138,7 +138,7 @@ fn initialize_indices(tcg: &mut Tcg) -> Result<(), ()> {
 
 /// Raises the counter to the target. The counter only rises, so
 /// this moves the floor forward and never lowers it. A failed raise
-/// shuts the machine down so revocation cannot silently stall.
+/// shuts the machine down, so a revocation is never silently skipped.
 fn raise_counter_to(tcg: &mut Tcg, current: u64, target: u64) {
     if target <= current {
         return;
