@@ -81,9 +81,9 @@ fn install_file(
     Ok(())
 }
 
-/// Configurator that publishes the device-specific Secure Boot keys
+/// Configurator that copies the device-specific Secure Boot keys
 /// from the boot vault into `/run/puavo/secure-boot-keys/` so
-/// userspace signers can read them without unsealing the vault.
+/// userspace signers can read them without opening the vault.
 pub struct DeviceSecureBootKeysConfigurator;
 
 impl DeviceSecureBootKeysConfigurator {

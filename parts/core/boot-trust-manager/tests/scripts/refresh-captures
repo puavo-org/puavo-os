@@ -1,5 +1,5 @@
 #!/bin/sh
-# Captures the TPM event logs of the boots the tests are designed against.
+# Captures the TPM event logs of the boots that the tests use.
 set -eu
 
 SCRIPTS_DIRECTORY="$(cd "$(dirname "$0")" && pwd)"

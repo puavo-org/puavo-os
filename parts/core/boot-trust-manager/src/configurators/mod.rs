@@ -41,8 +41,8 @@ pub fn configurators() -> Result<Vec<Box<dyn Configurator>>, PuavoError> {
     let configurators = configurators(DeviceSecureBootKeysConfigurator::new()?)
         .chain(configurators(PinConfigurator::new()?))
         // A database update is prepared before the enrollments and written
-        // to the firmware after them, so a token for the resulting state
-        // exists before the firmware enters it.
+        // to the firmware after them, so a token for the new state exists
+        // before the firmware changes.
         .chain(configurators(PrepareSecureBootUpdateConfigurator::new(
             secure_boot_update.clone(),
         )?))

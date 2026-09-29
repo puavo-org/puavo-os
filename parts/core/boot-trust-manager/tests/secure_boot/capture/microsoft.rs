@@ -1,6 +1,6 @@
-//! A boot of Microsoft signed shim under the variables the firmware ships
-//! with. Shim also measures its SBAT level, which no chain describes, so that
-//! event is taken from the capture.
+//! Tests a boot of the Microsoft signed shim with the default firmware
+//! variables. Shim also measures its SBAT level. Chains cannot predict that,
+//! so the event is taken from the capture.
 
 use std::path::Path;
 
@@ -85,9 +85,9 @@ fn chain_and_shim_events_reproduce_register() {
         Chain::new(&firmware_chain(directory.path())).predict(&device).unwrap();
     let logged = capture.events_of(REGISTER);
 
-    // No chain describes what shim measured. Those events are taken from the
-    // capture and extended onto the predicted value in order, so the final
-    // value agrees only when the predicted part is right.
+    // Chains cannot predict what shim measures. Those events are taken from
+    // the capture and extended onto the predicted value in order. The final
+    // value then matches only if the predicted part is correct.
     let mut value = predicted.value;
     for event in logged.iter().skip(predicted.steps.len()) {
         value = extend(&value, &event.digest);

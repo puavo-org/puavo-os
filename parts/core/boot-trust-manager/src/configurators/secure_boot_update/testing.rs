@@ -77,13 +77,13 @@ pub fn shipped_database(directory: &Path, built: u64) {
     fs::write(directory.join("built"), built.to_string()).unwrap();
 }
 
-/// Writes an empty revocation list beside the database, as the images have
-/// none.
+/// Writes an empty revocation list next to the database, because the images
+/// ship none.
 pub fn shipped_revocations(directory: &Path) {
     fs::write(directory.join("dbx.bin"), b"").unwrap();
 }
 
-/// An enrollment in the format of an installed one, measuring the named
+/// Creates an enrollment like an installed one that measures the specified
 /// variables.
 pub fn shipped_enrollment(
     name: &str,
@@ -113,7 +113,7 @@ pub fn shipped_enrollment(
     }
 }
 
-/// The update for one variable in an image directory.
+/// Reads the update for one variable from an image directory.
 pub fn shipped(image: &Path, variable: Variable) -> SecureBootDatabaseUpdate {
     SecureBootDatabaseUpdate::read(image, variable).unwrap().unwrap()
 }

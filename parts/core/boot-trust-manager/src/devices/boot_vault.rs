@@ -42,8 +42,8 @@ pub const VAULT_LUKS_DEVICE_PATH: &str = "/dev/mapper/puavo-boot-vault";
 /// This is purely aesthetic. Both unlock methods are always tried regardless of the prompt.
 pub const MAX_PIN_ONLY_ATTEMPTS: usize = 3;
 
-/// How many more attempts to allow after the device reports it is locked,
-/// before giving up so the user cannot keep guessing and prolong the lock.
+/// Number of attempts allowed after the TPM reports a lockout. More guesses
+/// would make the lockout last longer.
 pub const MAX_LOCKED_OUT_ATTEMPTS: usize = 3;
 
 /// Mount point for the decrypted vault filesystem at runtime.
@@ -189,11 +189,10 @@ impl BootVault {
 
     /// Attempt to unlock the LUKS device using user input (PIN or Recovery Key).
     ///
-    /// Each input is tried first as a PIN against the TPM tokens, then as a
-    /// recovery key. The recovery key therefore always works. Once the device
-    /// reports it is locked from too many wrong PINs, only
-    /// fixed number of further attempts are allowed before giving
-    /// up, so the user cannot keep guessing and prolong the lock.
+    /// Each input is tried first as a PIN on the TPM tokens and then as a
+    /// recovery key, so the recovery key always works. After the TPM reports
+    /// a lockout from too many wrong PINs, only a few more attempts are
+    /// allowed. More guesses would make the lockout last longer.
     ///
     /// Parameters:
     /// - `device`: The crypt device handle to activate.
@@ -697,8 +696,8 @@ impl BootVaultResources {
         self.mountpoint.join(SECURE_BOOT_CERTIFICATE_FILENAME)
     }
 
-    /// The database enrolled for the named Secure Boot variable, or None when
-    /// none was enrolled.
+    /// Returns the database enrolled for a Secure Boot variable, or None if
+    /// nothing was enrolled.
     pub fn enrolled_database(
         &self,
         name: &str,

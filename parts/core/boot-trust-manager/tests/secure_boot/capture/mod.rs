@@ -1,6 +1,6 @@
-//! Reads a captured boot, the log the measurements binary printed and the
-//! base the counter started from. Every variable and certificate in these
-//! tests comes from the capture.
+//! Reads a captured boot: the event log printed by the measurements binary
+//! and the base value of the counter. All variables and certificates in
+//! these tests come from the capture.
 
 mod database;
 mod device;
@@ -24,7 +24,7 @@ use uuid::Uuid;
 /// Directory of the captures.
 const CAPTURES: &str = "tests/fixtures/secure-boot";
 
-/// The register these chains describe.
+/// The PCR these chains predict.
 pub(super) const REGISTER: u32 = 7;
 
 /// The digest bank read from the capture. The firmware logs several.
@@ -33,9 +33,9 @@ const BANK: &str = "SHA256";
 /// The event type of a variable measurement.
 const FIRMWARE_VARIABLE: &str = "EFI_VARIABLE_DRIVER_CONFIG";
 
-/// The event type of an authority measurement. Its data has the layout of a
-/// variable measurement, but holds the one database entry that verified the
-/// image instead of the whole database.
+/// The event type of an authority measurement. Its data has the same layout
+/// as a variable measurement, but it contains only the database entry that
+/// verified the image.
 const AUTHORITY: &str = "EFI_VARIABLE_AUTHORITY";
 
 /// One event of the capture.
@@ -47,7 +47,7 @@ pub(super) struct Event {
 }
 
 impl Event {
-    /// The variable this event measured, or None for other events.
+    /// Returns the variable measured in this event, or None for other events.
     pub(super) fn variable(&self) -> Option<(String, Vec<u8>)> {
         if ![FIRMWARE_VARIABLE, AUTHORITY].contains(&self.kind.as_str()) {
             return None;
@@ -116,7 +116,7 @@ impl Capture {
     }
 
     /// The variables the firmware measured, in order. Authority events are
-    /// excluded, since they carry one entry rather than the whole variable.
+    /// excluded, because they contain one entry, not the whole variable.
     pub(super) fn measured_variables(&self) -> Vec<(String, Vec<u8>)> {
         self.events_of(REGISTER)
             .iter()
@@ -131,8 +131,8 @@ impl Capture {
     }
 }
 
-/// A machine serving the variables, the base and the PCR value of the
-/// captured boot, so that no test reads the machine running it.
+/// A fake device that returns the variables, the counter base and the PCR
+/// value of the captured boot, so the tests do not read the real machine.
 pub(super) struct CapturedDevice {
     variables: BTreeMap<String, Vec<u8>>,
     base: u64,
@@ -141,7 +141,7 @@ pub(super) struct CapturedDevice {
 }
 
 impl CapturedDevice {
-    /// The machine of the capture.
+    /// Creates the device for a capture.
     pub(super) fn of(capture: &Capture) -> Self {
         Self {
             variables: capture.measured_variables().into_iter().collect(),

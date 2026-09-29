@@ -1,5 +1,5 @@
-//! Chains this code rejects, and the two ways of naming an authority, using
-//! the captured slab boot.
+//! Tests chains that must be rejected, and the two ways to identify an
+//! authority, with the captured slab boot.
 
 use std::{
     fs,
@@ -18,7 +18,7 @@ use super::capture::{
     write_variables_into_directory,
 };
 
-/// The subject common names of the certificates of that boot.
+/// Subject common names of the certificates in the captured boot.
 const SLAB: &str = "Capture Slab";
 const NEXT_STAGE: &str = "Capture Next Stage";
 

@@ -1,4 +1,5 @@
-//! Checks the database reader against the database a captured boot measured.
+//! Tests the signature database reader with the database measured in a
+//! captured boot.
 
 use boot_trust_manager::error::PuavoError;
 use boot_trust_manager::secure_boot::database::{
@@ -13,11 +14,11 @@ use super::capture::{
     write_variables_into_directory,
 };
 
-/// The subject common names of the certificates of that boot.
+/// Subject common names of the certificates in the captured boot.
 const SLAB: &str = "Capture Slab";
 const NEXT_STAGE: &str = "Capture Next Stage";
 
-/// The database the captured boot measured.
+/// The database measured in the captured boot.
 fn database() -> Vec<u8> {
     Capture::read(slab::PROFILE)
         .measured_variables()

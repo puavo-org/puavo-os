@@ -162,7 +162,7 @@ pub fn strings() -> &'static Strings {
 
 /// Read the configured language from the GRUB environment on the
 /// mounted EFI partition. Returns English when the file is missing
-/// or names a language that is not supported.
+/// or contains a language that is not supported.
 pub fn read_locale_from_grub_environment(efi_mount_path: &Path) -> Locale {
     let grub_environment_path =
         efi_mount_path.join(GRUB_ENVIRONMENT_RELATIVE_PATH);
