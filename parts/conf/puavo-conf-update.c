@@ -336,15 +336,15 @@ update_cache(struct conf_cache **cache, const char *devicejson_path,
 
 	retvalue = E_OK;
 
-	/* First apply kernel arguments, because we get puavo.hosttype
-	 * and puavo.profiles.list from there, which affect subsequent
-	 * settings. */
-	if (apply_kernel_arguments(cache) != E_OK)
+	/* First apply device settings now, because those might affect
+	 * "puavo.hosttype" and "puavo.profiles.list", used for profiles. */
+	if (apply_device_settings(cache, devicejson_path, verbose) != E_OK)
 		retvalue = E_ERROR;
 
-	/* Also apply device settings now, because that might affect
-	 * puavo.hosttype and puavo.profiles.list. */
-	if (apply_device_settings(cache, devicejson_path, verbose) != E_OK)
+	/* Then apply kernel arguments, because we may get puavo.hosttype
+	 * and puavo.profiles.list from there as well, and these should
+	 * override the device settings from above. */
+	if (apply_kernel_arguments(cache) != E_OK)
 		retvalue = E_ERROR;
 
 	if (apply_one_profile(cache, IMAGE_CONF_PATH, verbose) != E_OK)
