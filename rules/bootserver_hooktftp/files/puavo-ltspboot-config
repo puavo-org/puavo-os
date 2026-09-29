@@ -28,7 +28,7 @@ boot_label() {
 label ltsp-NBD-${arch}
   menu label LTSP, using NBD with ${arch}-kernel
   kernel ltsp/${preferred_boot_image}/vmlinuz${kernel_version_suffix}-${arch}
-  append ro initrd=ltsp/${preferred_boot_image}/initrd.img${kernel_version_suffix}-${arch} init=/sbin/init-puavo puavo.hosttype=${hosttype} root=/dev/nbd0 nbdroot=dhcp,${preferred_boot_image},nbd0 netroot="nbd:${server_ip}:${preferred_boot_image}" ${kernel_arguments}
+  append ro initrd=ltsp/${preferred_boot_image}/initrd.img${kernel_version_suffix}-${arch} init=/sbin/init-puavo puavo.hosttype=${hosttype} puavo.profiles.list=${hosttype} root=/dev/nbd0 nbdroot=dhcp,${preferred_boot_image},nbd0 netroot="nbd:${server_ip}:${preferred_boot_image}" ${kernel_arguments}
 EOF
 }
 
@@ -278,7 +278,7 @@ label ltsp-NBD
   menu label LTSP, using NBD
   menu default
   kernel ltsp/${preferred_boot_image}/vmlinuz${kernel_version_suffix}
-  append ro initrd=ltsp/${preferred_boot_image}/initrd.img${kernel_version_suffix} init=/sbin/init-puavo puavo.hosttype=${hosttype} root=/dev/nbd0 nbdroot=dhcp,${preferred_boot_image},nbd0 netroot="nbd:${server_ip}:${preferred_boot_image}" ${kernel_arguments}
+  append ro initrd=ltsp/${preferred_boot_image}/initrd.img${kernel_version_suffix} init=/sbin/init-puavo puavo.hosttype=${hosttype} puavo.profiles.list=${hosttype} root=/dev/nbd0 nbdroot=dhcp,${preferred_boot_image},nbd0 netroot="nbd:${server_ip}:${preferred_boot_image}" ${kernel_arguments}
   ipappend 2
 EOF
 )
