@@ -163,7 +163,7 @@ fn capture_firmware_verifier() {
 #[cfg(feature = "verifier")]
 fn decide_from_now_on() {
     let Some((interface, _)) = FIRMWARE_VERIFIER.load() else {
-        error!("no verifier to stand in for, the machine keeps deciding");
+        error!("no firmware verifier to replace, the firmware keeps verifying");
         return;
     };
     // SAFETY: The interface belongs to the firmware, which keeps it for the
@@ -280,14 +280,14 @@ fn signature_accepted(
             core::slice::from_raw_parts(buffer as *const u8, size as usize)
         };
         if built_in_keys_accept(image, device_path) {
-            verification!("accepted by a key built in here");
+            verification!("accepted by a built-in key");
             return Status::SUCCESS;
         }
     }
 
     let status = firmware_authenticates(buffer, size, device_path);
     if status == Status::SUCCESS {
-        verification!("accepted by the machine");
+        verification!("accepted by the firmware");
     }
     status
 }
@@ -303,7 +303,7 @@ extern "sysv64" fn verify(buffer: *const c_void, size: u32) -> Status {
 /// Verifies the signature and version of an image for every caller. The device
 /// path tells where the image came from, and is empty when unknown.
 fn decide(buffer: *const c_void, size: u32, device_path: &[u8]) -> Status {
-    debug!("deciding about an image of {size} bytes");
+    debug!("verifying an image of {size} bytes");
 
     let status = signature_accepted(buffer, size, device_path);
     if status != Status::SUCCESS {

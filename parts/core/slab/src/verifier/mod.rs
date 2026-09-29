@@ -115,17 +115,17 @@ pub fn describe() {
 /// If the measurement fails, the image is rejected.
 pub fn trusts(image: &[u8], device_path: &[u8]) -> bool {
     let Ok(view) = PeFile64::parse(image) else {
-        error!("the image is not readable as a program, refusing");
+        error!("the image is not a valid PE image, refusing");
         return false;
     };
     let signatures = match AttributeCertificateIterator::new(&view) {
         Ok(Some(signatures)) => signatures,
         Ok(None) => {
-            verification!("the image carries no signature of its own");
+            verification!("the image has no signature");
             return false;
         }
         Err(error) => {
-            error!("the image hides its signature ({error:?}), refusing");
+            error!("the image signature cannot be read ({error:?}), refusing");
             return false;
         }
     };
@@ -180,17 +180,17 @@ fn approving_authority(
     // The digest of the file against the one stored in SpcIndirectDataContent.
     let mut digest = Sha256::new();
     if let Err(error) = authenticode_digest(view as &dyn PeTrait, &mut digest) {
-        error!("the image cannot be hashed as a program ({error:?}), refusing");
+        error!("the image cannot be hashed ({error:?}), refusing");
         return None;
     }
     if digest.finalize().as_slice() != signature.digest() {
-        verification!("the image is not the one the signature was made for");
+        verification!("the image does not match its signature");
         return None;
     }
 
     // Fetch the eContent data, which are the SpcIndirectDataContent above.
     let Some(signed_content) = signature.encapsulated_content() else {
-        verification!("the signature says nothing about what was signed");
+        verification!("the signature has no signed content");
         return None;
     };
 
@@ -198,11 +198,11 @@ fn approving_authority(
     match approved_content_type(signer) {
         Some(content_type) if content_type == SPC_INDIRECT_DATA_OBJID => {}
         Some(_) => {
-            verification!("the signer approved another kind of content");
+            verification!("the signed content has the wrong type");
             return None;
         }
         None => {
-            verification!("the signature does not say what kind of content");
+            verification!("the signature has no content type");
             return None;
         }
     }
@@ -211,11 +211,11 @@ fn approving_authority(
     // The messageDigest attribute of signedAttrs against the whole
     // eContent. This binds the attributes to the file contents.
     let Some(approved) = approved_digest(signer) else {
-        verification!("the signature does not say what the signer approved");
+        verification!("the signature has no message digest");
         return None;
     };
     if Sha256::digest(signed_content).as_slice() != approved.as_bytes() {
-        verification!("the signer approved something else");
+        verification!("the signed content does not match its digest");
         return None;
     }
 
@@ -224,11 +224,11 @@ fn approving_authority(
     let approval = match signer.signed_attrs.as_ref().map(Encode::to_der) {
         Some(Ok(approval)) => approval,
         Some(Err(error)) => {
-            error!("what the signer approved cannot be read back ({error:?})");
+            error!("the signed attributes cannot be encoded ({error:?})");
             return None;
         }
         None => {
-            verification!("the signature carries no approval to check");
+            verification!("the signature has no signed attributes");
             return None;
         }
     };
@@ -236,7 +236,7 @@ fn approving_authority(
     let signature = match Signature::try_from(signature.signature()) {
         Ok(signature) => signature,
         Err(error) => {
-            verification!("the signature itself is malformed ({error:?})");
+            verification!("the signature is malformed ({error:?})");
             return None;
         }
     };
@@ -270,7 +270,7 @@ fn authority_that_signed(
         }
     }
     verification!(
-        "none of the {} built-in authorities made this approval",
+        "none of the {} built-in authorities made this signature",
         AUTHORITIES.len()
     );
     None
@@ -304,7 +304,7 @@ fn approved_digest(signer: &SignerInfo) -> Option<OctetString> {
     match value.to_der().as_deref().map(OctetString::from_der) {
         Ok(Ok(digest)) => Some(digest),
         _ => {
-            debug!("the digest the signer approved is not readable");
+            debug!("the message digest cannot be read");
             None
         }
     }
@@ -316,7 +316,7 @@ fn approved_content_type(signer: &SignerInfo) -> Option<ObjectIdentifier> {
     match value.to_der().as_deref().map(ObjectIdentifier::from_der) {
         Ok(Ok(content_type)) => Some(content_type),
         _ => {
-            debug!("the kind of content the signer approved is not readable");
+            debug!("the content type cannot be read");
             None
         }
     }
@@ -348,7 +348,7 @@ fn record_authority(approval: &Approval) -> bool {
     }
 
     let Some(mut tcg) = rollback::open_tcg() else {
-        verification!("nothing keeps a record, the authority goes unrecorded");
+        verification!("no TPM, the authority is not recorded");
         return true;
     };
     match records::authority(&mut tcg, &approval.authority.identity) {
@@ -357,7 +357,7 @@ fn record_authority(approval: &Approval) -> bool {
             true
         }
         Err(error) => {
-            error!("could not record the authority decided with: {error:?}");
+            error!("could not record the authority: {error:?}");
             false
         }
     }
@@ -366,7 +366,7 @@ fn record_authority(approval: &Approval) -> bool {
 /// Extends a digest of the specified image into PCR 4 (mirrors UEFI firmware).
 fn record_image(image: &[u8], device_path: &[u8]) -> bool {
     let Some(mut tcg) = rollback::open_tcg() else {
-        verification!("nothing keeps an account of images, recording nothing");
+        verification!("no TPM, the image is not recorded");
         return true;
     };
     match records::image(&mut tcg, image, link_time_address(image), device_path)
