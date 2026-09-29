@@ -1,5 +1,5 @@
 #!/bin/sh
-# Boots slab twice against the same swtpm NV state. The first boot self defines
+# Boots slab twice against the same swtpm NV state. The first boot defines
 # the counter and base and raises to the list version. The second finds them
 # persisted, so the floor is stable, no raise happens, and PCR 7 is identical.
 # NV survives a TPM reset and PCR values do not, so an identical PCR 7 proves

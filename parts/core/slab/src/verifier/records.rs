@@ -31,8 +31,8 @@ const FLAT_IMAGE_EVENT_ID: u32 = 0x514B_F1A7;
 //                // for the encodings for DevicePath.
 // } UEFI_IMAGE_LOAD_EVENT;
 
-/// Records who allowed an image to run, the way the machine records the same
-/// thing about the keys it holds itself.
+/// Records the authority that approved an image in PCR 7, the same way the
+/// firmware records its own Secure Boot keys.
 pub fn authority(tcg: &mut Tcg, identity: &[u8]) -> CommandResult<()> {
     // Package event data using UEFI_VARIABLE_DATA for event of type
     // EV_EFI_VARIABLE_AUTHORITY.
@@ -75,9 +75,9 @@ pub fn authority(tcg: &mut Tcg, identity: &[u8]) -> CommandResult<()> {
     )
 }
 
-/// Records an image the machine is about to run, where the machine keeps the
-/// images it loads itself. What lands in PCR 4 is the hash of the program, and
-/// the record beside it says which image it was and where it came from.
+/// Records an image that is about to run in PCR 4, the same way the firmware
+/// records the images it loads. PCR 4 gets the image hash, and the event log
+/// gets the image location, size and device path.
 pub fn image(
     tcg: &mut Tcg,
     image: &[u8],
@@ -104,8 +104,8 @@ pub fn image(
         result => return result,
     }
 
-    // Some (older) firmware cannot explicitly hash a program.
-    // Record the bytes instead of refusing the boot.
+    // Some older firmware cannot hash a PE image.
+    // Hash the raw bytes instead of stopping the boot.
     verification!("this machine cannot hash a program, recording its bytes");
     flat_image(tcg, &record, image)
 }

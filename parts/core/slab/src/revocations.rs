@@ -1,13 +1,14 @@
 //! The revocation list compiled in.
 //!
-//! The list is carried rather than read from a signed file, so the firmware
-//! Secure Boot check on this image vouches for it and no signature code is
-//! needed. Bumping revocation means a new build with a higher LIST_VERSION.
+//! The list is built into this image instead of read from a signed file. The
+//! firmware Secure Boot check of the image also covers the list, so no
+//! signature code is needed. To revoke, make a new build with a higher
+//! LIST_VERSION.
 
 /// Fixed width of a component name, matching the version section.
 pub const NAME_LENGTH: usize = 128;
 
-/// The PE section that carries a component identity.
+/// The PE section that holds a component identity.
 pub const VERSION_SECTION_NAME: &[u8; 8] = b".version";
 
 /// The fleet wide logical revocation version this build enforces.
@@ -31,8 +32,8 @@ pub fn parse_identity(section: &[u8]) -> Option<(&[u8; NAME_LENGTH], u64)> {
     Some((name, version))
 }
 
-/// The minimum allowed version for the component named by a padded name, if
-/// the list mentions it. A component the list does not name has no floor.
+/// Returns the minimum allowed version of a component, given its padded name.
+/// Returns `None` for a component that is not in the list.
 pub fn minimum_version(padded_name: &[u8; NAME_LENGTH]) -> Option<u64> {
     COMPONENTS
         .iter()

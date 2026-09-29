@@ -59,7 +59,7 @@ struct Security2 {
 }
 
 /// The firmware verifier, captured once at startup and read later. The wrapper
-/// keeps out null pointers and can be stored safely in a shared global.
+/// rejects null pointers and can be stored safely in a shared global.
 struct FirmwareVerifier {
     instance: AtomicPtr<Security2>,
     authentication: AtomicPtr<c_void>,
@@ -97,9 +97,8 @@ impl FirmwareVerifier {
 
 static FIRMWARE_VERIFIER: FirmwareVerifier = FirmwareVerifier::empty();
 
-/// Whether this protocol is already there, which means an earlier instance of
-/// this bootloader is the one deciding and has done to the machine everything
-/// that comes with it.
+/// Returns whether this protocol is already installed. This means an earlier
+/// instance of this bootloader is already running and has done its setup.
 pub fn installed_already() -> bool {
     boot::locate_handle_buffer(SearchType::ByProtocol(&PROTOCOL_GUID)).is_ok()
 }
@@ -179,7 +178,7 @@ fn decide_from_now_on() {
 #[cfg(not(feature = "verifier"))]
 fn decide_from_now_on() {}
 
-/// The answer given to the firmware when it is about to load an image.
+/// Verifies an image for the firmware before the firmware loads it.
 #[cfg(feature = "verifier")]
 unsafe extern "efiapi" fn decide_for_firmware(
     _this: *const Security2,
@@ -207,8 +206,8 @@ unsafe extern "efiapi" fn decide_for_firmware(
     decide(file_buffer, size, path)
 }
 
-/// Whether the keys carried here accept the image, which is also where such an
-/// image gets into the machine's account of the boot.
+/// Returns whether the built-in keys accept the image. An accepted image is
+/// also measured into the TPM.
 #[cfg(feature = "verifier")]
 fn built_in_keys_accept(image: &[u8], device_path: &[u8]) -> bool {
     crate::verifier::trusts(image, device_path)
@@ -263,19 +262,18 @@ fn firmware_authenticates(
     }
 }
 
-/// Whether anything answered for here accepts the image: the keys built in, and
-/// then the machine.
+/// Returns whether the built-in keys or the firmware accept the image.
 ///
-/// A machine that accepts an image also records it, both the image and the key
-/// that let it through, so both are recorded for an image accepted here.
+/// The firmware measures an image it accepts and the key that accepted it. The
+/// same is done for an image the built-in keys accept.
 fn signature_accepted(
     buffer: *const c_void,
     size: u32,
     device_path: &[u8],
 ) -> Status {
-    // The built in keys are asked first, because they answer for what we sign,
-    // and asking the machine about an image it was never given the key for
-    // costs a full search of its key store before it says no.
+    // Check the built-in keys first, because they cover the images we sign.
+    // The firmware would search its whole key database before rejecting such
+    // an image.
     if !buffer.is_null() {
         // SAFETY: the image is not null and the caller gives its length.
         let image = unsafe {
@@ -294,16 +292,16 @@ fn signature_accepted(
     status
 }
 
-/// The answer to a caller asking through this protocol, which is the same
-/// answer the firmware is given.
+/// Verifies an image for a caller of this protocol. The result is the same as
+/// the firmware gets.
 extern "sysv64" fn verify(buffer: *const c_void, size: u32) -> Status {
-    // A caller asking through the protocol says nothing about where the image
-    // came from, so there is no device path to record.
+    // The protocol does not tell where the image came from, so there is no
+    // device path to record.
     decide(buffer, size, &[])
 }
 
-/// The one answer given about an image, whoever asks for it. The device path
-/// says where the image came from, for callers that know.
+/// Verifies the signature and version of an image for every caller. The device
+/// path tells where the image came from, and is empty when unknown.
 fn decide(buffer: *const c_void, size: u32, device_path: &[u8]) -> Status {
     debug!("deciding about an image of {size} bytes");
 
@@ -334,10 +332,10 @@ fn decide(buffer: *const c_void, size: u32, device_path: &[u8]) -> Status {
     Status::SUCCESS
 }
 
-/// Whether the image meets the revocation list minimum. An image that declares
-/// no version is allowed past this, because a signed image cannot fake its
-/// identity, and images outside the scheme, such as other operating systems,
-/// must keep booting. A component the list does not name has no floor.
+/// Returns whether the image meets the revocation list minimum. An image that
+/// declares no version is allowed, because a signed image cannot fake its
+/// identity, and images without versions, such as other operating systems,
+/// must still boot. A component that is not in the list has no floor.
 fn version_allowed(image: &[u8]) -> bool {
     let Some(section) = pe::read_section(image, VERSION_SECTION_NAME) else {
         verification!("image declares no version, allowing");

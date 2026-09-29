@@ -2,7 +2,7 @@
 # Boots slab from a server with Secure Boot on and custom keys, so slab reads
 # the next stage over the network.
 # The firmware must load a signed next stage and block an unsigned one.
-# No disk is attached, so nothing can satisfy the boot from one.
+# No disk is attached, so the boot cannot come from a disk.
 set -u
 
 . "$(dirname "$0")/helpers.sh"
@@ -42,8 +42,8 @@ sbsign --key "$WORK/db_slab.key" --cert "$WORK/db_slab.crt" \
 sbsign --key "$WORK/db_grub.key" --cert "$WORK/db_grub.crt" \
   --output "$WORK/grub.signed.efi" "$WORK/grubx64.efi" >/dev/null
 
-# Boots one case from the server and prints the serial output.
-# holds slab as the boot file and the next stage where slab asks for it.
+# Boots one case from the server and prints the serial output. The server
+# holds slab as the boot file and the next stage at the path slab requests.
 #   $1  next stage binary to serve
 boot_from_server() {
   state=$(mktemp -d)

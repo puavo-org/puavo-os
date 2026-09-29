@@ -23,7 +23,7 @@ use uefi_raw::protocol::network::pxe::{
     PxeBaseCodeProtocol, PxeBaseCodeTftpOpcode,
 };
 
-/// The next stage control is handed to.
+/// The path of the next stage on the partition.
 const NEXT_STAGE_PATH: &CStr16 = cstr16!("\\EFI\\puavo\\grub\\grubx64.efi");
 /// The path of the next stage on the server.
 const NEXT_STAGE_SERVER_PATH: &CStr8 = cstr8!("EFI/puavo/grub/grubx64.efi");
@@ -32,8 +32,8 @@ const NEXT_STAGE_SERVER_PATH: &CStr8 = cstr8!("EFI/puavo/grub/grubx64.efi");
 const DEVICE_PATH_BUFFER_SIZE: usize = 128;
 /// Largest next stage accepted, since the server decides the size.
 const NEXT_STAGE_SIZE_LIMIT: usize = 64 * 1024 * 1024;
-/// Block size asked for when reading from a server. Servers commonly answer
-/// the size of a file only to a client that also asks for a block size.
+/// Block size asked for when reading from a server. Many servers report the
+/// size of a file only when the client also asks for a block size.
 const NEXT_STAGE_BLOCK_SIZE: usize = 1468;
 
 /// Reads the next stage from partition or network.
@@ -58,7 +58,7 @@ fn read_from_server(device: Handle) -> Option<Vec<u8>> {
     let server = server_address(&base)?;
 
     // If the server does not answer how large the next stage file is,
-    // allocate largest allowed buffer for it.
+    // allocate the largest allowed buffer for it.
     let size = match file_size(&mut base, &server) {
         Ok(size) => usize::try_from(size).ok()?,
         Err(status) => {
@@ -101,17 +101,17 @@ fn file_size(
 
     let protocol: *mut PxeBaseCodeProtocol = ptr::from_mut(base).cast();
 
-    // SAFETY: The pointer comes from a borrow that outlives the call, the
-    // path is static, and the rest borrow locals of this function. The
-    // firmware writes only through the size.
+    // SAFETY: The pointer comes from a borrow that outlives the call. The
+    // path is static and the other arguments point to local variables. The
+    // firmware writes only to the size.
     let status = unsafe {
         let mtftp = (*protocol).mtftp;
         mtftp(
             protocol,
             PxeBaseCodeTftpOpcode::TFTP_GET_FILE_SIZE,
-            // No buffer, the size is all this asks for.
+            // No buffer, only the size is requested.
             ptr::null_mut(),
-            // Overwriting concerns writing a file.
+            // Overwrite applies only to writing a file.
             Boolean::FALSE,
             &mut size,
             &block_size,
@@ -119,7 +119,7 @@ fn file_size(
             NEXT_STAGE_SERVER_PATH.as_ptr().cast(),
             // Multicast settings, which a plain read does not need.
             ptr::null(),
-            // The buffer is skipped by leaving it out, not by this.
+            // The data is skipped by passing no buffer, not by this flag.
             Boolean::FALSE,
         )
     };
@@ -132,8 +132,8 @@ fn is_network(device: Handle) -> bool {
     open_network_protocol(device).is_some()
 }
 
-/// Opens the network protocol without taking it from the firmware, which
-/// keeps using it while the read happens.
+/// Opens the network protocol without exclusive access, because the firmware
+/// keeps using it during the read.
 fn open_network_protocol(
     device: Handle,
 ) -> Option<boot::ScopedProtocol<pxe::BaseCode>> {
@@ -143,9 +143,9 @@ fn open_network_protocol(
         controller: None,
     };
 
-    // SAFETY: Nothing is taken from the firmware, which keeps using the
-    // interface, and the interface stays usable for as long as the caller
-    // keeps what this returns.
+    // SAFETY: The protocol is opened without exclusive access, so the firmware
+    // can keep using it. The interface stays valid as long as the caller
+    // holds the returned value.
     unsafe {
         boot::open_protocol::<pxe::BaseCode>(
             parameters,
@@ -176,7 +176,7 @@ fn server_address(base: &pxe::BaseCode) -> Option<IpAddress> {
 
 /// Returns whether the next stage meets the revocation list minimum.
 /// A stage that declares no version is refused.
-/// A component the list does not name has no floor.
+/// A component that is not in the list has no floor.
 pub fn is_allowed(image: &[u8]) -> bool {
     let Some(section) = pe::read_section(image, VERSION_SECTION_NAME) else {
         security_violation!("next stage declares no version, refusing");
@@ -200,8 +200,8 @@ pub fn is_allowed(image: &[u8]) -> bool {
     }
 }
 
-/// Loads the exact buffer that was checked, so the bytes cannot change between
-/// check and the load, and starts it.
+/// Loads and starts the checked buffer. Using the same buffer means the bytes
+/// cannot change between the check and the load.
 pub fn start(image: &[u8]) -> Result<(), Status> {
     let mut path_buffer = [MaybeUninit::uninit(); DEVICE_PATH_BUFFER_SIZE];
     let file_path = DevicePathBuilder::with_buf(&mut path_buffer)
@@ -209,8 +209,8 @@ pub fn start(image: &[u8]) -> Result<(), Status> {
         .ok()
         .and_then(|builder| builder.finalize().ok());
 
-    // The next stage runs from this buffer, the file path only
-    // lets it learn the directory it was loaded from.
+    // The next stage runs from this buffer. The file path only
+    // tells it the directory it was loaded from.
     let handle = boot::load_image(
         boot::image_handle(),
         LoadImageSource::FromBuffer { buffer: image, file_path },
@@ -225,8 +225,8 @@ pub fn start(image: &[u8]) -> Result<(), Status> {
 }
 
 /// Points the next stage at the device this image was loaded from. Firmware
-/// the device unset for a buffer load, so without this the next stage cannot
-/// find where it was loaded from.
+/// leaves the device unset for a buffer load, so without this the next stage
+/// cannot find where it was loaded from.
 fn set_device(handle: Handle) {
     let Some(device) = device() else {
         debug!("no device handle, the next stage may not find its files");

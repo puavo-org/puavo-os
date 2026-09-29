@@ -14,17 +14,17 @@
 //! An authority entry holds the authority identity and its public keys. Each
 //! key is parsed at build time to detect invalid keys early.
 //!
-//! The directory the build is pointed at holds one subdirectory per authority.
-//! Anything else kept in one, such as what signs with a key, is ignored:
+//! The authority directory holds one subdirectory per authority. Other files
+//! in a subdirectory are ignored:
 //!
 //!     authorities
 //!     `-- example
-//!         |-- authority.guid   who this authority is
+//!         |-- authority.guid   the authority identity
 //!         |-- first.der        a public key it signs with
 //!         `-- second.der       the key replacing it
 //!
-//! Adding another DER file is how a key is replaced, and leaves the authority
-//! unchanged. That directory generates:
+//! To replace a key, add another DER file. The authority identity stays the
+//! same. That directory generates:
 //!
 //!     static AUTHORITIES: &[Authority] = &[Authority {
 //!         identity: [
@@ -47,13 +47,12 @@ use rsa::pkcs1::DecodeRsaPublicKey;
 use time::macros::format_description;
 use time::{Date, OffsetDateTime};
 
-/// Where the authorities come from, and what the files in one are called.
+/// The authority directory variable and the file names in an authority.
 const DIRECTORY_VARIABLE: &str = "SLAB_VERIFIER_KEYS";
 const IDENTITY_FILE: &str = "authority.guid";
 const KEY_EXTENSION: &str = "der";
 
-/// Where the floors come from, how a floor is written, and how old one may
-/// get.
+/// The floors file, the floor date format and the maximum floor age.
 const FLOORS_FILE: &str = "floors";
 const FLOOR_FORMAT: &[time::format_description::BorrowedFormatItem<'_>] =
     format_description!("[year][month][day]");
@@ -101,8 +100,8 @@ fn generate_floors() {
         .unwrap_or_else(|error| panic!("failed to write {output:?}: {error}"));
 }
 
-/// Generates one floor entry from a line of the floors file, refusing a
-/// version that is not a date or has gone stale.
+/// Generates one floor entry from a line of the floors file. Panics if the
+/// version is not a date or is too old.
 fn generate_floor(line: &str, today: u64) -> TokenStream {
     let (name, version) = line
         .split_once(char::is_whitespace)
@@ -219,14 +218,14 @@ fn keys_in(authority: &Path) -> Vec<PathBuf> {
     found
 }
 
-/// Returns sorted paths to the entries in the specified directory.
+/// Returns the paths to the entries in the specified directory.
 fn entries_of(directory: &Path) -> impl Iterator<Item = PathBuf> {
     let entries = fs::read_dir(directory)
         .unwrap_or_else(|error| panic!("cannot read {directory:?}: {error}"));
     entries.filter_map(|entry| Some(entry.ok()?.path()))
 }
 
-/// Asks for another build when this changes.
+/// Makes cargo rebuild when the path changes.
 fn watch(path: &Path) {
     println!("cargo:rerun-if-changed={}", path.display());
 }
