@@ -1,7 +1,7 @@
 #!/bin/sh
-# Captures what a boot of Microsoft signed shim measured, under the variables
-# the firmware ships with. A certificate made for the run is added to the
-# database, so that shim accepts the measurements binary.
+# Captures the measurements of a boot of the Microsoft signed shim with the
+# default firmware variables. A certificate created for this run is added to
+# the database, so that shim accepts the measurements binary.
 #
 #   $1  capture directory, a temporary one when absent
 set -u
@@ -46,8 +46,8 @@ openssl req -x509 -newkey rsa:4096 -nodes -keyout "${WORK}/db.key" \
   -out "${WORK}/db.crt" -subj "/CN=Capture Measurements/" -days 3650 \
   2>/dev/null
 
-# The certificate of the run is added beside the Microsoft ones in the variable
-# store.
+# Add the certificate of this run next to the Microsoft certificates in the
+# variable store.
 virt-fw-vars -i "${OVMF_VARIABLES}" -o "${STATE}/vars.fd" \
   --add-db "${GUID}" "${WORK}/db.crt" --secure-boot >/dev/null
 

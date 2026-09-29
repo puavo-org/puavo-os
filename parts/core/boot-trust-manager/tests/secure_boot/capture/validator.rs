@@ -1,12 +1,12 @@
-//! The validator checked against a captured boot, whose PCR value the device
-//! serves as the current one.
+//! Tests the validator with a captured boot. The fake device returns the
+//! captured PCR value as the current value.
 
 use boot_trust_manager::secure_boot::validator::Validator;
 
 use super::slab;
 use super::{Capture, CapturedDevice, write_variables_into_directory};
 
-/// The PCR of the chain, as a policy names it.
+/// The PCR of the chain, as written in a policy.
 const REGISTER_NAME: &str = "7:sha256";
 
 #[test]

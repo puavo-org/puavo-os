@@ -1,6 +1,6 @@
-//! The Secure Boot database installed in an image. Reads it, decides whether
-//! it should be enrolled and writes the pending contents of the variable.
-//! Does not write to the firmware.
+//! Reads the Secure Boot databases installed in an image, decides whether to
+//! enroll them and writes the new variable contents to a pending file. Does
+//! not write to the firmware.
 
 use std::{
     fmt, fs,
@@ -55,7 +55,7 @@ impl Variable {
     }
 
     /// Returns true when the device certificate is appended to this variable.
-    /// Only db authorizes images, so only db carries it.
+    /// Only db authorizes images, so only db needs it.
     fn includes_device_key(self) -> bool {
         matches!(self, Variable::Db)
     }
@@ -88,8 +88,8 @@ impl fmt::Display for Date {
     }
 }
 
-/// The database enrolled for one Secure Boot variable. The digest tells
-/// whether a database differs, the date whether it is newer.
+/// The database enrolled for one Secure Boot variable. The digest shows
+/// whether a database has changed and the build date whether it is newer.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct EnrolledDatabase {
     digest: String,
@@ -166,13 +166,13 @@ impl SecureBootDatabaseUpdate {
         &self.date
     }
 
-    /// The record of this database as enrolled.
+    /// Returns the record to store when this database is enrolled.
     pub fn enrolled(&self) -> EnrolledDatabase {
         EnrolledDatabase { digest: self.digest.clone(), built: self.built }
     }
 
-    /// Returns true when this database should be enrolled. Identical contents
-    /// or an older build date are not.
+    /// Returns true when this database should be enrolled. It is not enrolled
+    /// when the contents are identical or the build date is older.
     pub fn should_enroll(&self, enrolled: Option<&EnrolledDatabase>) -> bool {
         let name = self.variable.name();
 
@@ -230,8 +230,8 @@ impl SecureBootDatabaseUpdate {
         Ok(path)
     }
 
-    /// The name of the enrollment for the state after this update, derived
-    /// from the name of the enrollment it is copied from.
+    /// Returns the name of the enrollment used after this update, made from
+    /// the name of the enrollment it is copied from.
     pub fn enrollment_name(&self, base: &str) -> String {
         format!("{base} {}", self.enrollment_ending())
     }
@@ -242,10 +242,10 @@ impl SecureBootDatabaseUpdate {
         format!("after Secure Boot update {}", self.digest)
     }
 
-    /// A copy of the policy that reads this variable from the pending
-    /// contents instead of the machine, or None when the policy does not
-    /// measure it. The other variables are unchanged, since only one is
-    /// updated per boot.
+    /// Returns a copy of the policy that reads this variable from the pending
+    /// file instead of the machine, or None when the policy does not measure
+    /// it. Other variables are still read from the machine because only one
+    /// variable is updated per boot.
     pub fn policy_after(
         &self,
         policy: &LuksTpmEnrollmentPolicy,
@@ -304,8 +304,8 @@ mod tests {
     use std::collections::BTreeMap;
     use tempfile::TempDir;
 
-    /// A policy in the format of an installed one: it measures both
-    /// variables and an authority of the database.
+    /// A policy like an installed one. It measures both variables and an
+    /// authority in db.
     fn create_policy() -> LuksTpmEnrollmentPolicy {
         let chain = vec![
             Measurement::Variable {

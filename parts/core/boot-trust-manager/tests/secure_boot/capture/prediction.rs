@@ -1,5 +1,5 @@
-//! The prediction report of a captured boot, checked as the predict command
-//! builds it.
+//! Tests the prediction report for a captured boot, built the same way as
+//! the predict command builds it.
 
 use std::{
     collections::BTreeMap,
@@ -19,7 +19,7 @@ use super::{
     Capture, CapturedDevice, REGISTER, write_variables_into_directory,
 };
 
-/// The PCR of the chain, as a policy names it.
+/// The PCR of the chain, as written in a policy.
 const REGISTER_NAME: &str = "7:sha256";
 
 /// Writes a policy with one chain and returns its path.
@@ -47,7 +47,7 @@ fn policy_file(
     path
 }
 
-/// The report the predict command builds for a policy file.
+/// Builds the report for a policy file the same way as the predict command.
 fn report_of(policy: &Path, device: &CapturedDevice) -> Report {
     let configuration = EnrollmentItemConfiguration::read(policy).unwrap();
     let chains = configuration.policy.specific_pcrs.unwrap_or_default();

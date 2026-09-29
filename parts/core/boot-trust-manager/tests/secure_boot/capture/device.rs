@@ -1,7 +1,7 @@
 //! A chain reads a variable either from a file or from the machine. The same
-//! bytes must measure the same from either source, so the captured variables
-//! are served as a machine here and compared with the chain reading them from
-//! files.
+//! bytes must give the same measurement from both sources. These tests serve
+//! the captured variables as a machine and compare the result with a chain
+//! that reads them from files.
 
 use std::path::Path;
 

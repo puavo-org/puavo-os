@@ -1,4 +1,4 @@
-//! Reports what a policy predicts for the PCRs it binds.
+//! Reports the PCR values that a policy predicts.
 
 use std::{collections::BTreeMap, path::Path};
 

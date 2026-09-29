@@ -16,7 +16,7 @@ use crate::{
 };
 
 /// Writes a prepared Secure Boot database update to the firmware. Runs after
-/// the enrollments, so a token for the resulting state exists.
+/// the enrollments, so a token for the new state already exists.
 pub struct ApplySecureBootUpdateConfigurator {
     context: SecureBootUpdateContext,
 }
@@ -27,8 +27,8 @@ impl ApplySecureBootUpdateConfigurator {
         vec![Self { context }]
     }
 
-    /// Returns the prepared update when an enrollment for its resulting state
-    /// was applied, otherwise None. Without such an enrollment the next boot
+    /// Returns the prepared update when an enrollment for the new state was
+    /// applied, otherwise None. Without such an enrollment the next boot
     /// would require the recovery key.
     fn ready_to_apply(
         &self,
@@ -38,8 +38,8 @@ impl ApplySecureBootUpdateConfigurator {
             return Ok(None);
         };
 
-        // The enrollment state records the applied names, and an enrollment
-        // for this update has a name derived from it.
+        // The enrollment state stores the applied names. The name of an
+        // enrollment for this update ends with the update suffix.
         let ending = prepared.update.enrollment_ending();
         let applied = EnrollmentConfigurator::applied_names(resources)?;
 
@@ -67,7 +67,7 @@ impl ApplySecureBootUpdateConfigurator {
         let name = update.variable().name();
 
         // The firmware requires a timestamp later than the stored one, so
-        // the update carries the build date.
+        // the build date is used as the timestamp.
         secure_boot::update(
             name,
             resources.mountpoint(),
@@ -75,8 +75,7 @@ impl ApplySecureBootUpdateConfigurator {
             &update.date().to_string(),
         )?;
 
-        // Recorded so the same database is not enrolled again on the next
-        // boot.
+        // Record the database so it is not enrolled again on the next boot.
         resources.set_enrolled_database(name, &update.enrolled())?;
 
         Ok(true)
@@ -136,8 +135,8 @@ mod tests {
         update.enrollment_name("primary")
     }
 
-    /// An applier whose context holds the update, with the pending contents
-    /// written.
+    /// Creates an applier with the update in its context and writes the
+    /// pending contents.
     fn applier(
         update: &SecureBootDatabaseUpdate,
         resources: &BootVaultResources,

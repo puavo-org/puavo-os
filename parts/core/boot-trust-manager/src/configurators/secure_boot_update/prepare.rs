@@ -1,7 +1,6 @@
-//! Prepares a Secure Boot database update. Preparation decides whether the
-//! device has a database to enroll, takes the updates one variable per boot
-//! and writes an enrollment whose chain predicts the PCR state after the
-//! update.
+//! Prepares a Secure Boot database update. It checks whether the device has
+//! a database to enroll, updates one variable per boot and writes an
+//! enrollment that predicts the PCR state after the update.
 
 use std::{
     fs,
@@ -31,10 +30,10 @@ use crate::{
     system::{efi, locale},
 };
 
-/// Prepares one Secure Boot database update. It writes the pending contents
-/// of the variable and an enrollment for the resulting state, and does not
-/// write to the firmware. One variable is updated per boot, so every state
-/// the machine passes through has an enrollment.
+/// Prepares one Secure Boot database update. It writes the pending variable
+/// contents and an enrollment for the new state. It does not write to the
+/// firmware. One variable is updated per boot, so every intermediate state
+/// has an enrollment.
 pub struct PrepareSecureBootUpdateConfigurator {
     updates: Vec<SecureBootDatabaseUpdate>,
     shipped: Vec<EnrollmentItemConfiguration>,
@@ -113,8 +112,8 @@ impl PrepareSecureBootUpdateConfigurator {
         Ok(written)
     }
 
-    /// The update to apply in this boot, which is the first variable whose
-    /// database the device has not enrolled.
+    /// Returns the update to apply in this boot. It is the first variable
+    /// whose database is not yet enrolled on the device.
     fn next_update(
         &self,
         resources: &BootVaultResources,
@@ -181,8 +180,8 @@ impl Configurator for PrepareSecureBootUpdateConfigurator {
             return Ok(false);
         }
 
-        // The enrollments run only after a TPM unlock or a PIN change, and
-        // without them nothing binds the resulting state.
+        // The enrollments run only after a TPM unlock or a PIN change.
+        // Without them no token would match the new state.
         if !boot_vault.is_enrollment_required()
             && !matches!(
                 boot_vault.unlock_method(),
@@ -226,8 +225,8 @@ mod tests {
     use crate::secure_boot::update::Variable;
     use tempfile::TempDir;
 
-    /// A preparer for the databases in an image directory, with the given
-    /// installed enrollments.
+    /// Creates a preparer for the databases in an image directory and the
+    /// specified installed enrollments.
     fn preparer(
         image: &TempDir,
         runtime: &TempDir,
@@ -253,7 +252,7 @@ mod tests {
         vec![shipped_enrollment("primary", &["db", "dbx"])]
     }
 
-    /// The enrollments the preparer wrote.
+    /// Returns the enrollments that the preparer wrote.
     fn written_enrollments(
         preparer: &PrepareSecureBootUpdateConfigurator,
     ) -> Vec<EnrollmentItemConfiguration> {
@@ -278,7 +277,7 @@ mod tests {
             .clone()
     }
 
-    /// Records the update as enrolled, as applying it does.
+    /// Records the update as enrolled, like applying it does.
     fn record(
         resources: &BootVaultResources,
         update: &SecureBootDatabaseUpdate,

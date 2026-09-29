@@ -46,9 +46,10 @@ pub struct LuksTpmToken {
 /// Enrollment policy used when creating a TPM2 token via `systemd-cryptenroll`.
 #[derive(Serialize, Deserialize, Debug, Clone, Hash)]
 pub struct LuksTpmEnrollmentPolicy {
-    /// The PCRs to bind, each with the chain of measurements that predicts
+    /// The PCRs to bind, each with the chain of measurements used to predict
     /// its value. A PCR without a chain is bound to its current value. The
-    /// map is ordered, so the policy hashes and serializes deterministically.
+    /// map is ordered, so the policy hashes and serializes the same way every
+    /// time.
     #[serde(rename = "tpm2-pcrs")]
     pub specific_pcrs: Option<BTreeMap<String, Option<Vec<Measurement>>>>,
 
@@ -392,9 +393,9 @@ impl LuksTpmTokenManager {
         let output = Command::new("systemd-cryptenroll")
             .args(&arguments)
             // Security note: NEWPIN must be passed via environment variable as
-            // standard input does not work and there does not seem any other
-            // reliable way. While systemd erases the variable, it remains
-            // briefly visible via /proc.
+            // standard input does not work and there does not seem to be any
+            // other reliable way. While systemd erases the variable, it
+            // remains briefly visible via /proc.
             .env("NEWPIN", pin.map(|pin| pin.as_str()).unwrap_or_default())
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -417,8 +418,8 @@ impl LuksTpmTokenManager {
     /// * `token_id` - The identifier of the token to test.
     /// * `pin` - Optional PIN used for unlocking the token
     ///
-    /// Errors:
-    /// Returns `PuavoError` if the token is invalid or internal errors occur.
+    /// Returns:
+    /// Whether the token unlocks the device.
     pub fn test_token(
         &mut self,
         token_id: u32,

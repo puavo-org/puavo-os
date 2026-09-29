@@ -174,7 +174,7 @@ impl EnrollmentConfigurator {
     }
 
     /// Reads the enrollments in a directory sorted by file name.
-    /// A missing directory returns none.
+    /// Returns an empty list when the directory is missing.
     fn read_directory(
         directory: &str,
     ) -> Result<Vec<EnrollmentItemConfiguration>, PuavoError> {
@@ -263,7 +263,7 @@ impl EnrollmentConfigurator {
         Ok(enrollment_hashes != installed_enrollment_hashes)
     }
 
-    /// Collect all unique PCR indices used by the all enrollment configurations.
+    /// Collect all unique PCR indices used by the enrollment configurations.
     fn collect_pcr_indices(items: &[EnrollmentItemConfiguration]) -> Vec<u32> {
         let mut indices: Vec<u32> = items
             .iter()
@@ -363,9 +363,8 @@ impl EnrollmentConfigurator {
     }
 
     /// Evaluates every enrollment. At least one must match the current state
-    /// of the machine, otherwise every token would bind a different state and
-    /// the disk could not be unlocked. The others may describe a future
-    /// state.
+    /// of the machine, otherwise no token would match and the disk could not
+    /// be unlocked. The others may match a future state.
     fn evaluate(
         items: Vec<EnrollmentItemConfiguration>,
     ) -> Result<Vec<(EnrollmentItemConfiguration, Bindings)>, PuavoError> {
@@ -395,7 +394,7 @@ impl EnrollmentConfigurator {
         Ok(evaluated)
     }
 
-    /// Enroll all configured TPM policies for both the boot vault.
+    /// Enroll all configured TPM policies for the boot vault.
     pub fn enroll_all(
         &mut self,
         boot_vault: &mut BootVault,

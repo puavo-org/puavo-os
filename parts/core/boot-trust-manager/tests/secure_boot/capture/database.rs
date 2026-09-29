@@ -1,6 +1,6 @@
-//! Rebuilds the databases the captured boots measured from their entries and
-//! compares the bytes, which checks that the lists this code writes have the
-//! format the firmware reads.
+//! Rebuilds the databases measured in the captured boots from their entries
+//! and compares the bytes. This checks that the signature lists written by
+//! this code use the format the firmware reads.
 
 use boot_trust_manager::secure_boot::database::{
     SignatureDatabase, SignatureList,
@@ -18,7 +18,7 @@ fn measured_database(profile: &str) -> Vec<u8> {
         .1
 }
 
-/// The same database rebuilt from the entries it reads as.
+/// Rebuilds a database from the entries read from it.
 fn recreate_from_measurement_data(measured: &[u8]) -> Vec<u8> {
     SignatureDatabase::read(measured)
         .unwrap()

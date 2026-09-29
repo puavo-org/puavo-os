@@ -41,7 +41,7 @@ enum Commands {
     },
     /// Run configurators and automatically unmount everything afterwards
     Manage,
-    /// Print what a policy predicts for its registers and what they hold
+    /// Print the PCR values a policy predicts and their current values
     Predict {
         /// Path to an enrollment policy file
         #[arg(long = "policy")]

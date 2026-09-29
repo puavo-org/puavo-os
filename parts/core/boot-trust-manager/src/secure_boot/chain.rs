@@ -1,5 +1,5 @@
 //! Computes the value of a PCR from a chain of measurements declared as data.
-//! A change is predicted by replacing the contents a measurement reads.
+//! To predict a change, replace the contents that a measurement reads.
 
 use std::{collections::BTreeMap, fmt, fs, path::PathBuf};
 
@@ -135,7 +135,7 @@ pub enum Measurement {
     /// Secure Boot separator measurement.
     Separator,
 
-    /// The base value slab extends, read from its NV index.
+    /// The base value that slab extends, read from its NV index.
     SlabBase,
 
     /// The authority that verified an image in slab. Slab measures each
@@ -170,7 +170,7 @@ impl fmt::Display for Measurement {
 
 impl Measurement {
     /// Returns the bytes hashed for this measurement and a description of
-    /// their source. Variable contents are collected for future lookups.
+    /// their source. Variable contents are saved for later authority lookups.
     fn measured<'chain>(
         &'chain self,
         device: &dyn Device,
