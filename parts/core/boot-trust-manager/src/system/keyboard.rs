@@ -6,7 +6,7 @@ use crate::system::efi;
 
 const LOADKEYS: &str = "/usr/bin/loadkeys";
 
-/// Where the keymaps built for the boot environment are.
+/// Directory of the keymaps built for the boot environment.
 const KEYMAP_DIRECTORY: &str = "/usr/share/puavo/keymaps";
 
 const KEYMAPS: &[&str] = &["us", "fi", "se", "de", "gb"];
@@ -17,14 +17,14 @@ const KEYMAPS: &[&str] = &["us", "fi", "se", "de", "gb"];
 /// Returns:
 /// The applied layout upon success.
 pub fn load_configured_keymap() -> Option<&'static str> {
-    // Anything that loads is better than a prompt nobody can type into.
+    // Any working keymap is better than a prompt that cannot be typed into.
     configured_keymap()
         .into_iter()
         .chain(KEYMAPS.iter().copied())
         .find(|keymap| load(keymap))
 }
 
-/// The keymap this device is set to use, if it is one we have.
+/// Return the keymap this device is configured to use, if it is supported.
 fn configured_keymap() -> Option<&'static str> {
     let configured = efi::read_boot_keymap()?;
 
@@ -37,7 +37,7 @@ fn configured_keymap() -> Option<&'static str> {
 /// Load a keymap into the console.
 ///
 /// Returns:
-/// Whether the console now reads keys with it.
+/// Whether the keymap was loaded.
 fn load(keymap: &str) -> bool {
     let path = format!("{}/{}.kmap.gz", KEYMAP_DIRECTORY, keymap);
 

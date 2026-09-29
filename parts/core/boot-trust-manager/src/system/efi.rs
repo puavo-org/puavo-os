@@ -12,7 +12,7 @@ pub const PUAVO_VENDOR: Uuid =
 /// EFI variable name for requesting a PIN change from the OS
 const PIN_CHANGE_REQUEST_VARIABLE: &str = "PuavoPinChangeRequest";
 
-/// EFI variable name for the keymap the boot prompts read keys with
+/// EFI variable name for the keymap used by the boot prompts
 const BOOT_KEYMAP_VARIABLE: &str = "PuavoBootKeymap";
 
 /// EFI variable name for controlling whether the device is allowed to perform
@@ -62,7 +62,7 @@ pub trait EfiProvider: Send + Sync {
     /// Returns `None` if the variable does not exist.
     fn read_recovery_bundle(&self) -> Option<String>;
 
-    /// Read the keymap the boot prompts of this device read keys with.
+    /// Read the keymap used by the boot prompts of this device.
     /// Returns None if the variable does not exist.
     fn read_boot_keymap(&self) -> Option<String>;
 }
@@ -215,7 +215,7 @@ pub fn read_recovery_bundle() -> Option<String> {
     with_provider(|provider| provider.read_recovery_bundle())
 }
 
-/// Read the keymap the boot prompts of this device read keys with.
+/// Read the keymap used by the boot prompts of this device.
 pub fn read_boot_keymap() -> Option<String> {
     with_provider(|provider| provider.read_boot_keymap())
 }
