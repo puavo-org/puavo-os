@@ -106,7 +106,7 @@ impl Configurator for ApplySecureBootUpdateConfigurator {
 
         // The firmware measures the variables at boot, so the PCR reflects
         // the new state only after a reboot.
-        info!("A Secure Boot database was enrolled, so the machine restarts");
+        info!("A Secure Boot database was enrolled, restarting");
         reboot::request();
         Ok(())
     }
@@ -270,7 +270,7 @@ mod tests {
 
         assert!(!applier.apply(&resources).unwrap());
 
-        assert!(!record.exists(), "the firmware was given something");
+        assert!(!record.exists(), "nothing should be written to the firmware");
         assert_eq!(resources.enrolled_database("db").unwrap(), None);
     }
 }

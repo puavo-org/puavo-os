@@ -146,7 +146,7 @@ impl SecureBootDatabaseUpdate {
 
         let digest = hex::encode(Sha256::digest(&contents));
         debug!(
-            "This image carries a {} of {} bytes, built {}, as {}",
+            "This image has a {} of {} bytes, built {}, digest {}",
             variable.name(),
             contents.len(),
             built,
