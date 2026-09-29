@@ -20,7 +20,7 @@ pub const DEFAULT_TOKEN_LABEL: &str = "puavo-kps";
 /// Default PIN for HSM authentication
 pub const DEFAULT_PIN: &str = "123456";
 
-/// Return the default PIN as an owned, zeroized on drop.
+/// Return the default PIN as an owned value that is zeroized on drop.
 pub fn default_pin() -> Zeroizing<String> {
     Zeroizing::new(DEFAULT_PIN.to_owned())
 }

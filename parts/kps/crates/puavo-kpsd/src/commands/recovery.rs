@@ -366,11 +366,10 @@ fn read_recovery_bundle_from_json(
     Ok(recovery_bundle)
 }
 
-/// Decode a recovery bundle from a image that carries the
-/// bundle data inside a single QR code.
+/// Decode a recovery bundle from an image with a QR code.
 ///
-/// The image must contain exactly one decodable QR code. Zero or more
-/// than one QR codes cause the unwrap of this bundle to fail.
+/// The image must contain exactly one readable QR code. Otherwise the
+/// unwrap of this bundle fails.
 fn read_recovery_bundle_from_image(
     path: &PathBuf,
 ) -> Result<RecoveryBundle, RecoveryKeyError> {
