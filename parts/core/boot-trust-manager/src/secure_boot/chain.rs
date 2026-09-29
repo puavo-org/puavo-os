@@ -118,7 +118,12 @@ impl Source {
 #[derive(Debug, Clone, Hash, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum Entry {
-    /// By a glob pattern on the certificate subject common name.
+    /// By a glob pattern on the certificate subject common name. Keep it a
+    /// pattern. A chain also predicts the database that is about to be
+    /// enrolled, and after a key rotation that database has a new
+    /// certificate. An exact name would only match the old certificate, and
+    /// Secure Boot updates would stop working. The database contains exactly
+    /// one matching certificate.
     Subject(String),
     /// By the certificate in this file.
     Certificate(PathBuf),
