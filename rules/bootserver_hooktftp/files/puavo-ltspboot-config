@@ -37,7 +37,7 @@ local_os_menuentry() {
   cat <<'EOF'
 menuentry 'Local OS' --class os --id local {
   insmod chain
-  if [ $grub_platform = "efi" ] ; then
+  if [ "$grub_platform" = 'efi' ] ; then
     for bootloader in /EFI/puavo/grub/grubx64.efi \
                       /EFI/puavo/grubx64.efi \
                       /EFI/debian/grubx64.efi; do
