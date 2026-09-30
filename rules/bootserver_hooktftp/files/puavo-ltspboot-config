@@ -8,7 +8,7 @@
 
 set -eu
 
-tftpbase="/var/lib/tftpboot/ltsp"
+tftpbase='/var/lib/tftpboot/ltsp'
 
 get_bootparams() {
   # this is the same as
@@ -16,8 +16,7 @@ get_bootparams() {
   # but is more efficient (about 0.1 second in real bootserver hardware)
   api_server=$(puavo-resolve-api-server --no-cloud-fallback) || return 1
   curl --cacert /etc/puavo-conf/rootca.pem --silent --fail \
-       -H "Authorization: Bootserver" \
-        "${api_server}/v3/bootparams_by_mac/$1"
+       -H 'Authorization: Bootserver' "${api_server}/v3/bootparams_by_mac/$1"
 }
 
 grub_error() {
@@ -168,28 +167,29 @@ if [ ! -d "$tftpdir" ]; then
   tftpdir_missing=true
 fi
 
-if [ "$hosttype" = "unregistered" ]; then
+if [ "$hosttype" = 'unregistered' ]; then
   show_image_menu "$preferred_boot_image" "$tftpdir_missing"
   exit 0
 fi
 
 if $tftpdir_missing; then
-  grub_error "Missing ${preferred_boot_image}"
+  grub_error 'Missing tftpdir'
 fi
 
 kernel_version_suffix=''
 if [ -n "$kernel_version" ] \
-  && test -e "${tftpdir}/vmlinuz-${kernel_version}"; then
-  kernel_version_suffix="-$kernel_version"
+  && [ -e "${tftpdir}/vmlinuz-${kernel_version}" ]; then
+    kernel_version_suffix="-${kernel_version}"
 fi
 
-# Ensure the kernel file is present.
-if ! test -e "${tftpdir}/vmlinuz${kernel_version_suffix}"; then
+# Ensure the kernel file is present (because of the test above,
+# this is only triggered when we do not have a default kernel).
+if ! [ -e "${tftpdir}/vmlinuz${kernel_version_suffix}" ]; then
   grub_error 'No kernel found'
 fi
 
 # Ensure the corresponding initrd file is present.
-if ! test -e "${tftpdir}/initrd.img${kernel_version_suffix}"; then
+if ! [ -e "${tftpdir}/initrd.img${kernel_version_suffix}" ]; then
   # Something is wrong, use the default kernel.
   kernel_version_suffix=''
 fi
