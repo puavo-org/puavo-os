@@ -51,11 +51,11 @@ install() {
   fi
 
   # Install hooks
-  inst_hook pre-udev 90 "${moddir}/puavo-kernel-module-setup.sh"
-  inst_hook pre-pivot 90 "${moddir}/puavo-rootmount.sh"
-  inst_hook pre-pivot 91 "${moddir}/puavo-plymouth.sh"
-  inst_hook cleanup 20 "${moddir}/puavo-nbd-server.sh"
-  inst_hook cleanup 21 "${moddir}/puavo-netboot-address.sh"
+  inst_hook pre-udev     90 "${moddir}/puavo-kernel-module-setup.sh"
+  inst_hook pre-pivot    90 "${moddir}/puavo-rootmount.sh"
+  inst_hook pre-pivot    91 "${moddir}/puavo-plymouth.sh"
+  inst_hook cleanup      20 "${moddir}/puavo-nbd-server.sh"
+  inst_hook cleanup      21 "${moddir}/puavo-netboot-address.sh"
   inst_hook pre-shutdown 10 "${moddir}/puavo-release-root.sh"
 
   # Plymouth themes support displaying an image at runtime.
