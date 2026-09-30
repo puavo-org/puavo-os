@@ -78,4 +78,4 @@ grub-mkimage \
   --output "$output" \
   $modules
 
-"$(dirname "$0")/add-bootloader-version-section" "$output" grub 1
+"$(dirname "$0")/add-bootloader-version-section" "$output" grub
