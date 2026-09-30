@@ -1,6 +1,6 @@
 class bootserver_pxe {
+  include ::bootserver_pxe::generate_grub_pxe
   include ::packages
-  include bootserver_pxe::generate_grub_pxe
 
   define tftpexport($filedir) {
     $filename = $title
