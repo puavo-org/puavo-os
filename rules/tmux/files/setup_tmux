@@ -13,7 +13,7 @@ case "$puavo_hosttype" in
   diskinstaller)       bg_color='yellow'   ; fg_color='black' ;;
   fatclient)           bg_color='blue'     ; fg_color='white' ;;
   laptop)              bg_color='green'    ; fg_color='black' ;;
-  laptop-netboot)      bg_color='green'    ; fg_color='white' ;;
+  laptop-netboot)      bg_color='black'    ; fg_color='green' ;;
   preinstalled)        bg_color="'#ff8800'"; fg_color='black' ;;
   wirelessaccesspoint) bg_color='magenta'  ; fg_color='white' ;;
   unregistered)        bg_color='cyan'     ; fg_color='black' ;;
