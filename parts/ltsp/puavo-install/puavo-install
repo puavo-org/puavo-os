@@ -572,6 +572,11 @@ update_images() {
 
 # main
 
+# Mount the EFI variables when missing, a device may have none.
+mountpoint -q /sys/firmware/efi/efivars \
+  || mount -t efivarfs efivarfs /sys/firmware/efi/efivars 2>/dev/null \
+  || true
+
 puavo_install_hosttype=$(get_install_hosttype)
 
 if [ "$puavo_install_hosttype" = "diskinstaller" ]; then

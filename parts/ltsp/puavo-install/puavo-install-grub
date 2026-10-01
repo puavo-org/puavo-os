@@ -1128,6 +1128,11 @@ install_efi_grub() {
   grubdev=$3
   vgname=$4
 
+  # Mount the EFI variables when missing, a device may have none.
+  mountpoint -q /sys/firmware/efi/efivars \
+    || mount -t efivarfs efivarfs /sys/firmware/efi/efivars 2>/dev/null \
+    || true
+
   if ! mount_efi_partition "$efi_devpath"; then
     log err "could not mount /boot/efi from ${efi_devpath}"
     return 1
