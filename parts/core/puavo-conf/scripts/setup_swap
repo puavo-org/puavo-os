@@ -21,12 +21,14 @@ swap_index=0
 : > /etc/fstab
 
 # A single swap device is the norm, but a mirrored bootserver has one per
-# disk, so extra devices get a numbered name.
+# disk, so extra devices get a numbered name. The "nofail" and the device
+# timeout keep a swap problem from ever blocking the boot.
 for swap_partition_path in $(list_swap_partition_paths); do
   swap_index=$((swap_index + 1))
   mapper='cryptswap'
   [ "$swap_index" -gt 1 ] && mapper="cryptswap${swap_index}"
-  printf "%s %s /dev/urandom swap,cipher=aes-xts-plain64,size=256\n" \
+  printf "%s %s /dev/urandom swap,cipher=aes-xts-plain64,size=256,nofail\n" \
          "$mapper" "$swap_partition_path" >> /etc/crypttab
-  printf "/dev/mapper/%s none swap defaults 0 0\n" "$mapper" >> /etc/fstab
+  printf "/dev/mapper/%s none swap defaults,nofail,x-systemd.device-timeout=30s 0 0\n" \
+         "$mapper" >> /etc/fstab
 done
