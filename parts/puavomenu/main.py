@@ -150,6 +150,9 @@ class PuavoMenu(Gtk.Window):
 
         self.__in_search = False
 
+        # The first search result, highlighted to show what Enter will open
+        self.__search_selected_button = None
+
         # Storage for program and menu icons. Maintained
         # separately from the menu data.
         self.__icons = icons.IconCache(1024, self.__dims.program_button_icon_size)
@@ -1143,6 +1146,9 @@ class PuavoMenu(Gtk.Window):
 
         if not key:
             self.__in_search = False
+            # Leaving search; the result buttons get rebuilt below, so drop
+            # the stale highlight reference.
+            self.__search_selected_button = None
             self.__create_current_menu()
             return
 
@@ -1159,6 +1165,10 @@ class PuavoMenu(Gtk.Window):
 
         for widget in self.__programs_icons.get_children():
             widget.destroy()
+
+        # The old result buttons were just destroyed, so forget the previous
+        # highlight; the first result below becomes the new Enter target.
+        self.__search_selected_button = None
 
         # List the search results. __place_buttons_in_container() can't be used
         # because it does not understand the grouping structure.
@@ -1191,6 +1201,12 @@ class PuavoMenu(Gtk.Window):
                 button = self.__make_program_button(program)
                 button.connect("clicked", self.clicked_program_button)
 
+                # Highlight the very first result so it's visible which
+                # program Enter will launch (mirrors the arrow-key focus look).
+                if self.__search_selected_button is None:
+                    self.__search_selected_button = button
+                    button.get_style_context().add_class("pm_selected")
+
                 self.__programs_icons.put(button, xpos, ypos)
 
                 xpos += (
@@ -1217,6 +1233,15 @@ class PuavoMenu(Gtk.Window):
             self.__programs_container.show()
 
         self.__update_menu_title()
+
+    # Remove the highlight from the first search result (the Enter target),
+    # if there currently is one.
+    def __clear_search_highlight(self):
+        if self.__search_selected_button is not None:
+            self.__search_selected_button.get_style_context().remove_class(
+                "pm_selected"
+            )
+            self.__search_selected_button = None
 
     # Clear the search box without triggering another search
     # TODO: The usefulness of this method is questionable. After commenting
@@ -1254,15 +1279,10 @@ class PuavoMenu(Gtk.Window):
         elif key_event.keyval == Gdk.KEY_Return:
             self.__in_search = False
 
-            if text:
-                buttons = self.__programs_icons.get_children()
-
-                if len(buttons) == 2:
-                    # Only one matching program found and the user pressed
-                    # Enter, so launch it! (Note that there's a category/
-                    # menu banner also in there, so if there's only one
-                    # matching result the child container has two elements.)
-                    self.clicked_program_button(buttons[1])
+            if text and self.__search_selected_button is not None:
+                # Launch the highlighted first result, so the user can search
+                # and start a program without touching the arrow keys.
+                self.clicked_program_button(self.__search_selected_button)
 
         return False
 
@@ -1279,6 +1299,38 @@ class PuavoMenu(Gtk.Window):
             if not self.__in_search and self.current_menu:
                 # Alt+Left -> exit submenu and go back to the main level
                 self.__clicked_back_button(None)
+        elif key_event.keyval in (Gdk.KEY_Down, Gdk.KEY_Right, Gdk.KEY_Tab):
+            # Forward navigation. The first result is already highlighted as
+            # the Enter target, so the first Tab/Down/Right out of the search
+            # box should jump to the SECOND result, otherwise focus just lands
+            # on the (already highlighted) first result and nothing seems to
+            # happen. Once focus is inside the grid, let GTK navigate normally.
+            if (
+                self.__in_search
+                and self.__search_selected_button is not None
+                and self.get_focus() == self.__search
+            ):
+                program_buttons = [
+                    child
+                    for child in self.__programs_icons.get_children()
+                    if isinstance(child, buttons.program.ProgramButton)
+                ]
+                self.__clear_search_highlight()
+                if len(program_buttons) >= 2:
+                    program_buttons[1].grab_focus()
+                elif program_buttons:
+                    program_buttons[0].grab_focus()
+                return True  # don't also let GTK move focus to the first result
+            self.__clear_search_highlight()
+        elif key_event.keyval in (
+            Gdk.KEY_Up,
+            Gdk.KEY_Left,
+            Gdk.KEY_ISO_Left_Tab,
+        ):
+            # Backward navigation moves real focus onto a result, which
+            # highlights it via :focus. Drop our manual first-result highlight
+            # so two items aren't highlighted at the same time.
+            self.__clear_search_highlight()
         elif key_event.keyval != Gdk.KEY_Return:
             # If the user starts typing, focus the search box. This only reacts
             # to letters, numbers and punctuation, and ignores arrows, function
