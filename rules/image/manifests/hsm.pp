@@ -21,6 +21,7 @@ class image::hsm {
     or title == 'rsync'
     or title == 'ssss'
     or title == 'tpm2-tools'
+    or title == 'xorriso'
     or title == 'xxd'
   |>
 

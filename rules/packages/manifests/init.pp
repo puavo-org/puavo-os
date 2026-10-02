@@ -784,6 +784,7 @@ class packages {
     , 'wimtools'
     , 'wmctrl'
     , 'xinput'
+    , 'xorriso'
     , 'xxd'
     , 'zbarcam-gtk' ]:
       tag => [ 'tag_utils', 'tag_debian_desktop', ];
