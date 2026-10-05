@@ -2,9 +2,10 @@
 
 set -eu
 
-list_swap_partitions() {
-  lsblk --properties-by blkid -n -o PATH \
-    -Q 'PARTTYPE == "0657fd6d-a4ab-43c4-84e5-0933c84b4f4f"'
+list_swap_partition_paths() {
+  lsblk --properties-by blkid -n -r -o PATH \
+    -Q 'PARTTYPE == "0657fd6d-a4ab-43c4-84e5-0933c84b4f4f"
+          || (TYPE == "lvm" && NAME == "puavo-swap")'
 }
 
 # Encrypt the specified swap partition with a random key each boot.
@@ -35,7 +36,7 @@ swap_index=0
 
 # A single swap device is the norm, but a mirrored bootserver has one per
 # disk, so extra devices get a numbered name.
-for swap_partition in $(list_swap_partitions); do
+for swap_partition in $(list_swap_partition_paths); do
   swap_index=$((swap_index + 1))
   mapper=swap
   [ "$swap_index" -gt 1 ] && mapper="swap${swap_index}"
