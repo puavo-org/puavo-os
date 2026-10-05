@@ -266,7 +266,7 @@ class BootVaultBuilder
         handler.add_key(@control_key, @recovery_key)
       end
 
-      run('mkfs.ext4', '-q', handler.encryption_device)
+      run('mkfs.ext4', '-F', '-q', handler.encryption_device)
 
       Dir.mktmpdir('puavo-boot-vault-') do |mountpoint|
         begin
@@ -975,7 +975,7 @@ module DiskHandler
     run('sgdisk', "--attributes=#{ exam_partition_number }:set:63",
         "/dev/#{ device }")
 
-    run('mkfs.ext4', '-q', '-L', EXAM_PARTITION_FILESYSTEM_LABEL,
+    run('mkfs.ext4', '-F', '-q', '-L', EXAM_PARTITION_FILESYSTEM_LABEL,
         "/dev/#{ exam_partition }")
   end
 
