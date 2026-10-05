@@ -829,14 +829,14 @@ class packages {
   @packages::kernels::kernel_package {
     'default':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-6.12.107+deb13.1-amd64-unsigned',
-      version      => '6.12.107+deb13.1-amd64';
+      package_name => 'linux-image-6.12.111+deb13.1-amd64-unsigned',
+      version      => '6.12.111+deb13.1-amd64';
 
     'modern':
       dkms_modules   => [ $hpuefi_module, $puavo_command_line_signer_module ],
-      extra_packages => [ 'linux-modules-7.1.8+deb13-amd64' ],
-      package_name   => 'linux-binary-unsigned-7.1.8+deb13-amd64',
-      version        => '7.1.8+deb13-amd64';
+      extra_packages => [ 'linux-modules-7.2.6+deb13-amd64' ],
+      package_name   => 'linux-binary-unsigned-7.2.6+deb13-amd64',
+      version        => '7.2.6+deb13-amd64';
   }
 
   # special packages for "hsm"-image
