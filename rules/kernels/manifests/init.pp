@@ -1,4 +1,5 @@
 class kernels {
+  include ::dpkg
   include ::dracut
   include ::kernels::dkms
   include ::kernels::grub_update
@@ -53,6 +54,15 @@ class kernels {
 
   define install_kernel {
     $kernel_alias = $title
+
+    if $kernel_alias == 'modern' {
+      $version = $::kernels::kernel_versions['modern']
+      ::dpkg::divert {
+        "/usr/lib/modules/${version}/vmlinuz.unsigned":
+          before => Packages::Kernels::Kernel_package[$kernel_alias],
+          dest   => "/boot/vmlinuz-${version}";
+      }
+    }
 
     ::kernels::all_kernel_links {
       $kernel_alias:
