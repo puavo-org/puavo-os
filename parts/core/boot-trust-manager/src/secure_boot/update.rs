@@ -319,7 +319,7 @@ mod tests {
             Measurement::Separator,
             Measurement::Authority {
                 database: "db".to_string(),
-                entry: Entry::Subject("Puavo Slab*".to_string()),
+                entry: Entry::Subject("Puavo Secure Boot*".to_string()),
             },
         ];
 
