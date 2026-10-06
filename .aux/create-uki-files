@@ -15,8 +15,8 @@ config_directory=$2
 image_class=$3
 image_file=$4
 
-uki_key_directory="${config_directory}/boot_keys/slab/verifier/uki"
-kernel_key_directory="${config_directory}/boot_keys/slab/verifier/kernel"
+uki_key_directory="${config_directory}/boot/slab/verifier/uki"
+kernel_key_directory="${config_directory}/boot/slab/verifier/kernel"
 
 # Find the art directory based on the image class, otherwise use the default
 art_directory="${config_directory}/art/allinone/"

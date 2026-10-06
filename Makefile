@@ -246,7 +246,7 @@ rootfs-image: check-buildhost $(rootfs_dir) $(image_dir)
 	    '$(rootfs_dir)/etc/puavo-secure-boot/db.esl'
 	$(_sudo) .aux/create-uki-files '$(rootfs_dir)/boot' \
 	    '$(rootfs_dir)/puavo-os/config/' '$(image_class)' '$(_image_file)'
-	$(_sudo) .aux/sign-bootloaders '$(rootfs_dir)' '$(rootfs_dir)/puavo-os/config/boot_keys/'
+	$(_sudo) .aux/sign-bootloaders '$(rootfs_dir)' '$(rootfs_dir)/puavo-os/config/boot/'
 	$(MAKE) verify-boot-components
 	$(_sudo) .aux/create-image-grubenv '$(rootfs_dir)' '$(release_name)'
 	$(_sudo) mksquashfs '$(rootfs_dir)' '$(image_dir)/$(_image_file).tmp' \
@@ -262,8 +262,8 @@ rootfs-image: check-buildhost $(rootfs_dir) $(image_dir)
 .PHONY: verify-boot-components
 verify-boot-components: $(rootfs_dir)
 	$(_sudo) .aux/verify-boot-components --rootfs '$(rootfs_dir)' \
-	    --key-directory '$(rootfs_dir)/puavo-os/config/boot_keys' \
-	    --manifest '$(rootfs_dir)/puavo-os/config/boot-manifest.json'
+	    --key-directory '$(rootfs_dir)/puavo-os/config/boot' \
+	    --manifest '$(rootfs_dir)/puavo-os/config/boot/manifest.json'
 
 .PHONY: prepare-for-squashfs
 prepare-for-squashfs:
@@ -342,12 +342,12 @@ secure-boot-config:
 .PHONY: install-pcr-public-keys
 install-pcr-public-keys:
 	$(_sudo) install -D -o root -g root -m 644 -t /etc/puavo-conf/ \
-	    config/boot_keys/slab/verifier/uki/tpm2-pcr-public-key*.pem \
+	    config/boot/slab/verifier/uki/tpm2-pcr-public-key*.pem \
 
 .PHONY: install-secure-boot-certificates
 install-secure-boot-certificates:
 	$(_sudo) install -D -o root -g root -m 644 -t /etc/puavo-conf/ \
-	    config/boot_keys/slab/verifier/uki/secure-boot*.der
+	    config/boot/slab/verifier/uki/secure-boot*.der
 
 .PHONY: update
 update: prepare install-pcr-public-keys install-secure-boot-certificates /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem

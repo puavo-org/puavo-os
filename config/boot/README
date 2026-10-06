@@ -1,4 +1,5 @@
 Here is an example TPM key pair and also Secure Boot key pairs.
+Manifest lists the boot components an image must contain.
 
 The TPM key pair is generated with .aux/generate-tpm-keys and the Secure Boot
 key pairs are generated with .aux/generate-secure-boot-certificates.

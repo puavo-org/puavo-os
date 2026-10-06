@@ -9,5 +9,5 @@ here=$(cd "$(dirname "$0")" && pwd)
 repository=$(cd "${here}/../.." && pwd)
 
 "${repository}/.aux/generate-verifier-authorities" \
-  "${repository}/config/boot_keys/slab/verifier" \
+  "${repository}/config/boot/slab/verifier" \
   "${source_tree}/core/slab/authorities"
