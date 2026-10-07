@@ -22,6 +22,10 @@ KERNEL_COMMANDLINE_FILE        = f"{ADDONS_OUTPUT_DIRECTORY}/commandline"
 # to sign exactly that addon.
 AUTHORIZATION_BUNDLE = f"{ADDONS_OUTPUT_DIRECTORY}/authorization.json"
 
+# TODO(command-line-server-key): Remove with the placeholder keys, once
+# Puppet configures the server key.
+PLACEHOLDER_SERVER_PRIVATE_KEY = '/run/puavo/command-line/server.priv'
+
 PUAVO_CORE_LIBDIR    = '/usr/lib/puavo-core'
 PUAVO_INSTALL_LIBDIR = '/usr/lib/puavo-ltsp-install'
 
@@ -89,12 +93,45 @@ def read_bundle_commandline(bundle: str) -> str:
     return section.read().rstrip(b'\0').decode()
 
 
+def authorize_with_placeholder(section_value: str, bundle: str):
+  # Authorizes the command-line as the server would, one counter value
+  # ahead so it ends the earlier authorizations.
+  with tempfile.TemporaryDirectory() as directory:
+    addon = f"{directory}/addon.efi"
+    try:
+      run_command(
+        'ukify', 'build', f'--section=.cmdline:{section_value}',
+        f'--output={addon}'
+      )
+      counter = run_command(
+        f"{PUAVO_CORE_LIBDIR}/puavo-command-line-manager-counter"
+      ).stdout.strip()
+      run_command(
+        f"{PUAVO_CORE_LIBDIR}/puavo-command-line-manager-authorize",
+        addon, DEVICE_SECURE_BOOT_CERTIFICATE, PLACEHOLDER_SERVER_PRIVATE_KEY,
+        str(int(counter) + 1), bundle
+      )
+    except subprocess.CalledProcessError as error:
+      log_error(f"failed to authorize with the placeholder key (exit code {error.returncode}): {error.stderr.strip()}")
+      raise RuntimeError("failed to authorize command-line addon")
+
+
 def sign_with_tpm(section_value: str, output: str):
-  if not os.path.isfile(AUTHORIZATION_BUNDLE):
-    raise RuntimeError(f"no server authorization in {AUTHORIZATION_BUNDLE}")
+  with tempfile.TemporaryDirectory() as directory:
+    bundle = AUTHORIZATION_BUNDLE
+    if os.path.isfile(PLACEHOLDER_SERVER_PRIVATE_KEY):
+      bundle = f"{directory}/authorization.json"
+      authorize_with_placeholder(section_value, bundle)
+
+    sign_bundle(bundle, section_value, output)
+
+
+def sign_bundle(bundle: str, section_value: str, output: str):
+  if not os.path.isfile(bundle):
+    raise RuntimeError(f"no server authorization in {bundle}")
 
   # An authorization for an earlier command-line must not be installed.
-  authorized_commandline = read_bundle_commandline(AUTHORIZATION_BUNDLE)
+  authorized_commandline = read_bundle_commandline(bundle)
   if authorized_commandline != section_value:
     raise RuntimeError(
       f"server authorized '{authorized_commandline}', not '{section_value}'"
@@ -103,7 +140,7 @@ def sign_with_tpm(section_value: str, output: str):
   try:
     run_command(
       f"{PUAVO_CORE_LIBDIR}/puavo-command-line-manager-sign",
-      SECURE_BOOT_KEYS_DIRECTORY, AUTHORIZATION_BUNDLE, output
+      SECURE_BOOT_KEYS_DIRECTORY, bundle, output
     )
     run_command('sbverify', '--cert', DEVICE_SECURE_BOOT_CERTIFICATE, output)
   except subprocess.CalledProcessError as error:
