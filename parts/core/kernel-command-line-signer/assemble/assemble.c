@@ -2,7 +2,7 @@
 //
 // Takes the authenticated attributes DER, Indirect Data
 // Content (IDC) DER, and a raw RSA signature produced by
-// the kernel signing module. Rebuilds the PKCS7
+// the key holder. Rebuilds the PKCS7
 // Authenticode structure and embeds it into the unsigned
 // PE binary to produce a Secure Boot signed addon.
 //
@@ -137,7 +137,7 @@ int main(int argument_count, char** arguments) {
 
   // Load the Secure Boot certificate. This is the
   // public certificate corresponding to the private key
-  // that the kernel module used for signing. It gets
+  // that the key holder used for signing. It gets
   // embedded in the PKCS7 so that Secure Boot firmware
   // can verify the signature.
   certificate = fileio_read_cert(certificate_path);
@@ -154,8 +154,8 @@ int main(int argument_count, char** arguments) {
   // objects like certificates, signatures, and PKCS7
   // structures. The attributes blob was produced by the
   // request program and contains the content type and
-  // message digest that were signed by the kernel
-  // module.
+  // message digest that were signed by the key
+  // holder.
   size_t attributes_size;
   if (fileio_read_file(NULL, attributes_path, &attributes_data,
                        &attributes_size)) {
@@ -175,8 +175,8 @@ int main(int argument_count, char** arguments) {
     goto cleanup;
   }
 
-  // Load the raw RSA signature produced by the kernel
-  // signing module. This is the RSA-PKCS1v15 signature
+  // Load the raw RSA signature produced by the key
+  // holder. This is the RSA-PKCS1v15 signature
   // over SHA-256 of the authenticated attributes.
   size_t signature_size;
   if (fileio_read_file(NULL, signature_path, &signature_data,
@@ -247,7 +247,7 @@ int main(int argument_count, char** arguments) {
   // Restore the authenticated attributes from the DER
   // blob produced by the request program. These
   // attributes (content type and message digest) were
-  // what the kernel module signed. We parse the DER
+  // what the key holder signed. We parse the DER
   // back into OpenSSL's internal representation.
   //
   // ASN1_item_d2i means "ASN.1 item DER to internal",
@@ -271,7 +271,7 @@ int main(int argument_count, char** arguments) {
   // info
   signer_info->auth_attr = signed_attributes;
 
-  // Inject the RSA signature from the kernel module
+  // Inject the RSA signature from the key holder
   // into the SignerInfo's encrypted digest field. This
   // is the key step that makes offline signing work:
   // instead of OpenSSL computing the signature
