@@ -1,3 +1,10 @@
+collabora (25.04.9.2.2-1+puavo2) bookworm; urgency=medium
+
+  * Polyfill Element.checkVisibility() so that dialog OK buttons work
+    with Bookworm QtWebEngine 6.4 (Chromium 102).
+
+ -- Puavo Org <dev@opinsys.fi>  Wed, 07 Oct 2026 12:59:49 +0300
+
 collabora (25.04.9.2.2-1+puavo1) bookworm; urgency=medium
 
   * Initial Puavo OS packaging of Collabora Office.

@@ -1,0 +1,44 @@
+Description: Polyfill Element.checkVisibility() for QtWebEngine 6.4
+ Debian Bookworm ships QtWebEngine 6.4 (Chromium 102), but
+ Element.checkVisibility() is available only in Chromium 105+.
+ JSDialogBuilder.reportValidity() calls it for every number input
+ when a dialog's OK button is pressed, so in dialogs with number
+ inputs (e.g. Format Data Series -> Area -> Color) the click
+ throws a TypeError, the response is never sent and the dialog
+ stays open. Add a polyfill that is used only when the browser
+ lacks the native implementation.
+Author: Puavo Org <dev@opinsys.fi>
+Forwarded: not-needed
+---
+--- a/online/browser/js/global.js
++++ b/online/browser/js/global.js
+@@ -11,6 +11,29 @@
+ 	console: {}
+ };
+ 
++// Element.checkVisibility() is available only in Chromium 105+, but Debian
++// Bookworm ships QtWebEngine 6.4 (Chromium 102). Without this, e.g. the OK
++// button of JSDialogs containing number inputs throws and does nothing.
++if (typeof Element !== 'undefined' && !Element.prototype.checkVisibility) {
++	Element.prototype.checkVisibility = function(options) {
++		options = options || {};
++		if (!this.isConnected || this.getClientRects().length === 0)
++			return false;
++		var checkOpacity = options.checkOpacity || options.opacityProperty;
++		var checkVisibilityCSS = options.checkVisibilityCSS || options.visibilityProperty;
++		if (checkVisibilityCSS && window.getComputedStyle(this).visibility !== 'visible')
++			return false;
++		for (var el = this; el; el = el.parentElement) {
++			var style = window.getComputedStyle(el);
++			if (style.contentVisibility === 'hidden' && el !== this)
++				return false;
++			if (checkOpacity && style.opacity === '0')
++				return false;
++		}
++		return true;
++	};
++}
++
+ // For typings (including the global object), please see browser/src/global.d.ts
+ 
+ // This function may look unused, but it's needed in Android to send data through the fake websocket. Please
