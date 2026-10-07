@@ -1,0 +1,12 @@
+[Unit]
+Description=Generate command-line placeholder keys
+DefaultDependencies=no
+ConditionPathExists=!/etc/puavo-conf/server.pub
+Before=puavo-boot-trust-manager.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/puavo-core/puavo-command-line-manager-placeholder-keys
+
+[Install]
+WantedBy=initrd.target

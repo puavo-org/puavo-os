@@ -21,6 +21,20 @@ install() {
                   /usr/bin/loadkeys \
                   /usr/bin/openssl
 
+    # Install the command-line manager's key load and what it runs
+    inst_multiple /usr/lib/puavo-core/puavo-command-line-manager-load \
+                  /usr/bin/tpm2 \
+                  awk \
+                  install \
+                  mktemp
+
+    # TODO(command-line-server-key): Once Puppet configures the server
+    # key, remove these lines, the wants link below, the placeholder keys
+    # unit and its script.
+    inst /usr/lib/puavo-core/puavo-command-line-manager-placeholder-keys
+    inst "${moddir}/puavo-command-line-manager-placeholder-keys.service" \
+         "/usr/lib/systemd/system/puavo-command-line-manager-placeholder-keys.service"
+
     # Install Secure Boot update scripts
     inst "${moddir}/scripts/update-secure-boot-db" \
          "/usr/sbin/update-secure-boot-db"
@@ -71,4 +85,6 @@ install() {
     mkdir -p "${initdir}/etc/systemd/system/initrd.target.wants"
     ln_r "/usr/lib/systemd/system/puavo-boot-trust-manager.service" \
          "/etc/systemd/system/initrd.target.wants/puavo-boot-trust-manager.service"
+    ln_r "/usr/lib/systemd/system/puavo-command-line-manager-placeholder-keys.service" \
+         "/etc/systemd/system/initrd.target.wants/puavo-command-line-manager-placeholder-keys.service"
 }
