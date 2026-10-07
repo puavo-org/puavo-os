@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+
+# Prints the value of the TPM signing counter. The server needs it once,
+# at registration, to start the counter values it authorizes from.
+
+counter_index=0x010c3d15
+
+value=$(tpm2 nvread --size=8 "$counter_index" \
+  | od --address-radix=n --format=x1 | tr --delete ' \n')
+printf '%d\n' "0x${value}"

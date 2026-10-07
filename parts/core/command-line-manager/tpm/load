@@ -1,0 +1,167 @@
+#!/bin/sh
+set -eu
+
+# Imports the device Secure Boot key into the TPM under a policy that
+# only a policy signed by the server key satisfies, and defines the
+# signing counter. The imported key, usable only by this TPM, is written
+# to /run/puavo/command-line as device.pub and device.priv. Exits 0 on
+# success, 1 on error.
+#
+# Usage: puavo-command-line-manager-load <key-directory>
+#
+# The key directory holds the private key as secure-boot.priv. The server
+# key is /run/puavo/command-line/server.pub. A configured key in
+# /etc/puavo-conf/server.pub is copied there first.
+#
+# PUAVO_SERVER_PUBLIC_KEY overrides the configured server key and
+# PUAVO_COMMANDLINE_DIRECTORY the directory.
+
+configured_server_key=${PUAVO_SERVER_PUBLIC_KEY:-/etc/puavo-conf/server.pub}
+directory=${PUAVO_COMMANDLINE_DIRECTORY:-/run/puavo/command-line}
+server_key="${directory}/server.pub"
+storage_key=0x81000001
+counter_index=0x010c3d15
+
+# Object attribute bits from the TPM specification.
+fixed_tpm=0x2
+fixed_parent=0x10
+sensitive_data_origin=0x20
+user_with_auth=0x40
+restricted=0x10000
+decrypt=0x20000
+
+# The attributes the storage key is created with.
+storage_key_attribute_names='fixedtpm|fixedparent|sensitivedataorigin|userwithauth|noda|restricted|decrypt'
+
+# fixedTPM, fixedParent, sensitiveDataOrigin, userWithAuth, restricted
+# and decrypt => a storage key whose secret never left this TPM. The
+# noda attribute is not required, it does not affect where the secret
+# is.
+storage_key_attributes=$(( fixed_tpm | fixed_parent | sensitive_data_origin \
+  | user_with_auth | restricted | decrypt ))
+
+panic() {
+  echo "error: $1" >&2
+  exit 1
+}
+
+[ $# -eq 1 ] || panic "usage: $0 <key-directory>"
+private_key="$1/secure-boot.priv"
+
+export TPM2TOOLS_TCTI="${TPM2TOOLS_TCTI:-device:/dev/tpmrm0}"
+
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+
+install -d -m 0755 "$directory"
+if [ -f "$configured_server_key" ]; then
+  install -m 0644 "$configured_server_key" "$server_key"
+fi
+[ -f "$server_key" ] || panic "no server key in ${server_key}"
+
+# The storage key is created once and kept.
+# The TPM stores the imported device key outside the TPM, in the private
+# blob, encrypted with the storage key. Anyone who knows the secret of
+# the storage key could decrypt the blob and read the device key.
+if ! tpm2 readpublic --object-context="$storage_key" >/dev/null 2>&1; then
+  # Create the storage key under the owner hierarchy with
+  # the attributes explained above
+  tpm2 createprimary \
+    --key-context="${work}/storage.ctx" \
+    --hierarchy=o \
+    --hash-algorithm=sha256 \
+    --key-algorithm=ecc256:aes128cfb \
+    --attributes="$storage_key_attribute_names" \
+    --quiet \
+    || panic 'failed to create the storage key'
+  # Make the storage key persistent.
+  tpm2 evictcontrol \
+    --object-context="${work}/storage.ctx" \
+    --hierarchy=o \
+    "$storage_key" >/dev/null \
+    || panic 'failed to store the storage key'
+fi
+
+# Before trusting the existing storage key, validate it. The handle is
+# the one systemd uses for its storage key, so the key may have been
+# created by someone else.
+attributes=$(tpm2 readpublic --object-context "$storage_key" \
+  | awk '/^attributes:/ { a = 1 } a && /raw:/ { print $2; exit }')
+[ $(( attributes & storage_key_attributes )) -eq \
+  $(( storage_key_attributes )) ] \
+  || panic "${storage_key} is not a storage key of this TPM"
+
+# Load the server public key under the owner hierarchy.
+# The device key accepts any policy the server key signs.
+# The server public key must be loaded with the same attributes as in
+# the authorize script, so it gets the same TPM name.
+# The sign attribute is required for signature verification.
+tpm2 loadexternal \
+  --key-context="${work}/server.ctx" \
+  --hierarchy=o \
+  --key-algorithm=ecc \
+  --attributes=sign \
+  --public="$server_key" \
+  --name "${work}/server.name" \
+  --quiet \
+  || panic 'failed to load the server key'
+
+# Start a trial session where we compute the policy digest,
+# which will be used to restrict the device private key
+# to be only usable under policies signed by the server.
+tpm2 startauthsession --session="${work}/trial.ctx"
+
+# Restrict the device private key to be only usable
+# the way policies signed by the server dictate.
+# The policy names the server key by its TPM name, which is a hash of
+# the whole public area: the key itself, its attributes and its
+# parameters.
+# The resulting policy digest is written to the policy file. It must
+# equal the device-policy the authorize script computes, because the
+# policy is part of the TPM name of the device key, and the server
+# puts that name in the command hash.
+# Basically, we compute such a policy digest that allows
+# any policy digest signed by the server public key.
+tpm2 policyauthorize \
+  --session="${work}/trial.ctx" \
+  --name "${work}/server.name" \
+  --policy="${work}/policy" \
+  --quiet
+
+# End the trial session.
+tpm2 flushcontext "${work}/trial.ctx"
+
+# Now let's import the key with the policy (restrictions).
+# Without userwithauth attribute, signing needs the policy, a password is
+# not enough. Copying the key to another TPM always needs a policy, and
+# this key accepts only policies the server signed. The attributes and
+# the policy must be the same as in the authorize script, so the key gets
+# the same TPM name.
+# The command outputs the public blob and the private blob, which is
+# encrypted with the storage key, so only this TPM can load it.
+tpm2 import \
+  --parent-context="$storage_key" \
+  --key-algorithm=rsa \
+  --input="$private_key" \
+  --attributes='sign|adminwithpolicy' \
+  --policy="${work}/policy" \
+  --public="${directory}/device.pub" \
+  --private="${directory}/device.priv" \
+  --quiet \
+  || panic 'failed to import the key'
+
+# Define the NV counter used to prevent replaying old signing operations.
+# The size and the attributes must be the same as in the authorize
+# script. See the authorize script for details.
+if ! tpm2 nvreadpublic "$counter_index" >/dev/null 2>&1; then
+  tpm2 nvdefine "$counter_index" \
+    --hierarchy=o \
+    --size=8 \
+    --attributes='nt=counter|authread|authwrite|no_da' >/dev/null \
+    || panic 'failed to define the signing counter'
+fi
+
+# A counter can be read only once incremented (initialized).
+tpm2 nvread --size=8 "$counter_index" >/dev/null 2>&1 \
+  || tpm2 nvincrement "$counter_index" \
+  || panic 'failed to increment the signing counter'

@@ -1,0 +1,200 @@
+#!/bin/sh
+set -eu
+
+# Authorizes one device to sign a command-line addon, as the server
+# does. Writes a bundle for puavo-command-line-manager-sign. The bundle
+# holds while the device's signing counter is at most the given counter
+# value. Needs no TPM.
+#
+# Usage: puavo-command-line-manager-authorize <addon> <device-certificate>
+#            <server-private-key> <counter> <bundle>
+#
+# The bundle is JSON: the addon, its signing request, the digest and
+# command hash to sign, the policy and its signature in base64, and the
+# counter value.
+
+counter_index=0x010c3d15
+
+panic() {
+  echo "error: $1" >&2
+  exit 1
+}
+
+[ $# -eq 5 ] || panic "usage: $0 <addon> <device-certificate> <server-private-key> <counter> <bundle>"
+addon=$(realpath "$1")
+certificate=$(realpath "$2")
+server_key=$(realpath "$3")
+counter=$4
+bundle=$(realpath -m "$5")
+
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+
+# The software TPM keeps its state in the working directory.
+cd "$work"
+
+# Derive the Authenticode signing request from the addon and the device
+# certificate.
+puavo-command-line-sign-request "$addon" "$certificate" \
+  "${work}/attributes" "${work}/idc" \
+  || panic 'failed to build the signing request'
+# Compute the digest over the attributes, which is the actual value to be
+# signed.
+openssl dgst -sha256 -binary "${work}/attributes" > "${work}/digest"
+# Extract the device's public key from the certificate.
+openssl x509 -in "$certificate" -pubkey -noout > "${work}/device.pub" \
+  || panic "failed to read ${certificate}"
+# Extract the server's public key from the private key.
+openssl pkey -in "$server_key" -pubout -out "${work}/server.pub" \
+  || panic "failed to read ${server_key}"
+
+# The policy and command hash are TPM computations over public data, so
+# a software TPM in this process makes them.
+export TPM2TOOLS_TCTI="libtpms:${work}/tpm-state"
+
+# Initialize a clean software TPM.
+tpm2 startup --clear
+
+# Load the server public key under the owner hierarchy, because the
+# policy will refer to it below. The server key is ECC, only the device
+# key has to be RSA for Authenticode. On the device, the TPM verifies the
+# server signature with the server public key, and the TPM verifies only
+# with keys that have the sign attribute. The attributes are part of the
+# TPM name, so the device must load the server public key with the same
+# ones.
+tpm2 loadexternal \
+  --key-context="${work}/server.ctx" \
+  --hierarchy=o \
+  --public="${work}/server.pub" \
+  --name="${work}/server.name" \
+  --key-algorithm=ecc \
+  --attributes=sign \
+  --quiet
+
+# Start a trial session where we compute the policy digest,
+# which will be used to restrict the device private key
+# to be only usable under policies signed by the server.
+tpm2 startauthsession --session="${work}/trial.ctx"
+
+# Restrict the device private key to be only usable
+# the way policies signed by the server dictate.
+# The policy names the server key by its TPM name, which is a hash of
+# the whole public area: the key itself, its attributes and its
+# parameters. The device loads the server public key the same way, so it
+# gets the same name.
+# The resulting policy digest is written to the device-policy file.
+# Basically, we compute such a policy digest that allows
+# any policy digest signed by the server public key.
+tpm2 policyauthorize \
+  --session="${work}/trial.ctx" \
+  --name="${work}/server.name" \
+  --policy="${work}/device-policy" \
+  --quiet
+
+# End the trial session.
+tpm2 flushcontext "${work}/trial.ctx"
+# Unload the server key, only its name is needed from now on.
+tpm2 flushcontext --transient-object
+
+# Load the device public key to get its TPM name, which the command hash
+# below contains. The name depends only on the public area, so the
+# attributes and the policy must be the ones the device imports its key
+# with. Without userwithauth attribute, signing needs the policy,
+# a password is not enough.
+# The attributes fixedtpm and fixedparent would keep the key in one TPM,
+# but the TPM refuses them for imported keys, since such a key has
+# existed outside the TPM. Copying the key to another TPM needs a policy
+# that allows duplication, and only the server could sign one.
+tpm2 loadexternal \
+  --key-context="${work}/device.ctx" \
+  --hierarchy=o \
+  --attributes='sign|adminwithpolicy' \
+  --public="${work}/device.pub" \
+  --key-algorithm=rsa \
+  --policy="${work}/device-policy" \
+  --quiet
+
+# Define the counter, which is used to prevent replaying old signing
+# policies. The device has its own counter at the same index, and the
+# policy names the device counter by its TPM name, which covers the size
+# and the attributes. So define it exactly as the device does.
+tpm2 nvdefine "$counter_index" \
+  --hierarchy=o \
+  --size=8 \
+  --attributes='nt=counter|authread|authwrite|no_da' >/dev/null
+# One increment is required to initialize a new NV counter. It also sets
+# the written attribute, which is part of the name as well.
+tpm2 nvincrement "$counter_index"
+
+# Computes the command hash of the signing the device will perform,
+# nothing is signed. The command hash covers the whole signing operation:
+# the name of the key, the digest to sign and the scheme. This is why we
+# can use it to constrain what we want the device to be able to sign.
+# In this case, we want the device to sign exactly the Authenticode
+# digest we computed at the beginning. When the device signs that digest,
+# the device is able to complete the signing process for the command-line.
+# Use RSASSA, which is RSA with PKCS#1 v1.5 padding, as Authenticode
+# expects.
+tpm2 sign \
+  --key-context="${work}/device.ctx" \
+  --hash-algorithm=sha256 \
+  --scheme=rsassa \
+  --digest \
+  --quiet \
+  --cphash "${work}/command-hash-blob" \
+  "${work}/digest"
+
+# Convert the expected counter value to the format of the NV counter,
+# eight big endian bytes.
+printf '%016X' "$counter" | basenc --base16 --decode > "${work}/counter"
+
+# Start a new trial session where we compute the policy digest, which only
+# allows the signing operation defined above, given the counter is below
+# or equal to the value used in this new policy. When the device completes
+# a newer signing request and updates the counter, prior signing request
+# policies no longer pass due to the counter restriction.
+tpm2 startauthsession --session="${work}/trial.ctx"
+
+# Constrain the policy to the exact signing operation defined above.
+tpm2 policycphash \
+  --session="${work}/trial.ctx" \
+  --cphash-input "${work}/command-hash-blob" \
+  --quiet
+# Constrain the policy so that it requires the NV counter to be
+# less or equal to the "embedded" value here.
+tpm2 policynv \
+  --session="${work}/trial.ctx" \
+  --input "${work}/counter" \
+  "$counter_index" \
+  ule \
+  --policy="${work}/policy" \
+  --quiet
+
+# End the trial session.
+tpm2 flushcontext "${work}/trial.ctx"
+
+# We now have the complete policy digest for this exact signing request.
+# The device key accepts only a policy the server signed, so sign it with
+# the server private key. The device proves the signature to its TPM,
+# which then lets the policy pass the PolicyAuthorize above.
+# The server signs the policy followed by a policy reference. Ours is
+# empty, so the signed message is the policy alone. The server key is
+# ECC, so the signature is ECDSA.
+# A device with another key pair can not use this policy. The command
+# hash contains the name of the device key, which is derived from its
+# public key, so another key gives another command hash.
+openssl dgst -sha256 -sign "$server_key" -out "${work}/policy_signature" \
+  "${work}/policy" \
+  || panic 'failed to sign the policy'
+
+jq -n --arg addon "$(base64 -w0 "$addon")" \
+  --arg attributes "$(base64 -w0 "${work}/attributes")" \
+  --arg idc "$(base64 -w0 "${work}/idc")" \
+  --arg digest "$(base64 -w0 "${work}/digest")" \
+  --arg cp_hash "$(base64 -w0 "${work}/command-hash-blob")" \
+  --arg policy "$(base64 -w0 "${work}/policy")" \
+  --arg signature "$(base64 -w0 "${work}/policy_signature")" \
+  --argjson counter "$counter" \
+  '{ addon: $addon, attributes: $attributes, idc: $idc, digest: $digest,
+     cp_hash: $cp_hash, policy: $policy, policy_signature: $signature,
+     counter: $counter }' > "$bundle"
