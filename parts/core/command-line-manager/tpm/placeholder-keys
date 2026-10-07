@@ -1,0 +1,31 @@
+#!/bin/sh
+set -eu
+
+# Makes a placeholder server key pair in /run/puavo/command-line as
+# server.priv and server.pub when no server key is configured. Anyone
+# who can read server.priv can authorize addons. Runs at boot, before
+# the key load.
+#
+# Usage: puavo-command-line-manager-placeholder-keys
+#
+# PUAVO_SERVER_PUBLIC_KEY overrides the configured server key and
+# PUAVO_COMMANDLINE_DIRECTORY the directory.
+
+configured_server_key=${PUAVO_SERVER_PUBLIC_KEY:-/etc/puavo-conf/server.pub}
+directory=${PUAVO_COMMANDLINE_DIRECTORY:-/run/puavo/command-line}
+placeholder_key="${directory}/server.priv"
+
+panic() {
+  echo "error: $1" >&2
+  exit 1
+}
+
+[ -f "$configured_server_key" ] && exit 0
+
+install -d -m 0755 "$directory"
+(umask 077 && openssl genpkey -algorithm EC \
+   -pkeyopt ec_paramgen_curve:P-256 -out "$placeholder_key" 2>/dev/null) \
+  || panic 'failed to make a placeholder server key'
+openssl pkey -in "$placeholder_key" -pubout -out "${directory}/server.pub" \
+  || panic 'failed to write the placeholder server public key'
+echo "warning: no server key configured, using the placeholder key ${placeholder_key}" >&2

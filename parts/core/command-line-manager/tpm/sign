@@ -1,0 +1,164 @@
+#!/bin/sh
+set -eu
+
+# Signs the command-line addon of a server bundle for Secure Boot with
+# the device key in the TPM, and writes the signed addon. The TPM signs
+# only when the server signed a policy for exactly this signature and
+# the signing counter is at most the bundle's counter value. After
+# signing, the counter is raised to that value, which ends every older
+# bundle.
+#
+# Usage: puavo-command-line-manager-sign <key-directory> <bundle> <output>
+#
+# The key directory holds the device certificate as secure-boot.pem. The
+# bundle is what puavo-command-line-manager-authorize writes.
+#
+# The device key and the server key are the ones
+# puavo-command-line-manager-load left in /run/puavo/command-line.
+# PUAVO_COMMANDLINE_DIRECTORY overrides the directory.
+
+directory=${PUAVO_COMMANDLINE_DIRECTORY:-/run/puavo/command-line}
+storage_key=0x81000001
+counter_index=0x010c3d15
+
+panic() {
+  echo "error: $1" >&2
+  exit 1
+}
+
+[ $# -eq 3 ] || panic "usage: $0 <key-directory> <bundle> <output>"
+certificate="$1/secure-boot.pem"
+bundle=$2
+output=$3
+
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+
+for field in addon attributes idc digest cp_hash policy policy_signature; do
+  jq --exit-status --raw-output ".${field}" "$bundle" \
+    | base64 --decode > "${work}/${field}" \
+    || panic "${bundle} has no ${field}"
+done
+counter=$(jq --exit-status --raw-output .counter "$bundle") \
+  || panic "${bundle} has no counter"
+
+# Load the device key the load script imported. Only this TPM can load
+# it, because the private blob is encrypted with its storage key.
+tpm2 load \
+  --parent-context="$storage_key" \
+  --public="${directory}/device.pub" \
+  --private="${directory}/device.priv" \
+  --key-context="${work}/key.ctx" \
+  --quiet \
+  || panic 'failed to load the device key'
+
+# Load the server public key under the owner hierarchy, the same way as
+# the authorize and load scripts do, so it gets the same TPM name the
+# device key policy names.
+tpm2 loadexternal \
+  --key-context="${work}/server.ctx" \
+  --hierarchy=o \
+  --key-algorithm=ecc \
+  --attributes=sign \
+  --public="${directory}/server.pub" \
+  --name="${work}/server.name" \
+  --quiet \
+  || panic 'failed to load the server public key'
+
+# The TPM accepts the policy only with a ticket that proves the server
+# key signed it. The server key must have the attributes it had when
+# the device key policy was made, or the policy names another key.
+tpm2 verifysignature \
+  --key-context="${work}/server.ctx" \
+  --hash-algorithm=sha256 \
+  --scheme=ecdsa \
+  --message="${work}/policy" \
+  --signature="${work}/policy_signature" \
+  --ticket="${work}/ticket" \
+  --quiet \
+  || panic 'the server signature does not match the policy'
+
+# Start a policy session where we use the device key as the policy dictates.
+tpm2 startauthsession --policy-session --session="${work}/session.ctx"
+# Close the session and remove the data afterwards.
+trap 'tpm2 flushcontext "${work}/session.ctx" 2>/dev/null; rm -rf "$work"' EXIT
+
+# Now repeat the policy steps of the authorize script in a real session.
+# Each step extends the policy digest, so the steps and their order must
+# be exactly the same as in the authorize script, or the result is not
+# the policy the server signed.
+
+# Constrain the policy to the exact signing operation the server
+# authorized.
+tpm2 policycphash \
+  --session="${work}/session.ctx" \
+  --cphash-input "${work}/cp_hash" \
+  --quiet
+
+# Convert the counter value of the bundle to the format of the NV
+# counter, the same value the server embedded in the policy.
+printf '%016X' "$counter" | basenc --base16 --decode > "${work}/counter"
+
+# Constrain the policy so that it requires the NV counter to be
+# less or equal to the counter value of the bundle. Unlike in the trial
+# session of the authorize script, the TPM now checks the actual counter,
+# so this fails if a newer bundle has already been used.
+tpm2 policynv \
+  --session="${work}/session.ctx" \
+  --input "${work}/counter" \
+  "$counter_index" \
+  ule \
+  || panic 'a newer authorization has already been used'
+
+# The ticket proves to the TPM that it has verified a signature over the
+# policy with some key. On its own that is not enough, but the ticket is
+# bound to the name of that key, so passing the server key name here
+# makes the TPM accept only a signature by the server. The TPM also
+# checks that the session reached exactly the signed policy.
+# If this check passes, the policy digest is reset and extended with the
+# server key name, so that it matches the policy under which the private
+# key is allowed to be used.
+# However, the command hash restriction stays in the session, which
+# constrains the usage of the key to the intended operation. The counter
+# needs no such thing, the TPM checked it already above.
+tpm2 policyauthorize \
+  --session="${work}/session.ctx" \
+  --name="${work}/server.name" \
+  --input="${work}/policy" \
+  --ticket "${work}/ticket" \
+  --quiet \
+  || panic 'the TPM did not accept the server policy'
+
+# Sign the Authenticode digest with the device key under the policy
+# session. This is the signing operation whose command hash the
+# authorize script computed. The key, the hash algorithm, the scheme and
+# the digest must be exactly the same as there, or the command hash does
+# not match and the TPM refuses to sign.
+tpm2 sign \
+  --key-context="${work}/key.ctx" \
+  --hash-algorithm=sha256 \
+  --scheme=rsassa \
+  --digest \
+  --auth="session:${work}/session.ctx" \
+  --format=plain \
+  --signature="${work}/signature" \
+  "${work}/digest" \
+  || panic 'the TPM refused to sign'
+
+# The trap will do the cleanup.
+
+# Put the addon, the certificate, the signing request and the signature
+# made by the TPM together into the signed addon.
+puavo-command-line-sign-assemble "${work}/addon" "$certificate" \
+  "${work}/attributes" "${work}/idc" "${work}/signature" "$output" \
+  || panic 'failed to assemble the signed image'
+
+# Fetch the current value of the signing counter and increase until
+# it matches the server provided value. If raising fails, this
+# authorization stays usable until a newer one is used, which is
+# harmless.
+counter_reader="$(dirname "$0")/puavo-command-line-manager-counter"
+while [ "$("$counter_reader")" -lt "$counter" ]; do
+  tpm2 nvincrement "$counter_index" \
+    || { echo 'warning: failed to raise the signing counter' >&2; break; }
+done
