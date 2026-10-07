@@ -5,7 +5,7 @@
 // binary, builds the Indirect Data Content (IDC) and
 // PKCS7 authenticated attributes, and outputs both as
 // DER blobs. The authenticated attributes DER is what
-// the kernel signing module will RSA-sign.
+// the key holder will RSA-sign.
 //
 // This program does not need any private key. It uses
 // only the Secure Boot certificate to set up the PKCS7
@@ -78,7 +78,7 @@ int main(int argument_count, char** arguments) {
   // | | Message digest: SHA-256 of IDC content   | |
   // | +------------------------------------------+ |
   // +----------------------------------------------+
-  //   The kernel module RSA-signs SHA-256 of this blob.
+  //   The key holder RSA-signs SHA-256 of this blob.
   //
   // +----------------------------------------------+
   // | IDC (DER)                                    |
@@ -87,7 +87,6 @@ int main(int argument_count, char** arguments) {
   // | | PE Authenticode digest (SHA-256)         | |
   // | +------------------------------------------+ |
   // +----------------------------------------------+
-  //   The kernel module verifies its PE digest matches.
   //   The assemble program embeds it as PKCS7 content.
 
   const char* pe_path = arguments[1];
@@ -140,7 +139,7 @@ int main(int argument_count, char** arguments) {
   // Normally OpenSSL's PKCS7_sign_add_signer does this
   // automatically, but it requires a private key that
   // matches the certificate. Since the private key
-  // lives in the kernel module, we populate each field
+  // lives in the key holder, we populate each field
   // by hand.
   PKCS7_SIGNER_INFO* signer_info = PKCS7_SIGNER_INFO_new();
 
@@ -195,11 +194,8 @@ int main(int argument_count, char** arguments) {
     goto cleanup;
   }
 
-  // Write the IDC to a file. It will be used by two
-  // consumers: the kernel module reads it to verify
-  // that the PE digest inside matches the PE it
-  // received, and the assemble program embeds it as the
-  // PKCS7 content.
+  // Write the IDC to a file. The assemble program
+  // embeds it as the PKCS7 content.
   fileio_write_file(idc_output_path, idc_buffer, idc_length);
 
   // Register the SPC Indirect Data Content OID with
@@ -247,13 +243,13 @@ int main(int argument_count, char** arguments) {
   // Add the computed digest as the message digest
   // authenticated attribute. Together with the content
   // type attribute added earlier, these two attributes
-  // form the "authenticated attributes" that the kernel
-  // module will sign.
+  // form the "authenticated attributes" that the key
+  // holder will sign.
   PKCS7_add1_attrib_digest(signer_info, idc_digest, idc_digest_length);
 
   // Serialize the authenticated attributes to DER
   // format. This DER blob is the final output that the
-  // kernel module will RSA-sign after hashing it with
+  // key holder will RSA-sign after hashing it with
   // SHA-256. The PKCS7_ATTR_SIGN item type tells
   // OpenSSL to use the SET OF encoding (tag 0x31)
   // required by the PKCS7 signature computation.
@@ -263,7 +259,7 @@ int main(int argument_count, char** arguments) {
                     ASN1_ITEM_rptr(PKCS7_ATTR_SIGN));
 
   // Write the authenticated attributes DER to a file
-  // for the kernel module to sign.
+  // for the key holder to sign.
   fileio_write_file(attributes_output_path, attributes_buffer,
                     attributes_length);
 
