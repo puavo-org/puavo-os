@@ -3,9 +3,10 @@ use std::{
     io,
     os::unix::fs::{OpenOptionsExt, PermissionsExt},
     path::Path,
+    process::Command,
 };
 
-use log::info;
+use log::{error, info};
 
 use crate::{
     configurators::Configurator,
@@ -15,22 +16,17 @@ use crate::{
     luks::tokens::LuksTpmTokenManager,
 };
 
-/// Userspace location for the device-specific Secure Boot key and
-/// certificate. `/run` is a tmpfs that systemd preserves across
-/// `switch_root`, so a userspace signer can read the keys regardless
-/// of disk encryption.
+/// Userspace location for the device-specific Secure Boot certificate.
 pub const DEVICE_SECURE_BOOT_KEYS_DIRECTORY: &str =
     "/run/puavo/secure-boot-keys";
 
-const PRIVATE_KEY_FILENAME: &str = "secure-boot.priv";
 const CERTIFICATE_FILENAME: &str = "secure-boot.pem";
 
-/// Copy the device-specific Secure Boot private key and certificate
-/// from the open boot vault into the specified destination directory,
-/// enforcing `0700` on the directory, `0600` on the private key, and
-/// `0644` on the certificate. Each destination file is created with
-/// its target mode so the data is never visible under a more
-/// permissive mode.
+/// Loads the device key into the TPM and defines the signing counter.
+const LOAD_SCRIPT: &str = "/usr/lib/puavo-core/puavo-command-line-manager-load";
+
+/// Copies the device Secure Boot certificate from the open boot vault
+/// into the destination directory.
 pub fn install_keys(
     resources: &BootVaultResources,
     destination_directory: &Path,
@@ -41,11 +37,6 @@ pub fn install_keys(
         fs::Permissions::from_mode(0o700),
     )?;
 
-    install_file(
-        &resources.secure_boot_private_key_path(),
-        &destination_directory.join(PRIVATE_KEY_FILENAME),
-        0o600,
-    )?;
     install_file(
         &resources.secure_boot_certificate_path(),
         &destination_directory.join(CERTIFICATE_FILENAME),
@@ -81,9 +72,9 @@ fn install_file(
     Ok(())
 }
 
-/// Configurator that publishes the device-specific Secure Boot keys
-/// from the boot vault into `/run/puavo/secure-boot-keys/` so
-/// userspace signers can read them without unsealing the vault.
+/// Configurator that publishes the device-specific Secure Boot
+/// certificate to userspace, and loads the private key into the TPM, so
+/// userspace can sign only what the server authorizes.
 pub struct DeviceSecureBootKeysConfigurator;
 
 impl DeviceSecureBootKeysConfigurator {
@@ -107,12 +98,28 @@ impl Configurator for DeviceSecureBootKeysConfigurator {
         _primary_partition: &mut LuksTpmTokenManager,
         _display: &dyn UserDisplay,
     ) -> Result<(), PuavoError> {
-        info!("Installing device-specific Secure Boot keys for userspace");
-        install_keys(
-            boot_vault.resources(),
-            Path::new(DEVICE_SECURE_BOOT_KEYS_DIRECTORY),
-        )
-        .map_err(PuavoError::DeviceSecureBootKeyInstallation)
+        info!(
+            "Installing the device-specific Secure Boot certificate for userspace"
+        );
+        let destination = Path::new(DEVICE_SECURE_BOOT_KEYS_DIRECTORY);
+        install_keys(boot_vault.resources(), destination)
+            .map_err(PuavoError::DeviceSecureBootKeyInstallation)?;
+
+        // Loading the key is not critical, so the boot continues
+        // regardless of the outcome.
+        let key_directory = boot_vault.resources().mountpoint();
+        match Command::new(LOAD_SCRIPT).arg(key_directory).output() {
+            Ok(output) if output.status.success() => {}
+            Ok(output) => error!(
+                "Failed to load the device Secure Boot key ({}): {}",
+                output.status,
+                String::from_utf8_lossy(&output.stderr).trim()
+            ),
+            Err(error) => {
+                error!("Failed to run {LOAD_SCRIPT}: {error}");
+            }
+        }
+        Ok(())
     }
 
     fn name(&self) -> &'static str {
