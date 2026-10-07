@@ -1,0 +1,43 @@
+Description: Create tile bitmaps premultiplied for fast drawing
+ Tiles are created with createImageBitmap(..., { premultiplyAlpha:
+ 'none' }). Chromium 102, used by Debian Bookworm's QtWebEngine 6.4,
+ cannot keep such unpremultiplied bitmaps on the GPU, so every
+ drawImage() of a tile converts and re-uploads it (about 5 ms per
+ 256x256 tile vs. 0.04 ms for a premultiplied bitmap). This made
+ scrolling and repainting very slow: drawImage took ~85% of the
+ renderer main thread time.
+ .
+ Tile bitmaps are only drawn with 2D canvas drawImage(), for which a
+ bitmap premultiplied at creation gives the same result as an
+ unpremultiplied one premultiplied at draw time, so use 'premultiply'.
+Author: Puavo Org <dev@opinsys.fi>
+Forwarded: not-needed
+---
+--- a/online/browser/src/app/TilesMiddleware.ts
++++ b/online/browser/src/app/TilesMiddleware.ts
+@@ -521,7 +521,10 @@
+ 			const image = new ImageData(clampedData, this.tileSize, this.tileSize);
+ 			bitmaps.push(
+ 				createImageBitmap(image, {
+-					premultiplyAlpha: 'none',
++					// Not 'none': Chromium 102 (QtWebEngine 6.4 in Debian Bookworm)
++					// re-uploads unpremultiplied bitmaps on every drawImage, making
++					// tile painting ~100x slower. Same result for 2D drawImage.
++					premultiplyAlpha: 'premultiply',
+ 				}),
+ 			);
+ 			deltas.push(delta);
+--- a/online/browser/src/layer/tile/CanvasTileWorkerSrc.js
++++ b/online/browser/src/layer/tile/CanvasTileWorkerSrc.js
+@@ -86,7 +86,10 @@
+ 					);
+ 					bitmaps.push(
+ 						createImageBitmap(image, {
+-							premultiplyAlpha: 'none',
++							// Not 'none': Chromium 102 (QtWebEngine 6.4 in Debian Bookworm)
++							// re-uploads unpremultiplied bitmaps on every drawImage, making
++							// tile painting ~100x slower. Same result for 2D drawImage.
++							premultiplyAlpha: 'premultiply',
+ 						}),
+ 					);
+ 					tilesWithBitmaps.push(tile);
