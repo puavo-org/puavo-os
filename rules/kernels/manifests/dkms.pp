@@ -32,10 +32,6 @@ class kernels::dkms {
         $dkms_module_package = 'nvidia-kernel-dkms'
       }
 
-      /^puavo-command-line-signer\//: {
-        $dkms_module_package = 'puavo-core'
-      }
-
       /^r8168\//: { $dkms_module_package = 'r8168-dkms' }
 
       /^virtualbox\//: { $dkms_module_package = 'virtualbox-dkms' }

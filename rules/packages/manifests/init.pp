@@ -811,7 +811,6 @@ class packages {
   $broadcom_sta_dkms_module         = 'broadcom-sta/6.30.223.271'
   $hpuefi_module                    = 'hpuefi/3.07'
   $nvidia_dkms_535_module           = 'nvidia-current/550.163.01'
-  $puavo_command_line_signer_module = 'puavo-command-line-signer/1.0'
   $r8168_module                     = 'r8168/8.051.02'
   $virtualbox_module                = 'virtualbox/7.2.20'
 
@@ -821,7 +820,6 @@ class packages {
       default => [ $broadcom_sta_dkms_module
                  , $hpuefi_module
                  , $nvidia_dkms_535_module
-                 , $puavo_command_line_signer_module
                  , $virtualbox_module ]
                  # , $r8168_module              # XXX Trixie
   }
@@ -833,7 +831,7 @@ class packages {
       version      => '6.12.111+deb13.1-amd64';
 
     'modern':
-      dkms_modules   => [ $hpuefi_module, $puavo_command_line_signer_module ],
+      dkms_modules   => [ $hpuefi_module ],
       extra_packages => [ 'linux-modules-7.2.6+deb13-amd64' ],
       package_name   => 'linux-binary-unsigned-7.2.6+deb13-amd64',
       version        => '7.2.6+deb13-amd64';
