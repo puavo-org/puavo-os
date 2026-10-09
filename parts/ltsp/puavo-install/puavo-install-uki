@@ -177,7 +177,7 @@ install_ukis() {
     local uki_checksum_file="${uki}.sha256"
     local uki_destination="${uki_installation_directory}/$(basename "$uki")"
 
-    if ! (cd "$UKI_ROOT" \
+    if ! (cd "$uki_installation_directory" \
             && sha256sum -c --status "$uki_checksum_file" 2>/dev/null); then
       # If the UKI already exists, it must differ from the new one
       # (e.g. possibly broken).  Remove the existing file before copying
