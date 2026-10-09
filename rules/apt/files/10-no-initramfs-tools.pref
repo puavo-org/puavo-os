@@ -1,0 +1,5 @@
+# Without this, a package recommending initramfs-tools (e.g. intel-microcode)
+# makes apt remove dracut and everything depending on it.
+Package: initramfs-tools initramfs-tools-core
+Pin: version *
+Pin-Priority: -1
