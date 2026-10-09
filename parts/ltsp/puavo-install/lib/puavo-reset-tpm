@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+
+echo 5 > /sys/class/tpm/tpm0/ppi/request

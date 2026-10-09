@@ -80,6 +80,7 @@ install : installdirs
 		lib/puavo-read-boot-keymap \
 		lib/puavo-read-recovery-bundle \
 		lib/puavo-reset \
+		lib/puavo-reset-tpm \
 		lib/puavo-setup-secure-boot \
 		lib/puavo-torrent-updated \
 		lib/puavo-torrent-download-complete \
