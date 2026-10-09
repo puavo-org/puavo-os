@@ -111,7 +111,9 @@ assert_absent "oversized next stage never reached chainload" "$oversized" \
 : > "$WORK/absent.efi"
 absent=$(boot_from_server "$WORK/absent.efi")
 echo "$absent"
+assert_contains "next stage was not transmitted" "$absent" \
+  "read 0 bytes of next stage"
 assert_contains "an empty next stage was refused" "$absent" \
-  "next stage missing, refusing to continue"
+  "next stage declares no version, refusing"
 
 exit "$FAILED"
