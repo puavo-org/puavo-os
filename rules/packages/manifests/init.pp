@@ -538,6 +538,8 @@ class packages {
     , 'python3-pip'
     , 'python3-pygame'
     , 'python-is-python3'
+    , 'qtbase5-dev-tools'  # needed by qttools5-dev-tools for C++ programming
+    , 'qttools5-dev-tools' # contains designer-qt5
     , 'racket'
     , 'racket-doc'
     , 'sbcl'
