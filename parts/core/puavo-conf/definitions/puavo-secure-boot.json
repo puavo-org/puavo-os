@@ -1,0 +1,7 @@
+{
+  "puavo.secure-boot.update.enabled": {
+    "default": "false",
+    "description": "Apply newer Secure Boot databases shipped in the image",
+    "typehint": "bool"
+  }
+}
