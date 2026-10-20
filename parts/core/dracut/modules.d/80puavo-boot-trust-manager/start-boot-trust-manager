@@ -10,6 +10,9 @@ set -eu
 
 lock_path='/run/systemd/ask-password/ask.lock'
 
+# The battery and charger are not visible until these drivers load
+modprobe -a battery ac 2>/dev/null || true
+
 status=0
 touch "$lock_path"
 /usr/sbin/puavo-boot-trust-manager manage || status=$?

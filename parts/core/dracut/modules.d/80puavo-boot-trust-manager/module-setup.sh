@@ -47,6 +47,9 @@ install() {
         ckbcomp "$keymap" | gzip -9 > "${keymap_directory}/${keymap}.kmap.gz"
     done < "${moddir}/keymaps"
 
+    # Lets Boot Trust Manager see the battery charge
+    instmods battery ac
+
     # Install kernel command-line signer and related utilities
     instmods puavo_command_line_signer
     inst "${moddir}/scripts/initialize-command-line-signer" \

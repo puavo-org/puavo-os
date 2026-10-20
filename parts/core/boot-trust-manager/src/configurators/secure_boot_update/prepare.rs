@@ -31,6 +31,46 @@ use crate::{
     system::{efi, locale},
 };
 
+/// Where the kernel lists the batteries and chargers.
+const POWER_SUPPLY_DIRECTORY: &str = "/sys/class/power_supply";
+
+/// Battery charge in percent below which an update waits for a later
+/// boot. Firmware updaters commonly use the same limit.
+const LOW_BATTERY_PERCENT: u8 = 30;
+
+/// Tells whether the machine runs on a nearly empty battery. A machine
+/// that is plugged in, or that reports no battery, never counts as low.
+fn is_battery_low(power_supplies: &Path) -> bool {
+    let Ok(entries) = fs::read_dir(power_supplies) else {
+        return false;
+    };
+
+    let mut capacities = Vec::new();
+
+    for supply in entries.flatten().map(|entry| entry.path()) {
+        let property = |name: &str| {
+            fs::read_to_string(supply.join(name))
+                .ok()
+                .map(|value| value.trim().to_string())
+        };
+
+        if property("type").as_deref() == Some("Battery") {
+            if let Some(capacity) =
+                property("capacity").and_then(|value| value.parse::<u8>().ok())
+            {
+                capacities.push(capacity);
+            }
+        } else if property("online").as_deref() == Some("1") {
+            return false;
+        }
+    }
+
+    capacities
+        .iter()
+        .max()
+        .is_some_and(|&capacity| capacity < LOW_BATTERY_PERCENT)
+}
+
 /// Prepares one Secure Boot database update. It writes the pending contents
 /// of the variable and an enrollment for the resulting state, and does not
 /// write to the firmware. One variable is updated per boot, so every state
@@ -195,7 +235,19 @@ impl Configurator for PrepareSecureBootUpdateConfigurator {
             return Ok(false);
         }
 
-        Ok(self.next_update(boot_vault.resources())?.is_some())
+        let activate = self.next_update(boot_vault.resources())?.is_some();
+
+        // Power loss during the update could leave the machine unable to
+        // boot. Waiting is safe, because the machine keeps booting as before.
+        if activate && is_battery_low(Path::new(POWER_SUPPLY_DIRECTORY)) {
+            info!(
+                "Battery below {}%, Secure Boot update stays pending",
+                LOW_BATTERY_PERCENT,
+            );
+            return Ok(false);
+        }
+
+        Ok(activate)
     }
 
     fn configure(
@@ -430,5 +482,47 @@ mod tests {
         record(&resources, &shipped(image.path(), Variable::Db));
 
         assert!(preparer.next_update(&resources).unwrap().is_none());
+    }
+
+    fn write_supply(directory: &Path, name: &str, properties: &[(&str, &str)]) {
+        let supply = directory.join(name);
+        fs::create_dir(&supply).unwrap();
+        for (key, value) in properties {
+            fs::write(supply.join(key), value).unwrap();
+        }
+    }
+
+    #[test]
+    fn test_battery_below_threshold_is_low() {
+        let directory = TempDir::new().unwrap();
+        write_supply(
+            directory.path(),
+            "BAT0",
+            &[("type", "Battery"), ("capacity", "15")],
+        );
+
+        assert!(is_battery_low(directory.path()));
+    }
+
+    #[test]
+    fn test_external_power_is_not_low() {
+        let directory = TempDir::new().unwrap();
+        write_supply(
+            directory.path(),
+            "BAT0",
+            &[("type", "Battery"), ("capacity", "15")],
+        );
+        write_supply(
+            directory.path(),
+            "AC0",
+            &[("type", "Mains"), ("online", "1")],
+        );
+
+        assert!(!is_battery_low(directory.path()));
+    }
+
+    #[test]
+    fn test_unreadable_power_supplies_are_not_low() {
+        assert!(!is_battery_low(Path::new("/nonexistent")));
     }
 }
