@@ -66,6 +66,9 @@ install() {
         ckbcomp "$keymap" | gzip -9 > "${keymap_directory}/${keymap}.kmap.gz"
     done < "${moddir}/keymaps"
 
+    # Lets Boot Trust Manager see the battery charge
+    instmods battery ac
+
     # Install all public TPM PCR keys and the server
     # signing public key (if present)
     mkdir -p "${initdir}/etc/puavo-conf"
