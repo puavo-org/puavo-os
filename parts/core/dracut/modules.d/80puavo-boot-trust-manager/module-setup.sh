@@ -26,7 +26,9 @@ install() {
 
     # A full reconfiguration writes the Secure Boot keys of the device with
     # the same scripts as the installer.
-    inst_multiple /usr/lib/puavo-ltsp-install/puavo-setup-secure-boot \
+    inst_multiple /usr/lib/puavo-core/update-secure-boot-db \
+                  /usr/lib/puavo-core/update-secure-boot-dbx \
+                  /usr/lib/puavo-ltsp-install/puavo-setup-secure-boot \
                   /usr/lib/puavo-ltsp-install/puavo-prepare-secure-boot \
                   /usr/lib/puavo-ltsp-install/puavo-update-device-db
 
@@ -43,12 +45,6 @@ install() {
     inst /usr/lib/puavo-core/puavo-command-line-manager-placeholder-keys
     inst "${moddir}/puavo-command-line-manager-placeholder-keys.service" \
          "/usr/lib/systemd/system/puavo-command-line-manager-placeholder-keys.service"
-
-    # Install Secure Boot update scripts
-    inst "${moddir}/scripts/update-secure-boot-db" \
-         "/usr/sbin/update-secure-boot-db"
-    inst "${moddir}/scripts/update-secure-boot-dbx" \
-         "/usr/sbin/update-secure-boot-dbx"
 
     # Install the service file
     inst "${moddir}/puavo-boot-trust-manager.service" \
