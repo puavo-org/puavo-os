@@ -1,3 +1,3 @@
 #!/bin/sh
 # Replaces the real command in tests and records its arguments.
-echo "$2 dated $3" > "$PUAVO_TEST_RECORD"
+echo "$2 dated $3" >> "$PUAVO_TEST_RECORD"
