@@ -19,7 +19,9 @@ install() {
                   /usr/bin/sign-efi-sig-list \
                   /usr/bin/chattr \
                   /usr/bin/loadkeys \
-                  /usr/bin/openssl
+                  /usr/bin/openssl \
+                  /usr/lib/puavo-core/update-secure-boot-db \
+                  /usr/lib/puavo-core/update-secure-boot-dbx
 
     # Install the command-line manager's key load and what it runs
     inst_multiple /usr/lib/puavo-core/puavo-command-line-manager-load \
@@ -34,12 +36,6 @@ install() {
     inst /usr/lib/puavo-core/puavo-command-line-manager-placeholder-keys
     inst "${moddir}/puavo-command-line-manager-placeholder-keys.service" \
          "/usr/lib/systemd/system/puavo-command-line-manager-placeholder-keys.service"
-
-    # Install Secure Boot update scripts
-    inst "${moddir}/scripts/update-secure-boot-db" \
-         "/usr/sbin/update-secure-boot-db"
-    inst "${moddir}/scripts/update-secure-boot-dbx" \
-         "/usr/sbin/update-secure-boot-dbx"
 
     # Install the service file
     inst "${moddir}/puavo-boot-trust-manager.service" \
