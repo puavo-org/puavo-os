@@ -43,6 +43,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/scripts
 	mkdir -p $(DESTDIR)/var/lib/puavo
 	mkdir -p $(DESTDIR)$(sbindir)
+	mkdir -p $(DESTDIR)/usr/lib/systemd/system
 
 .PHONY : install
 install : $(install-subdirs) installdirs
@@ -65,6 +66,7 @@ install : $(install-subdirs) installdirs
 		lib/update-secure-boot-db \
 		lib/update-secure-boot-dbx
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) sbin/*
+	$(INSTALL_DATA) -t $(DESTDIR)/usr/lib/systemd/system systemd/*
 	ln -fns ../scripts/setup_btrfs_quotas \
 		$(DESTDIR)$(sysconfdir)/puavo-conf/hooks/puavo.image.overlay
 

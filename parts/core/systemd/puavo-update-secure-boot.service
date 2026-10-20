@@ -1,0 +1,17 @@
+[Unit]
+Description=Puavo Secure Boot database update
+# A device with a boot vault keeps its KEK there and updates in the initrd.
+ConditionPathExists=/images/boot/addons/kek.priv
+RequiresMountsFor=/images
+
+[Service]
+Type=oneshot
+ExecCondition=/bin/sh -c '[ "$(/usr/bin/puavo-conf puavo.secure-boot.update.enabled)" = "true" ]'
+ExecStart=/usr/bin/systemd-inhibit --what=shutdown:sleep \
+  --who=puavo-update-secure-boot --why='Updating Secure Boot databases' \
+  --mode=block \
+  /usr/sbin/puavo-boot-trust-manager update-secure-boot \
+  --databases /etc/puavo-secure-boot --keys /images/boot/addons
+
+[Install]
+WantedBy=multi-user.target
