@@ -843,6 +843,7 @@ module DiskHandler
       'secure-boot.priv', 'secure-boot.pem', 'db.auth', # DB private key, certificate and auth file
       'pk.pem', 'pk.auth',                              # PK certificate and auth file
       'kek.pem', 'kek.auth',                            # KEK certificate and auth file
+      'pk.priv', 'kek.priv', 'db.enrolled.json',        # PK and KEK private keys, enrolled db record
     ]
     secure_boot_files.each do |filename|
       src = File.join(device_keys_temporary_directory, filename)

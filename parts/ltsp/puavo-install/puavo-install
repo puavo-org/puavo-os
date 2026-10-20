@@ -435,15 +435,19 @@ generate_recovery_bundle() {
   echo "recovery bundle generated"
 }
 
-remove_secure_boot_key_if_tpm_encrypted() {
+remove_secure_boot_keys_if_tpm_encrypted() {
   # On encrypted devices the Boot Trust Manager loads the Secure Boot
-  # signing key into the TPM, so no copy stays on the disk.
+  # signing key into the TPM and the boot vault holds the other keys, so
+  # no copy stays on the disk.
   is_encrypted=$("$PUAVO_INSTALL_LIBDIR"/is-encrypted-install /images)
   [ "$is_encrypted" = 'true' ] || return 0
 
   for key_file in \
       /images/boot/addons/secure-boot.priv \
-      /images/boot/addons/secure-boot.pem; do
+      /images/boot/addons/secure-boot.pem \
+      /images/boot/addons/pk.priv \
+      /images/boot/addons/kek.priv \
+      /images/boot/addons/db.enrolled.json; do
     [ -e "$key_file" ] || continue
     if ! rm -f "$key_file"; then
       echo "error: failed to remove ${key_file}" >&2
@@ -516,7 +520,7 @@ install_localbootdevice() {
   install_image "$puavo_install_hosttype"
   update_images || update_configuration_retstatus=1
 
-  remove_secure_boot_key_if_tpm_encrypted
+  remove_secure_boot_keys_if_tpm_encrypted
 
   if [ "$puavo_hosttype" = 'bootserver' ]; then
     bootserver_setup_state
