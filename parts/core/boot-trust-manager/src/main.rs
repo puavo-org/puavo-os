@@ -16,10 +16,10 @@ use clap::{Parser, Subcommand};
 use boot_trust_manager::{
     boot_trust_manager::{BootTrustManager, BootTrustManagerConfiguration},
     error::PuavoError,
-    secure_boot::prediction,
+    secure_boot::{self, prediction, update::PENDING_DIRECTORY},
     system::reboot,
 };
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -53,6 +53,17 @@ enum Commands {
         #[arg(long = "device")]
         device: Option<String>,
     },
+    /// Write newer Secure Boot databases with the keys in a directory
+    UpdateSecureBoot {
+        /// Directory of the databases installed in the image
+        #[arg(long = "databases")]
+        databases: PathBuf,
+
+        /// Directory of the KEK, the device certificate and the records of
+        /// the enrolled databases
+        #[arg(long = "keys")]
+        keys: PathBuf,
+    },
 }
 
 fn main() -> Result<(), i32> {
@@ -75,6 +86,14 @@ fn main() -> Result<(), i32> {
         Commands::Manage => manager.manage(),
         Commands::Predict { policy } => prediction::predict(&policy),
         Commands::Open { device } => manager.open(device),
+        Commands::UpdateSecureBoot { databases, keys } => {
+            secure_boot::direct::update(
+                &databases,
+                &keys,
+                Path::new(PENDING_DIRECTORY),
+            )
+            .map(|_| ())
+        }
     };
 
     // Return with success code if the device is not encrypted,
