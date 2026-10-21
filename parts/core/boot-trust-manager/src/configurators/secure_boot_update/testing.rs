@@ -4,7 +4,6 @@ use std::{
     collections::BTreeMap,
     env, fs,
     path::{Path, PathBuf},
-    sync::Once,
 };
 
 use tempfile::TempDir;
@@ -20,22 +19,6 @@ use crate::{
         update::{SecureBootDatabaseUpdate, Variable},
     },
 };
-
-static SCRIPTS_ON_PATH: Once = Once::new();
-
-/// Puts the scripts under tests/scripts ahead of the installed commands, so
-/// a test runs them instead. Call it first in a test that runs a command.
-pub fn use_test_scripts() {
-    SCRIPTS_ON_PATH.call_once(|| {
-        let scripts =
-            Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/scripts");
-        let path = env::var("PATH").unwrap_or_default();
-
-        unsafe {
-            env::set_var("PATH", format!("{}:{}", scripts.display(), path));
-        }
-    });
-}
 
 /// Tells the stub update command where to record its arguments and returns
 /// that file.

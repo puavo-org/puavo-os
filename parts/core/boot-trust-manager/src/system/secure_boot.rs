@@ -7,6 +7,12 @@ use log::info;
 
 use crate::error::PuavoError;
 
+#[cfg(not(test))]
+const SCRIPT_DIRECTORY: &str = "/usr/lib/puavo-core";
+#[cfg(test)]
+const SCRIPT_DIRECTORY: &str =
+    concat!(env!("CARGO_MANIFEST_DIR"), "/tests/scripts");
+
 /// Replaces the contents of a variable with an update timestamped with the
 /// given date and signed with the keys in the boot vault.
 pub fn update(
@@ -15,7 +21,7 @@ pub fn update(
     contents: &Path,
     stated_date: &str,
 ) -> Result<(), PuavoError> {
-    let command = format!("update-secure-boot-{variable}");
+    let command = format!("{SCRIPT_DIRECTORY}/update-secure-boot-{variable}");
     info!("Writing {:?} to the firmware, dated {}", contents, stated_date);
 
     let output = Command::new(&command)

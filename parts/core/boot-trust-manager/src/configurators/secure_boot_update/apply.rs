@@ -123,8 +123,7 @@ mod tests {
     use crate::configurators::{
         enrollment::testing::write_applied_names,
         secure_boot_update::testing::{
-            shipped, shipped_database, stub_update_command, use_test_scripts,
-            vault,
+            shipped, shipped_database, stub_update_command, vault,
         },
     };
     use crate::secure_boot::update::{SecureBootDatabaseUpdate, Variable};
@@ -234,7 +233,6 @@ mod tests {
     #[test]
     #[serial_test::serial]
     fn applying_writes_contents_and_records_them() {
-        use_test_scripts();
         let image = TempDir::new().unwrap();
         shipped_database(image.path(), 20260101000000);
         let runtime = TempDir::new().unwrap();
@@ -257,7 +255,6 @@ mod tests {
     #[test]
     #[serial_test::serial]
     fn update_nothing_enrolled_for_not_written() {
-        use_test_scripts();
         let image = TempDir::new().unwrap();
         shipped_database(image.path(), 20260101000000);
         let runtime = TempDir::new().unwrap();
