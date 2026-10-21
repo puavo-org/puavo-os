@@ -1,4 +1,5 @@
 class image::bundle::core {
+  include ::console
   include ::dracut
   include ::kernels
   include ::locales
