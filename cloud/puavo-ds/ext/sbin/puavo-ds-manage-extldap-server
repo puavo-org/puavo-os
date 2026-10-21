@@ -1,0 +1,278 @@
+#!/usr/bin/ruby
+# -*- coding: utf-8 -*-
+#
+# This script connects to LDAP master and reads all its configuration
+# and database data.  Data is written to local database.
+#
+
+require 'erb'
+require 'fileutils'
+require 'highline/import'
+require 'ldap'
+require 'open3'
+require 'optparse'
+require 'syslog'
+
+def die(message)
+  log_error(message)
+  exit(1)
+end
+
+def log_error(message); warn(message); Syslog.err( '%s', message); end
+def log_info(message);  puts(message); Syslog.info('%s', message); end
+
+def parse_erb(basename)
+  ldif_template = File.read("/usr/share/puavo-ds-ext/templates/#{ basename }")
+  ERB.new(ldif_template, trim_mode: '%<>').result
+end
+
+def run(*command)
+  stdout = '', stderr = ''
+  begin
+    stdout, stderr, status = Open3.capture3(*command)
+    return if status.success?
+    raise "command terminated by signal #{ status.termsig }" if status.signaled?
+    raise "command failed with exit status #{ status.exitstatus }"
+  rescue StandardError => e
+    log_error("error running command #{ command.join(' ') }: #{ e.message }")
+    log_error("--- stdout ---\n#{ stdout }") unless stdout.empty?
+    log_error("--- stderr ---\n#{ stderr }") unless stderr.empty?
+    raise
+  end
+end
+
+def setup_and_clear_directory(directory)
+  FileUtils.mkdir_p(directory)
+  FileUtils.chmod(0o750, directory)
+  Dir.children(directory).each do |entry|
+    FileUtils.rm_rf( File.join(directory, entry) )
+  end
+end
+
+PROGRAM_NAME = File.basename($PROGRAM_NAME)
+
+Syslog.open(PROGRAM_NAME, Syslog::LOG_PID, Syslog::LOG_DAEMON)
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = """Usage: #{ File.basename(__FILE__) } [options]
+
+Setup extldap slave server.  Server syncs data from master server
+for all organisations.  Either --initialize or --update must always
+be specified.
+
+"""
+
+  opts.on('--force', 'do things even when nothing needs to be done') do
+    options[:force] = true
+  end
+  opts.on('-h', '--help', 'show this message') { warn(opts); exit(0) }
+  opts.on('--initialize', 'destroy LDAP data and setup from scratch') do
+    options[:initialize] = true
+  end
+  opts.on('--setup', 'setup credentials and master server') do
+    options[:setup] = true
+  end
+  opts.on('--update', 'update schema and ACLs only') do
+    options[:update] = true
+  end
+end.parse!
+
+unless options[:initialize] || options[:update] then
+  die('Either --initialize or --update must be specified')
+end
+
+if options[:initialize] && options[:update] then
+  die('Can not specify both --initialize and --update')
+end
+
+unless Process.euid == 0 then
+  die('This script must be run as root.')
+end
+
+Puavo_basedir = '/etc/puavo/ldap'
+Puavo_ds_ext_dir = '/var/lib/puavo-ds-ext'
+Slapd_d_dir = '/etc/ldap/slapd.d'
+Slapd_d_backup_dir = "#{ Slapd_d_dir }.backup"
+
+if options[:setup] then
+  @binddn = 'uid=admin,o=puavo'
+  @master_server = HighLine.ask('Master server: ')
+  @bindpw = HighLine.ask("#{ @binddn } password: ") { |q| q.echo = '*' }
+
+  FileUtils.mkdir_p(Puavo_basedir)
+  File.write("#{ Puavo_basedir }/dn",       "#{ @binddn }\n")
+  File.write("#{ Puavo_basedir }/master",   "#{ @master_server }\n")
+  File.write("#{ Puavo_basedir }/password", "#{ @bindpw }\n", perm: 0o600)
+  log_info('LDAP setup done')
+else
+  log_info('reading LDAP setup and credentials')
+  begin
+    @binddn        = IO.read("#{ Puavo_basedir }/dn").chomp
+    @bindpw        = IO.read("#{ Puavo_basedir }/password").chomp
+    @master_server = IO.read("#{ Puavo_basedir }/master").chomp
+  rescue StandardError => e
+    die("could not read setup, run with --setup first: #{ e.message }")
+  end
+end
+
+FileUtils.mkdir_p(Puavo_ds_ext_dir)
+slapadd_ldif_path = "#{ Puavo_ds_ext_dir }/ldap_cn_config.ldif"
+tmp_slapadd_ldif_path = "#{ slapadd_ldif_path }.tmp"
+
+directories_to_create = []
+
+File.open(tmp_slapadd_ldif_path, 'w', perm: 0o600) do |ldiffile|
+  log_info("connecting to LDAP master #{ @master_server }")
+  conn = LDAP::Conn.new(@master_server, 389)
+  conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
+  conn.start_tls
+
+  suffixes = []
+
+  conn.bind(@binddn, @bindpw) do
+    log_info('searching for cn=config on master')
+    conn.search('cn=config', LDAP::LDAP_SCOPE_BASE, '(objectClass=*)') do |e|
+      ldiffile.puts("dn: #{ e.dn }")
+
+      e.attrs.each do |attr|
+        e.vals(attr).each do |value|
+          ldiffile.puts("#{ attr }: #{ value }")
+        end
+      end
+
+      ldiffile.puts
+    end
+
+    log_info('searching for cn=schema,cn=config on master')
+    conn.search('cn=schema,cn=config',
+                LDAP::LDAP_SCOPE_SUBTREE,
+                '(objectClass=*)') do |e|
+      ldiffile.puts("dn: #{ e.dn }")
+
+      e.attrs.each do |attr|
+        e.vals(attr).each do |value|
+          ldiffile.puts("#{ attr }: #{ value }")
+        end
+      end
+
+      ldiffile.puts
+    end
+
+    ldiffile.puts( parse_erb('modules.ldif.erb') )
+    ldiffile.puts
+
+    log_info('searching for organisations on master')
+    conn.search('', LDAP::LDAP_SCOPE_BASE, '(objectClass=*)',
+                ['namingContexts']) do |e|
+      e.get_values('namingContexts').each do |suffix|
+        suffixes << suffix unless suffix.eql?('o=puavo')
+      end
+    end
+
+    raise 'No namingContexts received' if suffixes.empty?
+
+    rid = 1
+
+    log_info('searching for database configurations and ACLs on master')
+    suffixes.each do |suffix|
+      @suffix = suffix
+
+      raise 'Too many syncrepl databases' if rid > 999
+      @rid = rid
+      rid += 1
+
+      matchcount = 0
+      conn.search('cn=config', LDAP::LDAP_SCOPE_SUBTREE,
+                  "(&(objectClass=olcDatabaseConfig)(olcSuffix=#{ @suffix }))"
+      ) do |e|
+        matchcount += 1
+        @directory = "/var/lib/ldap/#{ @suffix }"
+        ldiffile.puts( parse_erb('slave_database.ldif.erb') )
+        e.vals('olcAccess').each do |acl|
+          ldiffile.puts("olcAccess: #{ acl }")
+        end
+
+        ldiffile.puts
+        directories_to_create << @directory
+      end
+
+      raise "No database found for suffix #{ @suffix }" if matchcount == 0
+      raise "Multiple databases found for suffix #{ @suffix }" if matchcount > 1
+
+      ldiffile.puts
+    end
+  end
+end
+
+unless options[:force] || options[:initialize] then
+  begin
+    log_info('comparing to old configurations on this server')
+    if FileUtils.compare_file(slapadd_ldif_path, tmp_slapadd_ldif_path) then
+      log_info('no changes, doing nothing')
+      exit(0)
+    end
+  rescue Errno::ENOENT
+  end
+end
+
+log_info('stopping the local slapd server')
+begin
+  run('service', 'slapd', 'stop')
+rescue StandardError => e
+  log_error("could not stop the local slapd server: #{ e.message }")
+  raise
+end
+
+error = nil
+
+begin
+  log_info("making a backup of #{ Slapd_d_dir } (to #{ Slapd_d_backup_dir })")
+  FileUtils.rm_rf(Slapd_d_backup_dir)
+  FileUtils.mv(Slapd_d_dir, Slapd_d_backup_dir) if File.exist?(Slapd_d_dir)
+
+  begin
+    log_info("clearing #{ Slapd_d_dir }")
+    setup_and_clear_directory(Slapd_d_dir)
+    if options[:initialize] then
+      log_info('initializing, so clearing /var/lib/ldap as well')
+      setup_and_clear_directory('/var/lib/ldap')
+    end
+
+    directories_to_create.each do |dir|
+      FileUtils.mkdir_p(dir)
+      FileUtils.chown('openldap', 'openldap', dir)
+      FileUtils.chmod(0o750, dir)
+    end
+
+    log_info('running slapadd to add a new ldap configuration')
+    run('slapadd', '-F', '/etc/ldap/slapd.d', '-l', tmp_slapadd_ldif_path,
+                   '-b', 'cn=config')
+    FileUtils.chown_R('openldap', 'openldap', '/etc/ldap/slapd.d')
+    FileUtils.chown_R('openldap', 'openldap', '/var/lib/ldap')
+  rescue StandardError => e
+    log_error("could not setup new slapd configuration: #{ e.message }")
+    if File.exist?(Slapd_d_backup_dir) then
+      log_info('restoring backup configuration')
+      FileUtils.rm_rf(Slapd_d_dir)
+      FileUtils.mv(Slapd_d_backup_dir, Slapd_d_dir)
+    end
+    raise
+  end
+
+  FileUtils.mv(tmp_slapadd_ldif_path, slapadd_ldif_path)
+  log_info('new configuration installed successfully')
+rescue StandardError => e
+  error = e
+  log_error("error: #{ e.message }")
+ensure
+  begin
+    log_info('starting the local slapd server')
+    run('service', 'slapd', 'start')
+  rescue StandardError => e
+    log_error("could not start the local slapd server: #{ e.message }")
+    error ||= e
+  end
+end
+
+raise error if error

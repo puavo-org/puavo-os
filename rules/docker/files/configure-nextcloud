@@ -355,13 +355,6 @@ patch_nc 3rdparty/icewind/smb/src/KerberosTicket.php <<'EOF'
  	public static function load(string $ticket): KerberosTicket {
  		$tmpFilename = tempnam(sys_get_temp_dir(), "krb5cc_php_");
  		file_put_contents($tmpFilename, $ticket);
-@@ -82,4 +106,4 @@
- 		}
- 		return $ticket;
- 	}
--}
-\ No newline at end of file
-+}
 EOF
 
 patch_nc lib/private/Authentication/LoginCredentials/Store.php <<'EOF'
