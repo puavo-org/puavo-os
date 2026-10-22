@@ -11,7 +11,6 @@ WORK=$(mktemp -d)
 cleanup() { swtpm_stop; rm -rf "$WORK"; }
 trap cleanup EXIT
 
-COUNTER_INDEX=0x01514B00
 FAILED=0
 
 # Case 1: a next stage below the minimum. A copy of slab stamped as grub
@@ -50,19 +49,9 @@ boot_qemu "$state" "$disk" >/dev/null
 swtpm_stop
 # The write lock clears on the TPM reset a fresh swtpm performs, so these
 # increments succeed and raise the floor above the list version.
-swtpm socket --tpm2 --tpmstate dir="$state" \
-  --ctrl type=tcp,port=2322 --server type=tcp,port=2321 --flags startup-clear &
-raise_process_id=$!
-sleep 1
-export TPM2TOOLS_TCTI="swtpm:host=127.0.0.1,port=2321"
-increment_count=0
-while [ "$increment_count" -lt 3 ]; do
-  tpm2_nvincrement "$COUNTER_INDEX" >/dev/null 2>&1
-  increment_count=$((increment_count + 1))
-done
-unset TPM2TOOLS_TCTI
-kill "$raise_process_id" 2>/dev/null
-wait "$raise_process_id" 2>/dev/null
+swtpm_start "$state" tools
+increment_counter 3
+swtpm_stop
 swtpm_start "$state"
 output=$(boot_qemu "$state" "$disk")
 swtpm_stop

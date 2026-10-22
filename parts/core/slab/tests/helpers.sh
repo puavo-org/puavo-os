@@ -24,6 +24,13 @@ NEXT_STAGE_MARKER="next stage configuration reached"
 # this, so it only bites a case where nothing boots.
 BOOT_TIMEOUT=90
 
+# The NV index of the counter.
+COUNTER_INDEX=0x01514B00
+
+# Ports of a swtpm that tpm2-tools talk to.
+SERVER_PORT=2321
+CONTROL_PORT=2322
+
 # Builds the debug slab binary through the Makefile.
 build_slab() {
   make -C "$SLAB_DIRECTORY" test-binary
@@ -50,11 +57,22 @@ prepare_variables() {
 }
 
 # Starts a fresh swtpm and sets SWTPM_PROCESS_ID. A fresh swtpm on an existing
-# state directory is what a reboot does.
+# state directory is what a reboot does, so it also clears write locks.
 #   $1  state directory
+#   $2  client, qemu (default) or tools for tpm2-tools
 swtpm_start() {
-  swtpm socket --tpm2 --tpmstate dir="$1" \
-    --ctrl type=unixio,path="$1/sock" --flags startup-clear &
+  case "${2:-qemu}" in
+    qemu)
+      swtpm socket --tpm2 --tpmstate dir="$1" \
+        --ctrl type=unixio,path="$1/sock" --flags startup-clear &
+      ;;
+    tools)
+      swtpm socket --tpm2 --tpmstate dir="$1" \
+        --ctrl type=tcp,port="$CONTROL_PORT" \
+        --server type=tcp,port="$SERVER_PORT" --flags startup-clear &
+      export TPM2TOOLS_TCTI="swtpm:host=127.0.0.1,port=$SERVER_PORT"
+      ;;
+  esac
   SWTPM_PROCESS_ID=$!
   sleep 1
 }
@@ -63,6 +81,27 @@ swtpm_stop() {
   [ -n "${SWTPM_PROCESS_ID:-}" ] || return 0
   kill "$SWTPM_PROCESS_ID" 2>/dev/null || true
   wait "$SWTPM_PROCESS_ID" 2>/dev/null || true
+  SWTPM_PROCESS_ID=
+  unset TPM2TOOLS_TCTI
+}
+
+# Prints the value of an NV index as a decimal number. Needs a swtpm started
+# for tpm2-tools.
+#   $1  index
+nv_value() {
+  printf '%d' "0x$(tpm2_nvread "$1" --size=8 \
+    | od --address-radix=n --format=x1 | tr --delete ' \n')"
+}
+
+# Increments the counter, which raises the floor. Needs a swtpm started for
+# tpm2-tools.
+#   $1  how many times
+increment_counter() {
+  step=0
+  while [ "$step" -lt "$1" ]; do
+    tpm2_nvincrement "$COUNTER_INDEX" >/dev/null || return 1
+    step=$((step + 1))
+  done
 }
 
 # Boots slab under QEMU and prints the serial output.
