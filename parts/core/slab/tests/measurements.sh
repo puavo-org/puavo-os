@@ -17,7 +17,10 @@ make -C "${SLAB_DIRECTORY}" measurements
 
 WORK=$(mktemp -d)
 STATE=$(mktemp -d)
-cleanup() { swtpm_stop; rm -rf "${WORK}" "${STATE}"; }
+cleanup() {
+  swtpm_stop
+  rm --recursive --force "${WORK}" "${STATE}"
+}
 trap cleanup EXIT
 
 # Slab and the next stage are signed with different db certificates.

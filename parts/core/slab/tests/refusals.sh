@@ -8,7 +8,10 @@ set -u
 build_slab
 
 WORK=$(mktemp -d)
-cleanup() { swtpm_stop; rm -rf "$WORK"; }
+cleanup() {
+  swtpm_stop
+  rm --recursive --force "$WORK"
+}
 trap cleanup EXIT
 
 FAILED=0

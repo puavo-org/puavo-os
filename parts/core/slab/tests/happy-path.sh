@@ -9,7 +9,10 @@ build_slab
 
 WORK=$(mktemp -d)
 STATE=$(mktemp -d)
-cleanup() { swtpm_stop; rm -rf "$WORK" "$STATE"; }
+cleanup() {
+  swtpm_stop
+  rm --recursive --force "$WORK" "$STATE"
+}
 trap cleanup EXIT
 
 build_next_stage "$WORK/grubx64.efi"
