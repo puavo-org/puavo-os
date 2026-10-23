@@ -11,7 +11,10 @@ build_slab
 
 WORK=$(mktemp -d)
 STATE=$(mktemp -d)
-cleanup() { swtpm_stop; rm -rf "$WORK" "$STATE"; }
+cleanup() {
+  swtpm_stop
+  rm --recursive --force "$WORK" "$STATE"
+}
 trap cleanup EXIT
 GUID="d4a2e1c0-1111-2222-3333-444455556666"
 
