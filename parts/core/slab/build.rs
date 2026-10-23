@@ -1,5 +1,8 @@
-//! Generates the components from the floors file, and one entry per
-//! authority from the authority directory.
+//! Generates the list version and the components from the configuration, and
+//! one entry per authority from the authority directory.
+//!
+//! The version file holds the logical revocation version, raised for each
+//! revocation.
 //!
 //! The floors file lists one component per line, its name and the oldest
 //! accepted version:
@@ -52,9 +55,10 @@ const DIRECTORY_VARIABLE: &str = "SLAB_VERIFIER_KEYS";
 const IDENTITY_FILE: &str = "authority.guid";
 const KEY_EXTENSION: &str = "der";
 
-/// Where the floors come from, how a floor is written, and how old one may
-/// get.
-const FLOORS_FILE: &str = "floors";
+/// The files the list version and the floors are read from, the date format
+/// of a floor, and the maximum age of a floor.
+const VERSION_FILE: &str = "config/version";
+const FLOORS_FILE: &str = "config/floors";
 const FLOOR_FORMAT: &[time::format_description::BorrowedFormatItem<'_>] =
     format_description!("[year][month][day]");
 const FLOOR_MAXIMUM_AGE_YEARS: u64 = 2;
@@ -63,11 +67,31 @@ const YEAR_IN_FLOOR: u64 = 10000;
 fn main() {
     println!("cargo:rerun-if-env-changed={DIRECTORY_VARIABLE}");
 
+    generate_version();
     generate_floors();
 
     if env::var_os("CARGO_FEATURE_VERIFIER").is_some() {
         generate_verifier_data();
     }
+}
+
+/// Generates the list version from the version file.
+fn generate_version() {
+    let file = Path::new(VERSION_FILE);
+    watch(file);
+    let written = fs::read_to_string(file)
+        .unwrap_or_else(|error| panic!("failed to read {file:?}: {error}"));
+    let version: u64 = written.trim().parse().unwrap_or_else(|error| {
+        panic!("{file:?} does not hold a version: {error}")
+    });
+
+    let constant = quote! {
+        pub const LIST_VERSION: u64 = #version;
+    };
+
+    let output = PathBuf::from(env::var("OUT_DIR").unwrap()).join("version.rs");
+    fs::write(&output, constant.to_string())
+        .unwrap_or_else(|error| panic!("failed to write {output:?}: {error}"));
 }
 
 /// Generates the components from the floors file.

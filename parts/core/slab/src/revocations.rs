@@ -10,8 +10,8 @@ pub const NAME_LENGTH: usize = 128;
 /// The PE section that carries a component identity.
 pub const VERSION_SECTION_NAME: &[u8; 8] = b".version";
 
-/// The fleet wide logical revocation version this build enforces.
-pub const LIST_VERSION: u64 = 1;
+// The logical revocation version this build enforces.
+include!(concat!(env!("OUT_DIR"), "/version.rs"));
 
 /// One component floor: the component name and its minimum allowed version.
 pub struct Component {

@@ -39,7 +39,7 @@ build_slab() {
 # Prints the revocation floor of a component from the floors file.
 #   $1  component name
 component_floor() {
-  awk -v name="$1" '$1 == name { print $2 }' "${SLAB_DIRECTORY}/floors"
+  awk -v name="$1" '$1 == name { print $2 }' "${SLAB_DIRECTORY}/config/floors"
 }
 
 # Builds a real GRUB image to serve as the next stage.
