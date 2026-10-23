@@ -4,7 +4,10 @@ set -eu
 
 # Generates the authorities a bootloader is built to accept, from the key
 # directories that hold them. An authority keeps its identity and its
-# certificate together, and a build needs the public key of that certificate.
+# certificates together, and a build needs the public keys of those.
+#
+# The certificates of an authority are kept under keys. It may hold several,
+# which is how a key is replaced without retiring the authority.
 #
 # The output is replaced entirely, so an authority whose keys are gone does not
 # stay behind.
@@ -16,6 +19,19 @@ usage="usage: $(basename "$0") <key-directory> <output-directory>"
 key_directory=${1:?$usage}
 output_directory=${2:?$usage}
 
+# Writes the public key of every certificate in directory $1 into $2.
+public_keys() {
+  for certificate in "$1"/*.pem; do
+    [ -f "$certificate" ] || continue
+
+    certificate_name=$(basename "$certificate" .pem)
+    mkdir -p "$2"
+    openssl x509 -in "$certificate" -pubkey -noout \
+      | openssl rsa -pubin -RSAPublicKey_out -outform DER \
+        -out "${2}/${certificate_name}.der" 2> /dev/null
+  done
+}
+
 rm -rf "$output_directory"
 
 for authority in "$key_directory"/*; do
@@ -23,9 +39,7 @@ for authority in "$key_directory"/*; do
 
   name=$(basename "$authority")
   mkdir -p "${output_directory}/${name}"
+  cp "${authority}/identity" "${output_directory}/${name}/"
 
-  cp "${authority}/authority.guid" "${output_directory}/${name}/"
-  openssl x509 -in "${authority}/secure-boot.pem" -pubkey -noout \
-    | openssl rsa -pubin -RSAPublicKey_out -outform DER \
-      -out "${output_directory}/${name}/${name}.der" 2> /dev/null
+  public_keys "${authority}/keys" "${output_directory}/${name}/keys"
 done

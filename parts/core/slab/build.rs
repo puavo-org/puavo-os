@@ -24,10 +24,11 @@
 //! Anything else kept in one, such as what signs with a key, is ignored:
 //!
 //!     authorities
-//!     `-- example
-//!         |-- authority.guid   who this authority is
-//!         |-- first.der        a public key it signs with
-//!         `-- second.der       the key replacing it
+//!     |-- example
+//!         |-- identity             who this authority is
+//!         |-- keys
+//!             |-- first.der        a public key it signs with
+//!             |-- second.der       the key replacing it
 //!
 //! Adding another DER file is how a key is replaced, and leaves the authority
 //! unchanged. That directory generates:
@@ -37,8 +38,8 @@
 //!             1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
 //!         ],
 //!         keys: &[
-//!             include_bytes!("authorities/example/first.der"),
-//!             include_bytes!("authorities/example/second.der"),
+//!             include_bytes!("authorities/example/keys/first.der"),
+//!             include_bytes!("authorities/example/keys/second.der"),
 //!         ],
 //!     }];
 
@@ -55,7 +56,8 @@ use time::{Date, OffsetDateTime};
 
 /// Where the authorities come from, and what the files in one are called.
 const DIRECTORY_VARIABLE: &str = "SLAB_VERIFIER_KEYS";
-const IDENTITY_FILE: &str = "authority.guid";
+const IDENTITY_FILE: &str = "identity";
+const KEYS_DIRECTORY: &str = "keys";
 const KEY_EXTENSION: &str = "der";
 
 /// The files the list version and the floors are read from, the date format
@@ -199,7 +201,10 @@ fn generate_authority(authority: &Path) -> TokenStream {
     let identity =
         identity_of(&identity_file).map(Literal::u8_unsuffixed).into_iter();
 
-    let keys: Vec<String> = keys_in(authority)
+    let keys_directory = authority.join(KEYS_DIRECTORY);
+    watch(&keys_directory);
+
+    let keys: Vec<String> = find_keys(&keys_directory)
         .iter()
         .map(|key| {
             watch(key);
@@ -247,9 +252,9 @@ fn directories_in(directory: &Path) -> Vec<PathBuf> {
     found
 }
 
-/// Returns the paths to the keys of one authority in sorted order.
-fn keys_in(authority: &Path) -> Vec<PathBuf> {
-    let mut found: Vec<PathBuf> = entries_of(authority)
+/// Returns the paths to the keys in the specified directory in sorted order.
+fn find_keys(directory: &Path) -> Vec<PathBuf> {
+    let mut found: Vec<PathBuf> = entries_of(directory)
         .filter(|path| {
             path.extension().is_some_and(|name| name == KEY_EXTENSION)
         })
