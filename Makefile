@@ -347,7 +347,7 @@ install-pcr-public-keys:
 .PHONY: install-secure-boot-certificates
 install-secure-boot-certificates:
 	$(_sudo) install -D -o root -g root -m 644 -t /etc/puavo-conf/ \
-	    config/boot/slab/verifier/uki/secure-boot*.der
+	    config/boot/slab/verifier/uki/keys/secure-boot*.der
 
 .PHONY: update
 update: prepare install-pcr-public-keys install-secure-boot-certificates /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem

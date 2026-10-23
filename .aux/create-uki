@@ -120,8 +120,10 @@ if ! sbverify --list "$uki_kernel_image" 2>&1 \
   exit 1
 fi
 
-secure_boot_private_key=$(signing_secureboot_private_key "$key_directory")
-secure_boot_certificate=$(signing_secureboot_certificate "$key_directory")
+# The Secure Boot keys are kept apart from the TPM PCR keys.
+secure_boot_key_directory="${key_directory}/keys"
+secure_boot_private_key=$(signing_secureboot_private_key "$secure_boot_key_directory")
+secure_boot_certificate=$(signing_secureboot_certificate "$secure_boot_key_directory")
 engine_arguments=$(signing_ukify_engine_arguments)
 
 # Build PCR key arguments by iterating over certificate or public key files.
@@ -174,9 +176,9 @@ ukify build \
   --measure
 
 # Attach additional Secure Boot signatures if additional key pairs exist
-if signing_secureboot_has_additional_keys "$key_directory"; then
+if signing_secureboot_has_additional_keys "$secure_boot_key_directory"; then
   echo 'Attaching additional Secure Boot signatures to UKI...'
-  signing_secureboot_sign_additional "$uki_file_path" "$key_directory"
+  signing_secureboot_sign_additional "$uki_file_path" "$secure_boot_key_directory"
 fi
 
 (

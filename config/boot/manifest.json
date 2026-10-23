@@ -42,7 +42,7 @@
   ],
   "secure_boot_signatures": [
     {
-      "certificate": "slab/verifier/uki/secure-boot.pem",
+      "certificate": "slab/verifier/uki/keys/secure-boot.pem",
       "components": [
         "usr/lib/grub/puavo/x86_64-efi/grubx64.efi.signed",
         "usr/lib/grub/puavo/i386-efi/grubia32.efi.signed",
@@ -70,7 +70,7 @@
     "slab/verifier/uki/tpm2-pcr-public-key*.pem"
   ],
   "installed_keys": [
-    "slab/verifier/uki/secure-boot.der",
+    "slab/verifier/uki/keys/secure-boot.der",
     "slab/verifier/uki/tpm2-pcr-public-key.pem"
   ]
 }

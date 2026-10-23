@@ -23,7 +23,7 @@ boot_key_directory=$2
 [ -d "$rootfs_directory" ] || panic "rootfs directory '$rootfs_directory' does not exist"
 [ -d "$boot_key_directory" ] || panic "key directory '$boot_key_directory' does not exist"
 
-uki_key_directory="${boot_key_directory}/slab/verifier/uki"
+uki_key_directory="${boot_key_directory}/slab/verifier/uki/keys"
 slab_key_directory="${boot_key_directory}/slab"
 
 [ -d "$uki_key_directory" ] || panic "key directory '$uki_key_directory' does not exist"
