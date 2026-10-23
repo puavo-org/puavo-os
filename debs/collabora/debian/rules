@@ -112,6 +112,10 @@ build-appimage:
 	# AppRun launcher script
 	install -m 755 debian/AppRun $(appdir)/AppRun
 
+	# Branding stylesheet, loaded by cool.html after bundle.css
+	install -m 644 debian/branding.css \
+		$(appdir)/usr/share/coolwsd/browser/dist/branding.css
+
 	# Desktop entry and icon from the source tree
 	install -m 644 \
 		$(online_directory)/qt/com.collaboraoffice.Office.desktop \

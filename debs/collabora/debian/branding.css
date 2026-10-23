@@ -1,0 +1,96 @@
+/*
+ * Simple branding for Collabora Office (puavo-os desktop build).
+ *
+ * Copyright (C) Opinsys Oy.
+ *
+ * Written from scratch, no logos. Uses only Collabora Online's own
+ * open-source palette variables from color-palette.css (MPL-2.0):
+ * --doc-type is the per-application colour (Writer blue, Calc green,
+ * Impress orange, Draw yellow) and the --color-* variables follow the
+ * light/dark theme. Loaded after bundle.css.
+ */
+
+/* Top bar in the application colour */
+nav.main-nav.hasnotebookbar,
+nav.main-nav.hasnotebookbar:not(.readonly) {
+	background: rgb(var(--doc-type));
+}
+
+nav.main-nav.hasnotebookbar button.ui-tab.notebookbar,
+nav.main-nav.hasnotebookbar #document-name-input {
+	color: #fff;
+}
+
+nav.main-nav.hasnotebookbar button.ui-tab.notebookbar:hover {
+	color: #fff !important;
+	background-color: rgba(255, 255, 255, .15);
+	box-shadow: none;
+}
+
+nav.main-nav.hasnotebookbar button.ui-tab.notebookbar.selected,
+nav.main-nav.hasnotebookbar button.ui-tab.notebookbar.selected:hover {
+	color: rgb(var(--doc-type)) !important;
+	background-color: var(--color-background-tabs-group);
+	border-color: transparent;
+	border-radius: 4px 4px 0 0;
+	box-shadow: none;
+}
+
+nav.main-nav.hasnotebookbar .notebookbar-shortcuts-bar img,
+nav.main-nav.hasnotebookbar #closebuttonwrapper img {
+	/* light icons on the coloured bar, keeping the icon shapes */
+	filter: invert(1) hue-rotate(180deg) brightness(1.2);
+}
+
+/* Toolbar continues the selected tab; status bar in the same grey */
+#toolbar-wrapper.hasnotebookbar,
+#toolbar-down:not(.mobile) {
+	background-color: var(--color-background-tabs-group);
+}
+
+/* Dialogs: plain title bar, thin close cross, buttons in the app colour */
+.jsdialog-container .ui-dialog-titlebar {
+	background-color: var(--color-background-lighter);
+}
+
+.jsdialog-container .ui-dialog-title {
+	font-weight: 600;
+}
+
+.ui-dialog .ui-dialog-titlebar-close {
+	border: 0;
+	background: transparent;
+}
+
+.ui-dialog .ui-dialog-titlebar-close .ui-icon {
+	background: var(--color-main-text);
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 3l10 10M13 3L3 13' stroke='black' stroke-width='1.3'/%3E%3C/svg%3E") center / 16px no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 3l10 10M13 3L3 13' stroke='black' stroke-width='1.3'/%3E%3C/svg%3E") center / 16px no-repeat;
+}
+
+.button-primary {
+	background-color: rgb(var(--doc-type));
+	border-color: rgb(var(--doc-type));
+}
+
+.button-primary:hover {
+	filter: brightness(.9);
+}
+
+/* Neutral list selection instead of solid blue */
+.ui-treeview-entry.selected {
+	background-color: var(--color-background-dark);
+	border-color: var(--color-border-dark);
+	color: var(--color-text-darker);
+}
+
+/* Active sheet tab: underlined text instead of a filled tab */
+#spreadsheet-tab-scroll button.spreadsheet-tab.spreadsheet-tab-selected,
+#spreadsheet-tab-scroll button.spreadsheet-tab.spreadsheet-tab-selected:hover {
+	background-color: transparent !important;
+	border-color: transparent;
+	color: rgb(var(--doc-type)) !important;
+	font-weight: 600;
+	text-decoration: underline;
+	text-underline-offset: 4px;
+}
