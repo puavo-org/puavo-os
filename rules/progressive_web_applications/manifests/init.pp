@@ -30,17 +30,16 @@ class progressive_web_applications {
       source => 'puppet:///modules/progressive_web_applications/puavo-setup-guestuser-pwas';
   }
 
-# XXX broken in Trixie
-# exec {
-#   'setup guestuser PWAs':
-#     command => '/usr/local/lib/puavo-setup-guestuser-pwas',
-#     require => [ File['/usr/local/lib/puavo-setup-guestuser-pwas']
-#                , File['/var/lib/puavo-guestsetup']
-#                , Package['chromium']
-#                , User['puavo-guestsetup'] ],
-#     onlyif  => '/usr/bin/test ! -e /var/lib/puavo-guestsetup/guest-profile.tar -o /var/lib/puavo-guestsetup/guest-profile.tar -ot /var/lib/puavo-pwa -o /var/lib/puavo-guestsetup/guest-profile.tar -ot /usr/bin/google-chrome-stable',
-#     user    => 'puavo-guestsetup';
-# }
+  exec {
+    'setup guestuser PWAs':
+      command => '/usr/local/lib/puavo-setup-guestuser-pwas',
+      require => [ File['/usr/local/lib/puavo-setup-guestuser-pwas']
+                 , File['/var/lib/puavo-guestsetup']
+                 , Package['chromium']
+                 , User['puavo-guestsetup'] ],
+      onlyif  => '/usr/bin/test ! -e /var/lib/puavo-guestsetup/guest-profile.tar -o /var/lib/puavo-guestsetup/guest-profile.tar -ot /var/lib/puavo-pwa -o /var/lib/puavo-guestsetup/guest-profile.tar -ot /usr/bin/google-chrome-stable',
+      user    => 'puavo-guestsetup';
+  }
 
   file {
     '/var/lib/puavo-guestsetup':

@@ -92,13 +92,15 @@ browser_pid=
 xvfb_pid=
 
 trigger_pwa_installation() {
-  local browser_path fake_display i pwa_url
+  local browser_args browser_path fake_display i pwa_url setup_only
   pwa_url=$1
   browser_path=$2
+  setup_only=$3
 
+  browser_args=''
   fake_display=:71
 
-  Xvfb "$fake_display" >/dev/null 2>&1 & xvfb_pid=$!
+  Xvfb "$fake_display" -extension GLX >/dev/null 2>&1 & xvfb_pid=$!
 
   i=0
   while [ "$i" -lt 100 ]; do
@@ -109,8 +111,12 @@ trigger_pwa_installation() {
     i=$(($i + 1))
   done
 
-  env DISPLAY="$fake_display" "$browser_path" --profile-directory=Default \
-    >/dev/null 2>&1 & browser_pid=$!
+  if $setup_only; then
+    browser_args='--no-sandbox'
+  fi
+
+  env DISPLAY="$fake_display" "$browser_path" $browser_args \
+    --profile-directory=Default >/dev/null 2>&1 & browser_pid=$!
 }
 
 wait_for_app_installation() {
@@ -212,7 +218,7 @@ fi
 
 if ! check_app_is_installed "$app_id" "$browser_prefs_path"; then
   if ! pgrep -U "$USER" -x "$browser" >/dev/null 2>&1; then
-    if ! trigger_pwa_installation "$pwa_url" "$browser_path"; then
+    if ! trigger_pwa_installation "$pwa_url" "$browser_path" "$setup_only"; then
       # XXX should user be notified?
       echo "Could not trigger PWA installation ${pwa_url}" >&2
       exit 1
