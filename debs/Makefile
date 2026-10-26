@@ -16,7 +16,7 @@ else
   # _pkgs_parts := puavo-ds puavo-os
   # _pkgs_ports := anki
   # XXX Trixie
-  _pkgs_cloud      := puavo-ds puavo-os krb5 openldap
+  _pkgs_cloud      := puavo-ds puavo-os krb5 openldap ruby-ldap
   _pkgs_extraports := collabora
   _pkgs_parts      := puavo-ds puavo-os
   _pkgs_ports      := cups cups-filters facter gnome-control-center \
