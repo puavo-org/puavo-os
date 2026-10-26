@@ -1,0 +1,12 @@
+diff -ruN ruby-ldap/conn.c ruby-ldap/conn.c
+--- ruby-ldap/conn.c	2026-10-26 11:13:51.508482355 +0200
++++ ruby-ldap/conn.c	2026-10-26 11:14:28.264760807 +0200
+@@ -1855,7 +1855,7 @@
+ {
+   rb_ldap_sort_obj = Qnil;
+ 
+-  rb_cLDAP_Conn = rb_define_class_under (rb_mLDAP, "Conn", rb_cData);
++  rb_cLDAP_Conn = rb_define_class_under (rb_mLDAP, "Conn", rb_cObject);
+   rb_define_attr (rb_cLDAP_Conn, "referrals", 1, 0);
+   rb_define_attr (rb_cLDAP_Conn, "controls", 1, 0);
+   rb_define_attr (rb_cLDAP_Conn, "sasl_quiet", 1, 1);

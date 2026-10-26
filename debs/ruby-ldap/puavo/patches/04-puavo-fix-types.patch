@@ -1,0 +1,34 @@
+diff -ruN ruby-ldap/conn.c ruby-ldap/conn.c
+--- ruby-ldap/conn.c	2026-10-26 11:14:28.264760807 +0200
++++ ruby-ldap/conn.c	2026-10-26 11:15:39.589349322 +0200
+@@ -481,7 +481,7 @@
+       break;
+ #endif
+     case LDAP_OPT_REFERRALS:
+-      optdata = (void *) NUM2INT (data);
++      optdata = (void *)(intptr_t) NUM2LL (data);
+       break;
+     case LDAP_OPT_DEREF:
+     case LDAP_OPT_SIZELIMIT:
+diff -ruN ruby-ldap/ldap.c ruby-ldap/ldap.c
+--- ruby-ldap/ldap.c	2026-10-26 11:15:09.117070128 +0200
++++ ruby-ldap/ldap.c	2026-10-26 11:15:39.589349322 +0200
+@@ -4,6 +4,8 @@
+  * $Id: ldap.c,v 1.14 2005/03/15 10:07:48 ianmacd Exp $
+  */
+ 
++#include <stdint.h>
++
+ #include "ruby.h"
+ #include "rbldap.h"
+ 
+@@ -386,7 +388,8 @@
+   /* rb_ldap_define_err_code(LDAP_CONNECT_ERROR); */
+ #undef rb_ldap_define_err_code
+ 
+-#define rb_ldap_define_opt(code) rb_define_const(rb_mLDAP,#code,INT2NUM((int)code))
++#define rb_ldap_define_opt(code) \
++  rb_define_const(rb_mLDAP, #code, LL2NUM((intptr_t)(code)))
+ #ifdef LDAP_OPT_ON
+   rb_ldap_define_opt (LDAP_OPT_ON);
+ #endif

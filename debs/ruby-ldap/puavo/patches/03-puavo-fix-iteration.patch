@@ -1,0 +1,39 @@
+diff -ruN ruby-ldap/ldap.c ruby-ldap/ldap.c
+--- ruby-ldap/ldap.c	2026-10-26 11:13:51.508482355 +0200
++++ ruby-ldap/ldap.c	2026-10-26 11:15:09.117070128 +0200
+@@ -169,21 +169,19 @@
+   return rb_ldap_class_new (argc, argv, rb_cLDAP_Mod);
+ }
+ 
+-static VALUE
+-rb_ldap_hash2mods_i (VALUE type_vals, VALUE tmp)
++static int
++rb_ldap_hash2mods_i (VALUE type, VALUE vals, VALUE tmp)
+ {
+-  VALUE type, vals, op, result;
++  VALUE op, result;
+   VALUE args[3];
+ 
+   op = rb_ary_entry (tmp, 0);
+   result = rb_ary_entry (tmp, 1);
+ 
+-  type = rb_ary_entry (type_vals, 0);
+-  vals = rb_ary_entry (type_vals, 1);
+-
+   args[0] = op, args[1] = type, args[2] = vals;
+   rb_ary_push (result, rb_ldap_mod_s_new (3, args, rb_cLDAP_Mod));
+-  return Qnil;
++
++  return ST_CONTINUE;
+ }
+ 
+ /*
+@@ -201,7 +199,7 @@
+   VALUE tmp;
+ 
+   tmp = rb_assoc_new (op, rb_ary_new ());
+-  rb_iterate (rb_each, hash, rb_ldap_hash2mods_i, tmp);
++  rb_hash_foreach (hash, rb_ldap_hash2mods_i, tmp);
+ 
+   return rb_ary_entry (tmp, 1);
+ }

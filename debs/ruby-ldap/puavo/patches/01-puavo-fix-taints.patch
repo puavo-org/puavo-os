@@ -1,0 +1,260 @@
+diff -ruN ruby-ldap/conn.c ruby-ldap/conn.c
+--- ruby-ldap/conn.c	2018-08-18 10:41:31.000000000 +0300
++++ ruby-ldap/conn.c	2026-10-26 11:13:51.508482355 +0200
+@@ -688,7 +688,7 @@
+ #endif
+ #endif
+ 	  val = (data
+-		 && *data) ? rb_tainted_str_new2 ((char *) (*data)) : Qnil;
++		 && *data) ? rb_str_new_cstr ((char *) (*data)) : Qnil;
+ 	  break;
+ #ifdef LDAP_OPT_API_INFO
+ 	case LDAP_OPT_API_INFO:
+@@ -781,7 +781,7 @@
+ 
+   GET_LDAP_DATA (self, ldapdata);
+   str = ldap_err2string (c_err);
+-  return (str ? rb_tainted_str_new2 (str) : Qnil);
++  return (str ? rb_str_new_cstr (str) : Qnil);
+ };
+ 
+ VALUE
+@@ -826,14 +826,14 @@
+ 
+   if (rb_ldap_sort_obj == Qtrue)
+     {
+-      res = rb_funcall (rb_tainted_str_new2 (left), rb_intern ("<=>"), 1,
+-			rb_tainted_str_new2 (right));
++      res = rb_funcall (rb_str_new_cstr (left), rb_intern ("<=>"), 1,
++			rb_str_new_cstr (right));
+     }
+   else if (rb_ldap_sort_obj != Qnil)
+     {
+       res = rb_funcall (rb_ldap_sort_obj, rb_intern ("call"), 2,
+-			rb_tainted_str_new2 (left),
+-			rb_tainted_str_new2 (right));
++			rb_str_new_cstr (left),
++			rb_str_new_cstr (right));
+     }
+   else
+     {
+diff -ruN ruby-ldap/entry.c ruby-ldap/entry.c
+--- ruby-ldap/entry.c	2018-08-18 10:41:31.000000000 +0300
++++ ruby-ldap/entry.c	2026-10-26 11:13:51.508482355 +0200
+@@ -40,7 +40,7 @@
+   nvals = ldap_count_values_len(bv);
+   vals = rb_ary_new2(nvals);
+   for (i = 0; i < nvals; i++) {
+-    rb_ary_push(vals, rb_tainted_str_new(bv[i]->bv_val, bv[i]->bv_len));
++    rb_ary_push(vals, rb_str_new(bv[i]->bv_val, bv[i]->bv_len));
+   }
+   ldap_value_free_len(bv);
+ 
+@@ -60,7 +60,7 @@
+   for (c_attr = ldap_first_attribute(ldap, msg, &ber);
+     c_attr != NULL;
+     c_attr = ldap_next_attribute(ldap, msg, ber)) {
+-    VALUE attr = rb_tainted_str_new2(c_attr);
++    VALUE attr = rb_str_new_cstr(c_attr);
+     VALUE vals = rb_ldap_entry_load_val(ldap, msg, c_attr);
+ 
+     rb_hash_aset(hash, attr, vals);
+@@ -106,7 +106,7 @@
+   /* get dn */
+   c_dn = ldap_get_dn(ldap, msg);
+   if (c_dn) {
+-    edata->dn = rb_tainted_str_new2(c_dn);
++    edata->dn = rb_str_new_cstr(c_dn);
+     ldap_memfree(c_dn);
+   }
+   else {
+@@ -139,7 +139,7 @@
+   cdn = ldap_get_dn (edata->ldap, edata->msg);
+   if (cdn)
+     {
+-      dn = rb_tainted_str_new2 (cdn);
++      dn = rb_str_new_cstr (cdn);
+       ldap_memfree (cdn);
+     }
+   else
+@@ -186,7 +186,7 @@
+       for (i = 0; i < count; i++)
+ 	{
+ 	  VALUE str;
+-	  str = rb_tainted_str_new (c_vals[i]->bv_val, c_vals[i]->bv_len);
++	  str = rb_str_new (c_vals[i]->bv_val, c_vals[i]->bv_len);
+ 	  rb_ary_push (vals, str);
+ 	}
+       ldap_value_free_len (c_vals);
+@@ -229,7 +229,7 @@
+        attr != NULL;
+        attr = ldap_next_attribute (edata->ldap, edata->msg, ber))
+     {
+-      rb_ary_push (vals, rb_tainted_str_new2 (attr));
++      rb_ary_push (vals, rb_str_new_cstr (attr));
+       ldap_memfree(attr);
+     }
+ 
+@@ -271,7 +271,7 @@
+ 
+ #if RUBY_VERSION_CODE < 190
+   Check_Type (attrs, T_ARRAY);
+-  rb_hash_aset (hash, rb_tainted_str_new2 ("dn"),
++  rb_hash_aset (hash, rb_str_new_cstr ("dn"),
+ 		rb_ary_new3 (1, rb_ldap_entry_get_dn (self)));
+   for (i = 0; i < RARRAY_LEN (attrs); i++)
+     {
+@@ -283,7 +283,7 @@
+   GET_LDAPENTRY_DATA (self, edata);
+   hash = rb_hash_dup(edata->attr);
+   dn_ary = rb_ary_new3(1, edata->dn);
+-  rb_hash_aset(hash, rb_tainted_str_new2("dn"), dn_ary);
++  rb_hash_aset(hash, rb_str_new_cstr("dn"), dn_ary);
+ #endif
+ 
+   return hash;
+diff -ruN ruby-ldap/ldap.c ruby-ldap/ldap.c
+--- ruby-ldap/ldap.c	2018-08-18 10:41:31.000000000 +0300
++++ ruby-ldap/ldap.c	2026-10-26 11:13:51.508482355 +0200
+@@ -44,7 +44,7 @@
+   VALUE msg;
+ 
+   cmsg = ldap_err2string (NUM2INT (err));
+-  msg = rb_tainted_str_new2 (cmsg);
++  msg = rb_str_new_cstr (cmsg);
+ 
+   return msg;
+ }
+@@ -80,7 +80,7 @@
+   c_dn = StringValueCStr (dn);
+   if ((c_ufn = ldap_dn2ufn (c_dn)))
+     {
+-      return rb_tainted_str_new2 (c_ufn);
++      return rb_str_new_cstr (c_ufn);
+     }
+   else
+     {
+@@ -106,7 +106,7 @@
+         ary = rb_ary_new ();
+         for (p = c_arr; *p != NULL; p++)
+         {
+-            rb_ary_push (ary, rb_tainted_str_new2 (*p));
++            rb_ary_push (ary, rb_str_new_cstr (*p));
+         }
+         ldap_value_free (c_arr);
+ 
+@@ -135,7 +135,7 @@
+     {
+         ary = rb_ary_new ();
+         for (p = c_arr; *p != NULL; p++) {
+-            rb_ary_push (ary, rb_tainted_str_new2 (*p));
++            rb_ary_push (ary, rb_str_new_cstr (*p));
+         }
+         ldap_value_free (c_arr);
+ 
+@@ -260,7 +260,7 @@
+ #endif
+ 
+   rb_define_const (rb_mLDAP, "VERSION",
+-		   rb_tainted_str_new2 (RB_LDAP_VERSION));
++		   rb_str_new_cstr (RB_LDAP_VERSION));
+   rb_define_const (rb_mLDAP, "MAJOR_VERSION",
+ 		   INT2NUM (RB_LDAP_MAJOR_VERSION));
+   rb_define_const (rb_mLDAP, "MINOR_VERSION",
+@@ -283,7 +283,7 @@
+ #endif
+ #ifdef LDAP_VENDOR_NAME
+   rb_define_const (rb_mLDAP, "LDAP_VENDOR_NAME",
+-		   rb_tainted_str_new2 (LDAP_VENDOR_NAME));
++		   rb_str_new_cstr (LDAP_VENDOR_NAME));
+ #else
+   rb_define_const (rb_mLDAP, "LDAP_VENDOR_NAME", Qnil);
+ #endif
+diff -ruN ruby-ldap/misc.c ruby-ldap/misc.c
+--- ruby-ldap/misc.c	2018-08-18 10:41:31.000000000 +0300
++++ ruby-ldap/misc.c	2026-10-26 11:13:51.508482355 +0200
+@@ -20,13 +20,13 @@
+   api_version = INT2NUM (info->ldapai_api_version);
+   protocol_version = INT2NUM (info->ldapai_protocol_version);
+   vendor_version = INT2NUM (info->ldapai_vendor_version);
+-  vendor_name = rb_tainted_str_new2 (info->ldapai_vendor_name);
++  vendor_name = rb_str_new_cstr (info->ldapai_vendor_name);
+   extensions = rb_ary_new ();
+ 
+   for (i = 0; info->ldapai_extensions[i]; i++)
+     {
+       rb_ary_push (extensions,
+-		   rb_tainted_str_new2 (info->ldapai_extensions[i]));
++		   rb_str_new_cstr (info->ldapai_extensions[i]));
+     }
+ 
+   return rb_struct_new (rb_sLDAP_APIInfo,
+@@ -183,7 +183,7 @@
+   else
+     {
+       val =
+-	rb_tainted_str_new (ctl->ldctl_value.bv_val, ctl->ldctl_value.bv_len);
++	rb_str_new (ctl->ldctl_value.bv_val, ctl->ldctl_value.bv_len);
+     }
+ 
+   return val;
+@@ -254,7 +254,7 @@
+     }
+   else
+     {
+-      val = rb_tainted_str_new2 (ctl->ldctl_oid);
++      val = rb_str_new_cstr (ctl->ldctl_oid);
+     }
+ 
+   return val;
+@@ -396,7 +396,7 @@
+ {
+   VALUE str;
+ 
+-  str = rb_tainted_str_new2 ("#<");
++  str = rb_str_new_cstr ("#<");
+   rb_str_cat2 (str, rb_class2name (CLASS_OF (self)));
+   rb_str_cat2 (str, " oid=");
+   rb_str_concat (str, rb_inspect (rb_ldap_control_get_oid (self)));
+diff -ruN ruby-ldap/mod.c ruby-ldap/mod.c
+--- ruby-ldap/mod.c	2018-08-18 10:41:31.000000000 +0300
++++ ruby-ldap/mod.c	2026-10-26 11:13:51.508482355 +0200
+@@ -221,7 +221,7 @@
+   RB_LDAPMOD_DATA *moddata;
+ 
+   GET_LDAPMOD_DATA (self, moddata);
+-  return rb_tainted_str_new2 (moddata->mod->mod_type);
++  return rb_str_new_cstr (moddata->mod->mod_type);
+ }
+ 
+ /*
+@@ -248,7 +248,7 @@
+       for (i = 0; bvals[i] != NULL; i++)
+ 	{
+ 	  VALUE str;
+-	  str = rb_tainted_str_new (bvals[i]->bv_val, bvals[i]->bv_len);
++	  str = rb_str_new (bvals[i]->bv_val, bvals[i]->bv_len);
+ 	  rb_ary_push (val, str);
+ 	}
+     }
+@@ -259,7 +259,7 @@
+       for (i = 0; svals[i] != NULL; i++)
+ 	{
+ 	  VALUE str;
+-	  str = rb_tainted_str_new2 (svals[i]);
++	  str = rb_str_new_cstr (svals[i]);
+ 	  rb_ary_push (val, str);
+ 	}
+     }
+diff -ruN ruby-ldap/saslconn.c ruby-ldap/saslconn.c
+--- ruby-ldap/saslconn.c	2018-08-18 10:41:31.000000000 +0300
++++ ruby-ldap/saslconn.c	2026-10-26 11:13:51.508482355 +0200
+@@ -204,7 +204,7 @@
+       /* How can I implement this with portability? */
+       /* 
+          VALUE scred;
+-	 scred = rb_tainted_str_new(servercred->bv_val,
++	 scred = rb_str_new(servercred->bv_val,
+          servercred->bv_len);
+       */
+     }

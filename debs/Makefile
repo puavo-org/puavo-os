@@ -22,7 +22,7 @@ else
   _pkgs_ports      := cups cups-filters facter gnome-control-center \
                       gnome-shell gtk+3.0 gtk4 hooktftp hpuefi \
                       libpam-ccreds linux-default linux-modern mutter \
-                      veyon wsmancli
+                      ruby-ldap veyon wsmancli
 
   # sblim-sfcc openwsman are dependencies for wsmancli
   _pkgs_ports_builddeps := sblim-sfcc openwsman
