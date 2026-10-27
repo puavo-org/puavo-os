@@ -371,14 +371,22 @@ test_audio() {
 
   ### Some device model/gen specific configurations
   case "$(product_name)" in
-    "HP EliteBook 8"[345]"0 G6" | "HP EliteBook 8"[345]"0 G"[78]" Notebook PC")
+    "HP EliteBook 8"[345]"0 G6"* | "HP EliteBook 8"[345]"0 G"[78]*)
       alsacard='0'
       alsamicdev='plughw:CARD=sofhdadsp,DEV=7'
       alsaspkctl='Master'
       alsaspkctl2='Speaker'
       alsavolume="85%"
       ;;
-    "HP EliteBook 820 G1"|"HP EliteBook 820 G2"|"HP EliteBook 840 G1"|"HP EliteBook 840 G2" )
+    "HP ZBook Fury"*"G8"*)
+      alsacard='1'
+      alsaspkdev='hw:1,0'
+      alsamicdev='plughw:CARD=sofhdadsp,DEV=7'
+      alsaspkctl='Master'
+      alsaspkctl2='Speaker'
+      alsavolume="80%"
+      ;;
+    "HP EliteBook 8"[24]"0 G"[12])
       alsaspkdev='hw:1,0'
       alsavolume="85%"
       ;;
@@ -402,6 +410,8 @@ test_audio() {
   ### On some devices, VUMeter does not register changes in audio levels if we play the test with normal sensitivity. Probably something to do with the microphones location.
   ### We do not want to break our ears by boosting the audio itself, so lets just boost microphone input by a couple levels (a few dozen dB).
   amixer --card "${alsacard}" set 'Internal Mic Boost' 2
+  amixer --card "${alsacard}" set 'Dmic1 2nd' 70
+
   aplay --device="${alsaspkdev}" \
         /usr/share/sounds/puavo/speakertest.wav & \
   arecord --vumeter=stereo -f cd -d 4 --device="${alsamicdev}" /dev/null && \
