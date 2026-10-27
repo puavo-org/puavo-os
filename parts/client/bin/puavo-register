@@ -16,12 +16,18 @@ require 'facter'
 require 'fileutils'
 require 'highline/import'
 require 'json'
+require 'logger'
 require 'net/https'
 require 'openssl'
 require 'resolv'
 require 'socket'
 require 'yaml'
 require 'uri'
+
+# Do not output warnings from Facter.  This fixes registration test
+# for puavo-web in run inside a container (test checks for puavo-register
+# output), but is probably a good idea anyway.
+Facter::Log.level = Logger::ERROR
 
 Puavodir            = '/etc/puavo'
 Puavo_hosttype_path = "#{ Puavodir }/hosttype"
