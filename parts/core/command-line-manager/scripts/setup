@@ -17,33 +17,26 @@ fi
 target_directory=$1
 patches_directory=$2
 
-SBSIGNTOOLS_REPOSITORY="https://git.kernel.org/pub/scm/linux/kernel/git/jejb/sbsigntools.git"
-SBSIGNTOOLS_TAG="v0.9.5"
+SBSIGNTOOLS_ARCHIVE_URL="http://deb.debian.org/debian/pool/main/s/sbsigntool/sbsigntool_0.9.5.orig.tar.gz"
+SBSIGNTOOLS_ARCHIVE_SHA256="fa93920ef80a406115c1de6f7764ffa4c34e3d1bd7890b9145c36de899a258f5"
 
 # Skip if already fetched
 if [ -f "${target_directory}/.fetched" ]; then
   exit 0
 fi
 
-echo "Fetching sbsigntools ${SBSIGNTOOLS_TAG}..."
+echo "Fetching ${SBSIGNTOOLS_ARCHIVE_URL}..."
 
-# Clone and checkout the pinned tag
-git clone "${SBSIGNTOOLS_REPOSITORY}" "${target_directory}"
-git -C "${target_directory}" checkout "${SBSIGNTOOLS_TAG}"
+archive=$(mktemp)
+trap 'rm -f "${archive}"' EXIT
 
-# Initialize and update submodules (ccan library).
-git -C "${target_directory}" submodule init
-git -C "${target_directory}" config \
-  submodule.lib/ccan.git.url \
-  https://github.com/rustyrussell/ccan.git
-git -C "${target_directory}" submodule update
+wget --quiet --output-document="${archive}" "${SBSIGNTOOLS_ARCHIVE_URL}"
 
-# The ccan submodule checks out into lib/ccan.git/ but
-# the sbsigntools source includes from lib/ccan/. Create
-# a symlink to bridge this.
-if [ ! -e "${target_directory}/lib/ccan" ]; then
-  ln -s ccan.git "${target_directory}/lib/ccan"
-fi
+echo "${SBSIGNTOOLS_ARCHIVE_SHA256}  ${archive}" | sha256sum --check --quiet
+
+mkdir -p "${target_directory}"
+tar --extract --gzip --strip-components=1 \
+  --file="${archive}" --directory="${target_directory}"
 
 # Apply patches
 echo "Applying patches..."
