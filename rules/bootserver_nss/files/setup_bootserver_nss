@@ -70,7 +70,7 @@ passwd:         compat ldap
 group:          compat ldap
 shadow:         compat
 
-hosts:          files mdns4_minimal [NOTFOUND=return] dns myhostname
+hosts:          files mdns4 [NOTFOUND=return] dns myhostname
 networks:       files
 
 protocols:      db files
@@ -81,3 +81,9 @@ rpc:            db files
 netgroup:       nis
 EOF
 mv /etc/nsswitch.conf.tmp /etc/nsswitch.conf
+
+cat <<'EOF' > /etc/mdns.allow.tmp
+.local.
+.local
+EOF
+mv /etc/mdns.allow.tmp /etc/mdns.allow
