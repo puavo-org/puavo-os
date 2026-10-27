@@ -43,12 +43,12 @@ if [ -f puavo/surface-config ]; then
 fi
 
 # Merge common security config
-cat "${common}/module-signing-config" \
+cat "${common}/config" \
   >> debian/config/amd64/config
 
 # Generate a build-time module signing key. This key is
 # added to the kernel's trusted keyring via
-# CONFIG_SYSTEM_TRUSTED_KEYS (in module-signing-config)
+# CONFIG_SYSTEM_TRUSTED_KEYS (in config)
 # and used by DKMS and out-of-tree module builds.
 "${common}/generate-module-signing-key" \
   /puavo-os/.module-signing-key.pem \
