@@ -422,6 +422,12 @@ start_vpn() {
 }
 
 generate_recovery_bundle() {
+  is_encrypted=$("$PUAVO_INSTALL_LIBDIR"/is-encrypted-install /images)
+  [ "$is_encrypted" = 'true' ] || return 0
+
+  # The bundle is encrypted with the recovery key of the organisation.
+  update_configuration update_org_json || return 1
+
   echo "generating recovery bundle..."
 
   "$PUAVO_INSTALL_LIBDIR"/puavo-generate-recovery-bundle
@@ -429,10 +435,9 @@ generate_recovery_bundle() {
   echo "recovery bundle generated"
 }
 
-finalize_encrypted_secure_boot_keys() {
-  # On encrypted devices, drop the plaintext Secure Boot
-  # signing key now that the install is done. The boot trust
-  # manager republishes it from the boot vault on later boots.
+remove_secure_boot_key_if_tpm_encrypted() {
+  # On encrypted devices the Boot Trust Manager loads the Secure Boot
+  # signing key into the TPM, so no copy stays on the disk.
   is_encrypted=$("$PUAVO_INSTALL_LIBDIR"/is-encrypted-install /images)
   [ "$is_encrypted" = 'true' ] || return 0
 
@@ -468,6 +473,10 @@ install_localbootdevice() {
   /usr/lib/puavo-ltsp-install/puavo-setup-secure-boot
 
   setup_state "$puavo_hosttype"
+
+  # Without a recovery bundle the device must not boot as installed, so
+  # the bundle comes before anything installs the final host type.
+  generate_recovery_bundle
 
   if is_preinstalled "$puavo_install_hosttype"; then
     # If host was preinstalled, the system will boot in 'preinstalled' mode
@@ -507,8 +516,7 @@ install_localbootdevice() {
   install_image "$puavo_install_hosttype"
   update_images || update_configuration_retstatus=1
 
-  generate_recovery_bundle
-  finalize_encrypted_secure_boot_keys
+  remove_secure_boot_key_if_tpm_encrypted
 
   if [ "$puavo_hosttype" = 'bootserver' ]; then
     bootserver_setup_state
