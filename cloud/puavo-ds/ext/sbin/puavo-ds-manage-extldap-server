@@ -131,16 +131,34 @@ File.open(tmp_slapadd_ldif_path, 'w', perm: 0o600) do |ldiffile|
   suffixes = []
 
   conn.bind(@binddn, @bindpw) do
+    log_info('searching for organisations on master')
+    conn.search('', LDAP::LDAP_SCOPE_BASE, '(objectClass=*)',
+                ['namingContexts']) do |e|
+      e.get_values('namingContexts').each do |suffix|
+        suffixes << suffix unless suffix.eql?('o=puavo')
+      end
+    end
+
+    raise 'No namingContexts received' if suffixes.empty?
+
+    # After a restart, every syncrepl consumer can hold a worker thread
+    # while it waits for its first response from the provider (timeout=30),
+    # so size the thread pool by the number of databases, with a margin
+    # for client requests.
+    threads = [suffixes.length + 64, 128].max
+
     log_info('searching for cn=config on master')
     conn.search('cn=config', LDAP::LDAP_SCOPE_BASE, '(objectClass=*)') do |e|
       ldiffile.puts("dn: #{ e.dn }")
 
       e.attrs.each do |attr|
+        next if attr.casecmp('olcThreads').zero? # set below
         e.vals(attr).each do |value|
           ldiffile.puts("#{ attr }: #{ value }")
         end
       end
 
+      ldiffile.puts("olcThreads: #{ threads }")
       ldiffile.puts
     end
 
@@ -161,16 +179,6 @@ File.open(tmp_slapadd_ldif_path, 'w', perm: 0o600) do |ldiffile|
 
     ldiffile.puts( parse_erb('modules.ldif.erb') )
     ldiffile.puts
-
-    log_info('searching for organisations on master')
-    conn.search('', LDAP::LDAP_SCOPE_BASE, '(objectClass=*)',
-                ['namingContexts']) do |e|
-      e.get_values('namingContexts').each do |suffix|
-        suffixes << suffix unless suffix.eql?('o=puavo')
-      end
-    end
-
-    raise 'No namingContexts received' if suffixes.empty?
 
     rid = 1
 

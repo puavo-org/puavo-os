@@ -34,7 +34,12 @@ olcDbIndex: puavoServiceDomain eq
 olcDbIndex: puavoWirelessPrinterQueue eq
 olcDbIndex: sn sub
 olcDbIndex: uid eq,sub
-olcSyncRepl: rid=<%= @rid %> provider="ldap://<%= @master_server %>" binddn="<%= @binddn %>" bindmethod=simple credentials="<%= @bindpw %>" searchbase="<%= @suffix %>" type=refreshAndPersist interval=00:00:00:05 retry="15 +" timeout=30 starttls=critical tls_cacert=/etc/ssl/certs/puavo-ca.crt schemachecking=off scope=sub
+# Do not add interval= here. When it follows type=refreshAndPersist, slapd
+# 2.5/2.6 sets the syncrepl task interval to 0, which makes the listener
+# thread busy-loop after a restart (OpenLDAP ITS#9878,
+# https://bugs.openldap.org/show_bug.cgi?id=9878). Without interval=, slapd
+# uses its 60 s default; reconnects are controlled by retry=.
+olcSyncRepl: rid=<%= @rid %> provider="ldap://<%= @master_server %>" binddn="<%= @binddn %>" bindmethod=simple credentials="<%= @bindpw %>" searchbase="<%= @suffix %>" type=refreshAndPersist retry="15 +" timeout=30 starttls=critical tls_cacert=/etc/ssl/certs/puavo-ca.crt schemachecking=off scope=sub
 olcUpdateRef: ldap://<%= @master_server %>
 olcDbNosync: TRUE
 olcDbDirectory: <%= @directory %>
