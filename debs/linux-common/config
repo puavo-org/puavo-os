@@ -22,3 +22,12 @@ CONFIG_SYSTEM_TRUSTED_KEYS="/puavo-os/.module-signing-key.pem"
 ## kernel modules, bypassing lockdown.
 ##
 CONFIG_INTEGRITY_MACHINE_KEYRING=n
+
+##
+## Trusted keys
+##
+## Lets the kernel create keys that it seals with the
+## TPM before handing them out.
+##
+CONFIG_TRUSTED_KEYS=y
+CONFIG_TRUSTED_KEYS_TPM=y
