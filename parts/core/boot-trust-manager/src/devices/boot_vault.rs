@@ -547,7 +547,7 @@ impl BootVaultResources {
         key: &str,
         value: T,
     ) -> Result<(), PuavoError> {
-        debug!("Writing property '{}' to boot vault", key);
+        debug!("Writing property '{}' into resources", key);
 
         let property_path = self.mountpoint.join(key);
 
@@ -565,7 +565,7 @@ impl BootVaultResources {
         &self,
         key: &str,
     ) -> Result<Option<String>, PuavoError> {
-        debug!("Reading property '{}' from boot vault", key);
+        debug!("Reading property '{}' from resources", key);
 
         let property_path = self.mountpoint.join(key);
 
