@@ -473,14 +473,16 @@ install_localbootdevice() {
     maybe_install_windows
   fi
 
-  echo 'Setting up Secure Boot...'
-  /usr/lib/puavo-ltsp-install/puavo-setup-secure-boot
-
   setup_state "$puavo_hosttype"
 
   # Without a recovery bundle the device must not boot as installed, so
   # the bundle comes before anything installs the final host type.
   generate_recovery_bundle
+
+  # Enrolled keys make the Boot Trust Manager lock the host type at the
+  # next boot, so they wait for the bundle too.
+  echo 'Setting up Secure Boot...'
+  /usr/lib/puavo-ltsp-install/puavo-setup-secure-boot
 
   if is_preinstalled "$puavo_install_hosttype"; then
     # If host was preinstalled, the system will boot in 'preinstalled' mode
