@@ -1,0 +1,8 @@
+[Unit]
+Description=Save boot diagnostics once the boot has settled
+
+[Timer]
+OnBootSec=2min
+
+[Install]
+WantedBy=timers.target

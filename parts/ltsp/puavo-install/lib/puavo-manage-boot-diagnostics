@@ -1,0 +1,159 @@
+#!/bin/sh
+#
+# Saves the diagnostics of the machine to the EFI partition. An oversized
+# save is refused.
+#
+# Usage: puavo-manage-boot-diagnostics [--name <name>] [--kernel-log]
+#                                      [<efi-mountpoint>]
+#
+# Without a name, the save is named by its time among the successful saves,
+# and only the newest of those are kept. With a name, the save replaces the
+# one of that name. --kernel-log includes the kernel log. Without a
+# mountpoint, the EFI partition of the boot disk is mounted for the time of
+# the save.
+#
+# Runs in the initramfs too, so switches are short where busybox has no
+# long ones.
+
+set -u
+
+usage() {
+  echo "Usage: $0 [--name <name>] [--kernel-log] [<efi-mountpoint>]" >&2
+  exit 1
+}
+
+name=''
+kernel_log=no
+
+while [ "$#" -gt 0 ]; do
+  case $1 in
+    --name)
+      [ "$#" -ge 2 ] || usage
+      name=$2
+      shift 2
+      ;;
+    --kernel-log)
+      kernel_log=yes
+      shift
+      ;;
+    -*)
+      usage
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+if [ "$#" -gt 1 ]; then
+  usage
+fi
+
+efi_mountpoint=${1:-}
+
+# Installed next to this script.
+collector="$(dirname "$0")/puavo-collect-boot-diagnostics"
+
+# The largest save written, in bytes.
+MAX_SIZE=$((2 * 1024 * 1024))
+
+KEPT_SAVES=3
+
+DIAGNOSTICS_DIRECTORY=EFI/puavo/diagnostics
+SUCCESS_DIRECTORY=EFI/puavo/diagnostics/success
+
+EFI_PARTITION_TYPE=c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+
+report=$(mktemp /tmp/diagnostics.XXXXXX)
+own_mountpoint=''
+
+clean_up() {
+  rm -f "$report"
+
+  if [ -n "$own_mountpoint" ]; then
+    umount "$own_mountpoint" && rmdir "$own_mountpoint"
+  fi
+}
+
+trap clean_up EXIT
+
+# Prints the EFI partition of the first boot disk that has one.
+find_efi_partition() {
+  for disk in $(/usr/lib/puavo-core/puavo-get-boot-disks); do
+    lsblk --noheadings --list --output PATH,PARTTYPE "$disk" |
+      awk -v type="$EFI_PARTITION_TYPE" '$2 == type { print $1; exit }' |
+      grep . && return
+  done
+
+  return 1
+}
+
+mount_efi_partition() {
+  if ! partition=$(find_efi_partition); then
+    echo 'error: no EFI partition found' >&2
+    return 1
+  fi
+
+  own_mountpoint=$(mktemp --directory /tmp/diagnostics-efi.XXXXXX)
+  if ! mount "$partition" "$own_mountpoint"; then
+    rmdir "$own_mountpoint"
+    own_mountpoint=''
+    return 1
+  fi
+
+  efi_mountpoint=$own_mountpoint
+}
+
+# Removes all but the newest saves. Saves are named by their UTC time, so
+# the names sort by age.
+remove_old_saves() {
+  find "$1" -maxdepth 1 -type f | grep -x '.*/[0-9]\{14\}' | sort -r |
+    tail -n +$((KEPT_SAVES + 1)) |
+    while read -r old; do
+      rm -f "$old"
+    done
+}
+
+if [ -z "$efi_mountpoint" ]; then
+  mount_efi_partition || exit 1
+fi
+
+if [ -n "$name" ]; then
+  directory="${efi_mountpoint}/${DIAGNOSTICS_DIRECTORY}"
+  rotation=no
+else
+  name=$(date --utc +%Y%m%d%H%M%S)
+  directory="${efi_mountpoint}/${SUCCESS_DIRECTORY}"
+  rotation=yes
+fi
+
+set -- "$efi_mountpoint"
+if [ "$kernel_log" = yes ]; then
+  set -- --kernel-log "$@"
+fi
+
+# Generated in memory first, so a failed write to the EFI partition never
+# replaces a previous save.
+if ! "$collector" "$@" > "$report"; then
+  echo 'error: collecting the diagnostics failed, nothing written' >&2
+  exit 1
+fi
+
+size=$(wc -c < "$report")
+if [ "$size" -gt "$MAX_SIZE" ]; then
+  echo "error: ${size} bytes is more than ${MAX_SIZE}, nothing written" >&2
+  exit 1
+fi
+
+mkdir --parents "$directory" || exit 1
+
+# Left by a write that was cut short.
+rm -f "${directory}"/*.tmp
+
+cp "$report" "${directory}/${name}.tmp" || exit 1
+sync
+mv --force "${directory}/${name}.tmp" "${directory}/${name}" || exit 1
+
+if [ "$rotation" = yes ]; then
+  remove_old_saves "$directory"
+fi

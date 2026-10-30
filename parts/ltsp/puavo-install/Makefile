@@ -19,6 +19,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(datarootdir)/dbus-1/system-services
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-install
+	mkdir -p $(DESTDIR)$(libdir)/dracut/modules.d/90puavo-boot-diagnostics
 	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-install
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)/boot/efi    # needed by puavo-install-grub
@@ -26,6 +27,7 @@ installdirs :
 	mkdir -p $(DESTDIR)/usr/lib/systemd/system
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/sockets.target.wants
+	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/timers.target.wants
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
 .PHONY : install
@@ -62,6 +64,9 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(libdir)/puavo-ltsp-install \
 		lib/minimal-bcd
 
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/dracut/modules.d/90puavo-boot-diagnostics \
+		dracut/modules.d/90puavo-boot-diagnostics/module-setup.sh
+
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-install \
 		lib/create-bcd \
 		lib/is-encrypted-install \
@@ -69,12 +74,14 @@ install : installdirs
 		lib/is-update-available \
 		lib/ls-old-images-and-rdiffs \
 		lib/puavo-change-unlock-pin \
+		lib/puavo-collect-boot-diagnostics \
 		lib/puavo-create-device-keys \
 		lib/puavo-create-device-secure-boot-keys \
 		lib/puavo-create-device-tpm-keys \
 		lib/puavo-generate-recovery-bundle \
 		lib/puavo-get-tpm-ek-public \
 		lib/puavo-image-preinst \
+		lib/puavo-manage-boot-diagnostics \
 		lib/puavo-prepare-secure-boot \
 		lib/puavo-prepare-tpm-configuration \
 		lib/puavo-read-boot-keymap \
@@ -103,6 +110,9 @@ install : installdirs
 	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/sockets.target.wants \
 		/usr/lib/systemd/system/puavo-image-torrent-updated.socket    \
 		/usr/lib/systemd/system/puavo-rdiff-torrent-updated.socket
+
+	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/timers.target.wants \
+		/usr/lib/systemd/system/puavo-manage-boot-diagnostics.timer
 
 	ln -fs /usr/lib/systemd/system/puavo-update.service \
 		$(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants/puavo-update.service

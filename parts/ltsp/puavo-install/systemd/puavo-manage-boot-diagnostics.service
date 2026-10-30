@@ -1,0 +1,11 @@
+[Unit]
+Description=Save boot diagnostics to the EFI partition
+
+[Service]
+Type=oneshot
+# Only an encrypted installation has booted through an unlock.
+ExecCondition=/bin/sh -c '/usr/lib/puavo-ltsp-install/is-encrypted-install \
+  /images | grep -qx true'
+ExecStart=/usr/lib/puavo-ltsp-install/puavo-manage-boot-diagnostics
+Nice=19
+IOSchedulingClass=idle
