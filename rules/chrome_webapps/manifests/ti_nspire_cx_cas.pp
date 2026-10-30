@@ -7,6 +7,9 @@ class chrome_webapps::ti_nspire_cx_cas {
       require => File['/usr/local/bin/puavo-chrome-webapp'],
       source => 'puppet:///modules/chrome_webapps/puavo-ti-nspire-webapp';
 
+    '/usr/local/share/applications':
+      ensure => directory;
+
     '/usr/local/share/applications/puavo-ti-nspire-webapp.desktop':
       require => File['/usr/local/bin/puavo-ti-nspire-webapp'],
       source  => 'puppet:///modules/chrome_webapps/puavo-ti-nspire-webapp.desktop';
