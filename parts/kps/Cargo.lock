@@ -1234,7 +1234,7 @@ dependencies = [
 
 [[package]]
 name = "puavo-hsm"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "cryptoki",
  "openssl",
@@ -1246,7 +1246,7 @@ dependencies = [
 
 [[package]]
 name = "puavo-ipc"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "bincode",
  "clap",
@@ -1258,7 +1258,7 @@ dependencies = [
 
 [[package]]
 name = "puavo-kps"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1280,7 +1280,7 @@ dependencies = [
 
 [[package]]
 name = "puavo-kpsd"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "async-trait",
