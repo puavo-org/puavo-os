@@ -1,8 +1,10 @@
+pub mod diagnostics;
 pub mod efi;
 pub mod kernel_commandline;
 pub mod keyboard;
 pub mod locale;
 pub mod mount;
+pub mod process;
 pub mod reboot;
 pub mod secure_boot;
 pub mod udev;

@@ -5,7 +5,7 @@ check() {
 }
 
 depends() {
-    echo "base crypt dm systemd systemd-cryptsetup tpm2-tss"
+    echo "base crypt dm systemd systemd-cryptsetup tpm2-tss puavo-boot-diagnostics"
     return 0
 }
 
