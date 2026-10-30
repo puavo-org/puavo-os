@@ -21,7 +21,12 @@ use crate::{
     error::PuavoError,
     luks::tokens::{LuksTpmTokenManager, MAX_TOKENS},
     secure_boot::update::EnrolledDatabase,
-    system::{keyboard, locale, mount::unmount, udev::device_from_device_node_path},
+    system::{
+        diagnostics::{self, DiagnosticsKind},
+        keyboard, locale,
+        mount::unmount,
+        udev::device_from_device_node_path,
+    },
     tpm,
 };
 
@@ -221,6 +226,7 @@ impl BootVault {
         for attempt in 0.. {
             if attempt == recovery_qr_attempt {
                 recovery_qr::show_recovery_qr();
+                diagnostics::collect(DiagnosticsKind::Failure);
             }
 
             let prompt = if tokens.is_empty() {

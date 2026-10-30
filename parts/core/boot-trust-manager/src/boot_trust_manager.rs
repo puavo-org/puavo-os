@@ -2,6 +2,7 @@ use std::{
     fs, mem,
     path::{Path, PathBuf},
     process::Command,
+    time::Duration,
 };
 
 use log::{debug, error, info, warn};
@@ -20,6 +21,7 @@ use crate::{
     error::PuavoError,
     luks::tokens::LuksTpmTokenManager,
     system::{
+        diagnostics::{self, DiagnosticsKind},
         efi,
         locale::{self, Strings},
         mount::{MountGuard, unmount},
@@ -31,6 +33,10 @@ use crate::{
 
 /// LUKS device name for the root device
 pub const ROOT_DEVICE_NAME: &str = "root";
+
+/// Longest wait for diagnostics saves still running. A save takes a few
+/// seconds, so this only caps a hung tool.
+const DIAGNOSTICS_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// Configuration options for the boot trust manager.
 #[derive(Debug, Clone, Default)]
@@ -163,6 +169,7 @@ impl BootTrustManager {
             }
 
             info!("Configurator activated");
+            diagnostics::request(DiagnosticsKind::Update);
             configurator.configure(
                 &mut boot_vault,
                 &mut primary_partition_manager,
@@ -217,13 +224,19 @@ impl BootTrustManager {
     ) -> Result<(), PuavoError> {
         let (efi_mount, primary_device_path) = Self::setup(None)?;
         Self::install_locale(&efi_mount.mountpoint);
+        diagnostics::enable(&efi_mount.mountpoint);
 
-        Self::configure_with_paths(
+        let result = Self::configure_with_paths(
             display,
             configurators,
             &efi_mount.mountpoint.join(VAULT_PATH),
             primary_device_path,
-        )
+        );
+
+        // Diagnostics saves write to the EFI partition, which is unmounted
+        // next, and the machine may reboot right after.
+        diagnostics::finish(DIAGNOSTICS_TIMEOUT);
+        result
 
         // EFI partition is automatically unmounted here
     }
