@@ -302,7 +302,7 @@ impl BootVault {
             // guesses cannot make the lock last even longer.
             if tpm::is_in_lockout().unwrap_or(false) {
                 locked_out_attempts += 1;
-                let _ = display.show_message("The device is temporarily locked from too many attempts. Enter the recovery key, or restart and try again later.");
+                let _ = display.show_message(strings.device_locked_out);
                 if locked_out_attempts >= MAX_LOCKED_OUT_ATTEMPTS {
                     warn!(
                         "Giving up after {} locked attempts",
