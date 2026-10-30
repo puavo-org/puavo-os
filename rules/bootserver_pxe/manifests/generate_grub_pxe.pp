@@ -3,10 +3,11 @@ class bootserver_pxe::generate_grub_pxe {
 
   file {
     '/usr/lib/grub/pxe':
-      ensure => directory,
-      owner  => 'root',
-      group  => 'root',
-      mode   => '0755';
+      ensure  => directory,
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0755',
+      require => Package['grub-pc-bin'];
   }
 
   exec {
