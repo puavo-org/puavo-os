@@ -12,6 +12,7 @@ class puavo_pkg::packages {
   # install by default.  There may be other puavo-pkg packages available.
   $available_packages = [ 'abicus'
 			, 'abitti-naksu'
+			, 'anki'
 			, 'appinventor'
 			, 'arduino-ide'
 			, 'arduino-ottodiylib'
