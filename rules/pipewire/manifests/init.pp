@@ -9,7 +9,8 @@ class pipewire {
     , '/etc/systemd/user/pipewire-pulse.service.d'
     , '/etc/systemd/user/pipewire-pulse.socket.d'
     , '/etc/systemd/user/wireplumber.service.d' ]:
-      ensure => directory;
+      ensure  => directory,
+      require => Package['systemd'];
 
     [ '/etc/systemd/user/pipewire.service.d/puavo-pipewire-systemd-service-tweaks.conf'
     , '/etc/systemd/user/pipewire.socket.d/puavo-pipewire-systemd-service-tweaks.conf'
@@ -20,8 +21,9 @@ class pipewire {
       source  => 'puppet:///modules/pipewire/puavo-pipewire-systemd-service-tweaks.conf';
 
     '/usr/lib/puavo-desktop/puavo-pipewire-show-user-configuration':
-      mode   => '0755',
-      source => 'puppet:///modules/pipewire/puavo-pipewire-show-user-configuration';
+      mode    => '0755',
+      require => Package['puavo-desktop'],
+      source  => 'puppet:///modules/pipewire/puavo-pipewire-show-user-configuration';
 
     '/usr/local/sbin/puavo-pipewire-ctl':
       mode   => '0755',
