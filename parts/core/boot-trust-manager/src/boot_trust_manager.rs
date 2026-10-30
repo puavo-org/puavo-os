@@ -18,7 +18,7 @@ use crate::{
     },
     display::{UserDisplay, choose_display},
     error::PuavoError,
-    luks::{tokens::LuksTpmTokenManager, unlock_info},
+    luks::tokens::LuksTpmTokenManager,
     system::{
         efi,
         locale::{self, Strings},
@@ -223,7 +223,6 @@ impl BootTrustManager {
             configurators,
             &efi_mount.mountpoint.join(VAULT_PATH),
             primary_device_path,
-            Some(&efi_mount.mountpoint),
         )
 
         // EFI partition is automatically unmounted here
@@ -242,7 +241,6 @@ impl BootTrustManager {
     /// - `configurators`: Configurator instances to run.
     /// - `boot_vault_image_path`: Path to the boot vault LUKS image file.
     /// - `primary_device_path`: Path to the primary LUKS partition device.
-    /// - `efi_mountpoint`: Optional EFI partition mount point for saving unlock info.
     ///
     /// Returns:
     /// - `Ok(())` on success.
@@ -252,7 +250,6 @@ impl BootTrustManager {
         configurators: Vec<Box<dyn Configurator>>,
         boot_vault_image_path: &PathBuf,
         primary_device_path: String,
-        efi_mountpoint: Option<&PathBuf>,
     ) -> Result<(), PuavoError> {
         info!("Boot vault image path: {:?}", boot_vault_image_path);
 
@@ -271,12 +268,6 @@ impl BootTrustManager {
             primary_partition_manager.device_mut(),
             ROOT_DEVICE_NAME,
         )?;
-
-        // Save unlock info after successful unlock. If a future unlock fails,
-        // this info can be compared to identify what changed in the boot chain.
-        if let Some(efi_path) = efi_mountpoint {
-            unlock_info::save_to_efi(efi_path);
-        }
 
         // Use the resources for configuration
         Self::check_secure_boot_and_run_configurators(
