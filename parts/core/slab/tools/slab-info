@@ -8,7 +8,7 @@ COUNTER_INDEX=0x01514B00
 BASE_INDEX=0x01514B01
 
 read_nv_u64() {
-  hex=$(tpm2_nvread "$1" 2>/dev/null | od -An -tx1 | tr -d ' \n')
+  hex=$(tpm2 nvread "$1" 2>/dev/null | od -An -tx1 | tr -d ' \n')
   if [ -z "$hex" ]; then
     echo unavailable
   else
@@ -30,8 +30,8 @@ printf '%-12s%s\n' '=> version:' "$version"
 
 echo
 echo 'counter public area:'
-tpm2_nvreadpublic "$COUNTER_INDEX" || echo '  unavailable'
+tpm2 nvreadpublic "$COUNTER_INDEX" || echo '  unavailable'
 
 echo
 echo 'base public area:'
-tpm2_nvreadpublic "$BASE_INDEX" || echo '  unavailable'
+tpm2 nvreadpublic "$BASE_INDEX" || echo '  unavailable'
