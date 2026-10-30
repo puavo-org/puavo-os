@@ -1,0 +1,307 @@
+#!/bin/sh
+#
+# Prints the state of the machine, for debugging a device that fails to boot
+# later. Holds no key material, PINs or recovery data.
+#
+# Usage: puavo-collect-boot-diagnostics [--kernel-log] [<efi-mountpoint>]
+#
+# With --kernel-log, the kernel log is included. With a mountpoint, the
+# files of the EFI partition are listed too.
+#
+# Runs in the initramfs too, so switches are short where busybox has no
+# long ones.
+
+set -u
+
+usage() {
+  echo "Usage: $0 [--kernel-log] [<efi-mountpoint>]" >&2
+  exit 1
+}
+
+kernel_log=no
+if [ "${1:-}" = --kernel-log ]; then
+  kernel_log=yes
+  shift
+fi
+
+if [ "$#" -gt 1 ]; then
+  usage
+fi
+
+efi_mountpoint=${1:-}
+
+# Section sizes in bytes. Together they stay below the largest save
+# puavo-manage-boot-diagnostics writes.
+SECTION_SIZE=$((16 * 1024))
+VARIABLE_LIST_SIZE=$((32 * 1024))
+PCR_LOG_SIZE=$((1024 * 1024))
+BTM_LOG_SIZE=$((256 * 1024))
+KERNEL_LOG_SIZE=$((256 * 1024))
+
+# Seconds a tool may run before it is stopped.
+TOOL_TIMEOUT=5
+
+# Exit status of timeout when it stopped the tool.
+TIMED_OUT=124
+
+DMI_PATH=/sys/class/dmi/id
+
+DMI_FIELDS='
+bios_vendor
+bios_version
+bios_date
+bios_release
+sys_vendor
+product_name
+product_version
+product_family
+product_sku
+product_serial
+product_uuid
+board_vendor
+board_name
+board_version
+board_serial
+chassis_type
+chassis_serial
+'
+
+# Tests point this to a directory of their own.
+EFIVARS_PATH=${EFIVARS_PATH:-/sys/firmware/efi/efivars}
+GLOBAL_VARIABLES=8be4df61-93ca-11d2-aa0d-00e098032b8c
+SECURITY_DATABASES=d719b2cb-3d3a-4596-a3bc-dad00e67656f
+PUAVO_VARIABLES=7cb44677-9bb9-4504-bb8f-923def5fa3b1
+
+# UEFI variable files start with attribute bytes.
+ATTRIBUTE_SIZE=4
+
+BLOCK_DEVICE_COLUMNS='
+NAME
+PATH
+TYPE
+SIZE
+MODEL
+SERIAL
+PTTYPE
+PTUUID
+PARTTYPE
+PARTUUID
+PARTLABEL
+FSTYPE
+UUID
+LABEL
+'
+
+# The LUKS2 header fields kept, as a jq object built from the header
+# metadata. Salts, digests, token blobs and keys are other fields, so they
+# never pass.
+LUKS_PUBLIC_FIELDS='{
+  keyslots: .keyslots | map_values({
+    type,
+    key_size,
+    priority,
+    kdf: { type: .kdf.type },
+  }),
+  tokens: .tokens | map_values({
+    type,
+    keyslots,
+    "tpm2-pcrs",
+    "tpm2-pcr-bank",
+    "tpm2-primary-alg",
+    "tpm2-pin",
+    tpm2_pubkey_pcrs,
+    tpm2_pcrlock,
+  }),
+  segments: .segments | map_values({
+    type,
+    encryption,
+    sector_size,
+  }),
+  config: { flags: .config.flags },
+} | del(.. | nulls)'
+
+scratch=$(mktemp /tmp/diagnostics-section.XXXXXX)
+trap 'rm -f "$scratch"' EXIT
+
+# Prints the items of a list, one per line.
+items() {
+  printf '%s\n' "$1" | grep .
+}
+
+# Prints the items of a list separated by commas.
+#
+# Example: "NAME", "PATH" and "TYPE" on their own lines give NAME,PATH,TYPE.
+comma_separated() {
+  items "$1" | tr '\n' , | sed 's/,$//'
+}
+
+# Runs a tool with its errors in the output, and stops it after the timeout.
+run() {
+  timeout "$TOOL_TIMEOUT" "$@" 2>&1
+
+  if [ "$?" -eq "$TIMED_OUT" ]; then
+    printf '[stopped after %s seconds]\n' "$TOOL_TIMEOUT"
+  fi
+}
+
+# Keeps the start and the end of the input when it is larger than the size.
+cut_middle() {
+  size=$1
+  cat > "$scratch"
+  length=$(wc -c < "$scratch")
+
+  if [ "$length" -le "$size" ]; then
+    cat "$scratch"
+    return
+  fi
+
+  head -c $((size / 2)) "$scratch"
+  printf '\n[%s bytes left out]\n' $((length - size))
+  tail -c $((size / 2)) "$scratch"
+}
+
+# Keeps the input whole, or prints an error when it is larger than the size.
+# A partial event log cannot be replayed.
+whole() {
+  size=$1
+  cat > "$scratch"
+  length=$(wc -c < "$scratch")
+
+  if [ "$length" -le "$size" ]; then
+    cat "$scratch"
+    return
+  fi
+
+  printf '[error: %s bytes is more than %s]\n' "$length" "$size"
+}
+
+heading() {
+  printf '\n== %s\n' "$1"
+}
+
+# Prints a heading and the input, cut to the size.
+section() {
+  heading "$1"
+  cut_middle "$2"
+}
+
+# Prints the contents of a UEFI variable without its attribute bytes.
+# Variable files cannot seek, so they are read whole through a pipe.
+variable() {
+  dd if="${EFIVARS_PATH}/$1" bs=$((4 * 1024)) 2>/dev/null |
+    tail -c +$((ATTRIBUTE_SIZE + 1))
+}
+
+# Prints a UEFI variable as bytes in the given od format, or "unset".
+#
+# Example: print_bytes SecureBoot SecureBoot-8be4df61-... u1 gives
+# "SecureBoot: 1".
+print_bytes() {
+  if [ ! -e "${EFIVARS_PATH}/$2" ]; then
+    printf '%s: unset\n' "$1"
+    return
+  fi
+
+  printf '%s: %s\n' "$1" "$(variable "$2" |
+    od --address-radix=n --format="$3" | tr -s ' ' |
+    sed 's/^ //')"
+}
+
+# Prints the size and SHA-256 of a UEFI variable, or "unset".
+print_digest() {
+  if [ ! -e "${EFIVARS_PATH}/$2" ]; then
+    printf '%s: unset\n' "$1"
+    return
+  fi
+
+  printf '%s: %s bytes, sha256 %s\n' "$1" "$(variable "$2" | wc -c)" \
+    "$(variable "$2" | sha256sum | cut -d ' ' -f 1)"
+}
+
+header() {
+  printf 'date: %s\n' "$(date --utc '+%Y-%m-%d %H:%M:%S UTC')"
+  printf 'uptime: %s\n' "$(cut -d ' ' -f 1 /proc/uptime)"
+  printf 'kernel: %s\n' "$(uname --kernel-release)"
+  printf 'command line: %s\n' "$(cat /proc/cmdline)"
+}
+
+dmi() {
+  items "$DMI_FIELDS" | while read -r field; do
+    printf '%s: %s\n' "$field" "$(cat "${DMI_PATH}/${field}" 2>/dev/null)"
+  done
+}
+
+secure_boot() {
+  for name in SecureBoot SetupMode AuditMode DeployedMode; do
+    print_bytes "$name" "${name}-${GLOBAL_VARIABLES}" u1
+  done
+
+  for name in PK KEK; do
+    print_digest "$name" "${name}-${GLOBAL_VARIABLES}"
+  done
+
+  for name in db dbx dbt dbr; do
+    print_digest "$name" "${name}-${SECURITY_DATABASES}"
+  done
+
+  # PuavoRecoveryBundle is recovery data. Its size is in the variable list.
+  for name in PuavoSecureBootUpdate PuavoPinChangeRequest PuavoBootKeymap; do
+    print_bytes "$name" "${name}-${PUAVO_VARIABLES}" c
+  done
+}
+
+luks_headers() {
+  lsblk --raw --noheadings --output PATH,FSTYPE |
+    while read -r path type; do
+      if [ "$type" != crypto_LUKS ]; then
+        continue
+      fi
+
+      printf -- '-- %s\n' "$path"
+      run cryptsetup luksDump --dump-json-metadata "$path" |
+        jq "$LUKS_PUBLIC_FIELDS"
+    done
+}
+
+collect() {
+  header
+  dmi | section dmi "$SECTION_SIZE"
+  run grep -r -s . /sys/firmware/efi/esrt/entries |
+    section 'firmware updates' "$SECTION_SIZE"
+  run grep -r -s . /sys/firmware/acpi/fpdt/boot |
+    section 'firmware boot timing' "$SECTION_SIZE"
+  run ls -l "$EFIVARS_PATH" | section 'efi variables' "$VARIABLE_LIST_SIZE"
+  secure_boot | section 'secure boot' "$SECTION_SIZE"
+  run efibootmgr --verbose | section 'boot entries' "$SECTION_SIZE"
+  run tpm2 getcap properties-fixed |
+    section 'tpm fixed properties' "$SECTION_SIZE"
+  run tpm2 getcap properties-variable |
+    section 'tpm variable properties' "$SECTION_SIZE"
+  run tpm2 readclock | section 'tpm clock' "$SECTION_SIZE"
+  run tpm2 getcap pcrs | section 'tpm pcr banks' "$SECTION_SIZE"
+  run tpm2 pcrread | section 'tpm pcrs' "$SECTION_SIZE"
+  run tpm2 getcap handles-persistent |
+    section 'tpm persistent handles' "$SECTION_SIZE"
+  run slab-info | section slab "$SECTION_SIZE"
+  run lsblk --bytes --output "$(comma_separated "$BLOCK_DEVICE_COLUMNS")" |
+    section 'block devices' "$SECTION_SIZE"
+  luks_headers | section 'luks headers' "$SECTION_SIZE"
+
+  if [ -n "$efi_mountpoint" ]; then
+    run ls -lR "${efi_mountpoint}/EFI" |
+      section 'efi files' "$SECTION_SIZE"
+  fi
+
+  heading 'pcr log'
+  run /usr/lib/systemd/systemd-pcrlock cel | whole "$PCR_LOG_SIZE"
+
+  run journalctl --boot --no-pager --output short-monotonic \
+      --unit puavo-boot-trust-manager.service |
+    section 'boot trust manager log' "$BTM_LOG_SIZE"
+
+  if [ "$kernel_log" = yes ]; then
+    run dmesg | section 'kernel log' "$KERNEL_LOG_SIZE"
+  fi
+}
+
+collect

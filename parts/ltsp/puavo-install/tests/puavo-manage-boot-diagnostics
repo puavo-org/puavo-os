@@ -1,0 +1,180 @@
+#!/bin/sh
+#
+# Tests puavo-manage-boot-diagnostics with a mock collector. Run as a
+# normal user, because one test relies on a read-only directory.
+#
+# Usage: tests/puavo-manage-boot-diagnostics
+
+set -u
+
+library="$(cd "$(dirname "$0")/../lib" && pwd)"
+manager="${library}/puavo-manage-boot-diagnostics"
+
+MAX_SIZE=$((2 * 1024 * 1024))
+
+KEPT_SAVES=3
+
+# Saves from earlier boots, oldest first.
+EARLIER_SAVES='
+20010101000000
+20020101000000
+20030101000000
+20040101000000
+'
+
+failures=0
+
+fail() {
+  echo "FAIL: $1"
+  failures=$((failures + 1))
+}
+
+# Writes the mock collector, which runs the given shell commands.
+mock_collector() {
+  printf '#!/bin/sh\n%s\n' "$1" > "${programs}/puavo-collect-boot-diagnostics"
+  chmod +x "${programs}/puavo-collect-boot-diagnostics"
+}
+
+# Creates an empty EFI partition, and the manager next to a mock
+# collector that names the arguments it was given.
+set_up() {
+  work=$(mktemp --directory)
+  programs="${work}/programs"
+  efi="${work}/efi"
+  diagnostics="${efi}/EFI/puavo/diagnostics"
+  saves="${diagnostics}/success"
+
+  mkdir --parents "$programs" "$saves"
+  ln --symbolic "$manager" "${programs}/puavo-manage-boot-diagnostics"
+  mock_collector "echo \"collected with \$*\""
+}
+
+# Runs the manager with the given options on the EFI partition.
+manage() {
+  "${programs}/puavo-manage-boot-diagnostics" "$@" "$efi"
+}
+
+# Prints the names of the saves, oldest first.
+list_saves() {
+  find "$saves" -maxdepth 1 -type f | sed 's|.*/||' | sort
+}
+
+write_earlier_saves() {
+  printf '%s\n' "$EARLIER_SAVES" | grep . | while read -r name; do
+    echo earlier > "${saves}/${name}"
+  done
+}
+
+tear_down() {
+  chmod --recursive u+w "$work"
+  rm --recursive --force "$work"
+}
+
+test_saves_collected_diagnostics() {
+  set_up
+  manage || fail "saves: exit status $?"
+
+  [ "$(list_saves | wc --lines)" -eq 1 ] || fail 'saves: not one save'
+  list_saves | grep --quiet --line-regexp '[0-9]\{14\}' ||
+    fail 'saves: not named by time'
+
+  save="${saves}/$(list_saves)"
+  [ "$(cat "$save")" = "collected with ${efi}" ] || fail 'saves: contents'
+
+  tear_down
+}
+
+test_saves_under_name() {
+  set_up
+  write_earlier_saves
+
+  manage --name failure --kernel-log || fail "named: exit status $?"
+
+  expected="collected with --kernel-log ${efi}"
+  [ "$(cat "${diagnostics}/failure")" = "$expected" ] || fail 'named: contents'
+
+  earlier=$(printf '%s\n' "$EARLIER_SAVES" | grep --count .)
+  [ "$(list_saves | wc --lines)" -eq "$earlier" ] ||
+    fail 'named: success saves changed'
+
+  tear_down
+}
+
+test_keeps_newest_three_saves() {
+  set_up
+  write_earlier_saves
+
+  manage
+
+  [ "$(list_saves | wc --lines)" -eq "$KEPT_SAVES" ] ||
+    fail 'rotation: wrong number of saves'
+
+  for name in 20010101000000 20020101000000; do
+    list_saves | grep --quiet --line-regexp "$name" &&
+      fail "rotation: ${name} kept"
+  done
+
+  for name in 20030101000000 20040101000000; do
+    list_saves | grep --quiet --line-regexp "$name" ||
+      fail "rotation: ${name} lost"
+  done
+
+  tear_down
+}
+
+test_keeps_saves_on_failed_write() {
+  set_up
+  echo earlier > "${saves}/20040101000000"
+  chmod a-w "$saves"
+
+  if manage 2>/dev/null; then
+    fail 'failed write: exit status 0'
+  fi
+
+  [ "$(list_saves)" = 20040101000000 ] || fail 'failed write: saves changed'
+
+  tear_down
+}
+
+test_refuses_too_large_save() {
+  set_up
+  echo earlier > "${saves}/20040101000000"
+  mock_collector "head --bytes=$((MAX_SIZE + 1)) /dev/zero"
+
+  if manage 2>/dev/null; then
+    fail 'too large: exit status 0'
+  fi
+
+  [ "$(list_saves)" = 20040101000000 ] || fail 'too large: saves changed'
+
+  tear_down
+}
+
+test_saves_nothing_when_collector_fails() {
+  set_up
+  echo earlier > "${saves}/20040101000000"
+  mock_collector 'echo partial; exit 1'
+
+  if manage 2>/dev/null; then
+    fail 'collector failed: exit status 0'
+  fi
+
+  [ "$(list_saves)" = 20040101000000 ] ||
+    fail 'collector failed: saves changed'
+
+  tear_down
+}
+
+test_saves_collected_diagnostics
+test_saves_under_name
+test_keeps_newest_three_saves
+test_keeps_saves_on_failed_write
+test_refuses_too_large_save
+test_saves_nothing_when_collector_fails
+
+if [ "$failures" -ne 0 ]; then
+  echo "${failures} failed"
+  exit 1
+fi
+
+echo 'all passed'

@@ -1,0 +1,231 @@
+#!/bin/sh
+#
+# Tests puavo-collect-boot-diagnostics on a LUKS2 image in a file, with
+# mocks for the other tools it runs.
+#
+# Usage: tests/puavo-collect-boot-diagnostics
+
+set -u
+
+library="$(cd "$(dirname "$0")/../lib" && pwd)"
+collector="${library}/puavo-collect-boot-diagnostics"
+
+MAX_SIZE=$((2 * 1024 * 1024))
+TOOL_TIMEOUT=5
+
+GLOBAL_VARIABLES=8be4df61-93ca-11d2-aa0d-00e098032b8c
+PUAVO_VARIABLES=7cb44677-9bb9-4504-bb8f-923def5fa3b1
+
+# UEFI variable files start with four attribute bytes.
+ATTRIBUTES='\007\000\000\000'
+
+# Fake contents of the platform key variable.
+PLATFORM_KEY=PLATFORM-KEY-LIST
+
+IMAGE_SIZE=32M
+PASSPHRASE=passphrase
+
+# Few iterations keep the format fast. The image protects nothing.
+PBKDF_ITERATIONS=1000
+
+# A TPM token with fake values in capitals, which must never pass.
+TOKEN='{
+  "type": "systemd-tpm2",
+  "keyslots": [ "0" ],
+  "tpm2-blob": "TOKEN-BLOB-TOKEN-BLOB",
+  "tpm2-pcrs": [ 7 ],
+  "tpm2-pcr-bank": "sha256",
+  "tpm2-primary-alg": "ecc",
+  "tpm2-policy-hash": "POLICY-HASH-POLICY-HASH",
+  "tpm2-pin": false,
+  "tpm2_salt": "TOKEN-SALT-TOKEN-SALT",
+  "tpm2_srk": "STORAGE-KEY-STORAGE-KEY"
+}'
+
+failures=0
+
+fail() {
+  echo "FAIL: $1"
+  failures=$((failures + 1))
+}
+
+# Writes a mock program that runs the given shell commands.
+mock() {
+  printf '#!/bin/sh\n%s\n' "$2" > "${programs}/$1"
+  chmod +x "${programs}/$1"
+}
+
+# Creates a LUKS2 image with the token. The systemd token plugin would
+# refuse the fake values, so plugins are not loaded.
+create_image() {
+  truncate --size="$IMAGE_SIZE" "$image"
+
+  printf '%s' "$PASSPHRASE" |
+    cryptsetup luksFormat --batch-mode --type luks2 --pbkdf pbkdf2 \
+      --pbkdf-force-iterations "$PBKDF_ITERATIONS" --key-file - "$image"
+
+  printf '%s' "$TOKEN" |
+    cryptsetup token import --disable-external-tokens --token-id 1 "$image"
+}
+
+# Prints the salts and digests of the image, which must never pass.
+image_secrets() {
+  cryptsetup luksDump --dump-json-metadata "$image" |
+    jq --raw-output '.. | objects | .salt, .digest | select(. != null)'
+}
+
+# Creates an empty EFI partition, an empty variable directory, a LUKS2
+# image and mocks for the other tools.
+set_up() {
+  work=$(mktemp --directory)
+  programs="${work}/programs"
+  efi="${work}/efi"
+  output="${work}/output"
+  image="${work}/luks.img"
+  efivars="${work}/efivars"
+
+  mkdir --parents "$programs" "${efi}/EFI/puavo" "$efivars"
+  create_image
+
+  for program in tpm2 efibootmgr journalctl slab-info dmesg; do
+    mock "$program" 'echo mock'
+  done
+
+  mock lsblk "echo '${image} crypto_LUKS'"
+}
+
+# Writes a UEFI variable file with the given contents.
+write_variable() {
+  printf "${ATTRIBUTES}%b" "$2" > "${efivars}/$1"
+}
+
+# Runs the collector with the given arguments into the output file.
+collect() {
+  EFIVARS_PATH="$efivars" PATH="${programs}:${PATH}" "$collector" "$@" \
+    > "$output"
+}
+
+tear_down() {
+  rm --recursive --force "$work"
+}
+
+test_prints_sections() {
+  set_up
+  collect "$efi" || fail "prints sections: exit status $?"
+
+  for heading in dmi 'secure boot' 'tpm pcrs' slab 'luks headers' \
+                 'efi files' 'pcr log' 'boot trust manager log'; do
+    grep --quiet --line-regexp "== ${heading}" "$output" ||
+      fail "prints sections: ${heading}"
+  done
+
+  tear_down
+}
+
+test_lists_efi_files_only_with_mountpoint() {
+  set_up
+  collect
+
+  if grep --quiet --line-regexp '== efi files' "$output"; then
+    fail 'no mountpoint: efi files listed'
+  fi
+
+  tear_down
+}
+
+test_prints_kernel_log_only_when_asked() {
+  set_up
+
+  collect "$efi"
+  if grep --quiet --line-regexp '== kernel log' "$output"; then
+    fail 'kernel log: printed unasked'
+  fi
+
+  collect --kernel-log "$efi"
+  grep --quiet --line-regexp '== kernel log' "$output" ||
+    fail 'kernel log: missing'
+
+  tear_down
+}
+
+test_keeps_only_listed_luks_fields() {
+  set_up
+  collect "$efi"
+
+  for kept in '"luks2"' '"pbkdf2"' '"systemd-tpm2"' '"tpm2-pcrs"' \
+              '"tpm2-pin"' '"aes-xts-plain64"' '"sector_size"'; do
+    grep --quiet --fixed-strings -- "$kept" "$output" ||
+      fail "luks fields: ${kept} dropped"
+  done
+
+  for secret in BLOB POLICY TOKEN-SALT STORAGE-KEY $(image_secrets); do
+    if grep --quiet --fixed-strings -- "$secret" "$output"; then
+      fail "luks fields: ${secret} passed"
+    fi
+  done
+
+  tear_down
+}
+
+test_reads_variables() {
+  set_up
+  write_variable "SecureBoot-${GLOBAL_VARIABLES}" '\001'
+  write_variable "PK-${GLOBAL_VARIABLES}" "$PLATFORM_KEY"
+  write_variable "PuavoBootKeymap-${PUAVO_VARIABLES}" 'fi'
+
+  collect "$efi"
+
+  digest=$(printf '%s' "$PLATFORM_KEY" | sha256sum |
+    cut --delimiter=' ' --fields=1)
+
+  for expected in 'SecureBoot: 1' 'SetupMode: unset' \
+                  "PK: ${#PLATFORM_KEY} bytes, sha256 ${digest}" \
+                  'KEK: unset' 'PuavoBootKeymap: f i'; do
+    grep --quiet --line-regexp --fixed-strings -- "$expected" "$output" ||
+      fail "variables: ${expected}"
+  done
+
+  tear_down
+}
+
+test_cuts_long_log() {
+  set_up
+  mock journalctl \
+    "yes '1.000000 a long log line' | head --bytes=$((4 * 1024 * 1024))"
+
+  collect "$efi"
+
+  grep --quiet 'bytes left out' "$output" || fail 'long log: not cut'
+  [ "$(wc --bytes < "$output")" -lt "$MAX_SIZE" ] ||
+    fail 'long log: too large'
+
+  tear_down
+}
+
+test_stops_hung_tool() {
+  set_up
+  mock slab-info 'sleep 60'
+
+  collect "$efi"
+
+  grep --quiet --line-regexp --fixed-strings \
+    "[stopped after ${TOOL_TIMEOUT} seconds]" "$output" ||
+    fail 'hung tool: not stopped'
+
+  tear_down
+}
+
+test_prints_sections
+test_lists_efi_files_only_with_mountpoint
+test_prints_kernel_log_only_when_asked
+test_keeps_only_listed_luks_fields
+test_reads_variables
+test_cuts_long_log
+test_stops_hung_tool
+
+if [ "$failures" -ne 0 ]; then
+  echo "${failures} failed"
+  exit 1
+fi
+
+echo 'all passed'
