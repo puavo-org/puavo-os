@@ -1,0 +1,24 @@
+diff -ruN icedtea-web/shell-launcher/launchers.sh.in icedtea-web/shell-launcher/launchers.sh.in
+--- icedtea-web/shell-launcher/launchers.sh.in	2026-11-03 14:46:29.934630765 +0200
++++ icedtea-web/shell-launcher/launchers.sh.in	2026-11-03 14:48:55.975780405 +0200
+@@ -96,10 +96,16 @@
+ 
+ # Support Modular JDK (jigsaw):
+ MODULAR_JDK="NO"
+-fullversion=`${JAVA} -version 2>&1`
+-version=`echo $fullversion | head -n 1 | cut -d'-' -f1 | cut -d'"' -f2 | cut -d'.' -f1`
+-if [ "$version" -eq "1" ]; then
+-  version=`echo $fullversion | head -n 1 | cut -d'-' -f1 | cut -d'"' -f2 | cut -d'.' -f2`
++fullversion="$("${JAVA}" -version 2>&1)"
++java_version="$(
++  printf '%s\n' "$fullversion" |
++    sed -n 's/.*version "\([^"]*\)".*/\1/p' |
++    head -n 1
++)"
++version="${java_version%%.*}"
++if [ "$version" = "1" ]; then
++  java_version="${java_version#*.}"
++  version="${java_version%%.*}"
+ fi
+ if [ "$version" -ge "9" ]; then
+   MODULAR_JDK="YES"
