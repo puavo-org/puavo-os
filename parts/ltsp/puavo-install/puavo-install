@@ -482,7 +482,7 @@ install_localbootdevice() {
   # Enrolled keys make the Boot Trust Manager lock the host type at the
   # next boot, so they wait for the bundle too.
   echo 'Setting up Secure Boot...'
-  /usr/lib/puavo-ltsp-install/puavo-setup-secure-boot
+  /usr/lib/puavo-ltsp-install/puavo-setup-secure-boot /images/boot/addons
 
   if is_preinstalled "$puavo_install_hosttype"; then
     # If host was preinstalled, the system will boot in 'preinstalled' mode
