@@ -1,0 +1,6 @@
+#!/bin/sh
+
+set -eu
+
+# fix build when cargo is installed
+sed -i '/^buildflags/s/$/ ac_cv_path_RUSTC=/' debian/rules
