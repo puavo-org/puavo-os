@@ -46,6 +46,7 @@ mod certificates;
 mod records;
 
 use crate::debug;
+use crate::revocations::VersionRequirement;
 use crate::rollback;
 use authenticode::SPC_INDIRECT_DATA_OBJID;
 use authenticode::{
@@ -76,12 +77,14 @@ type Identity = [u8; 16];
 type PublicKey = &'static [u8];
 type PublicKeys = &'static [PublicKey];
 
-/// An authority whose signatures are accepted, the keys it signs with, and the
-/// keys it issues certificates with.
+/// An authority whose signatures are accepted, the keys it signs with, the
+/// keys it issues certificates with, and whether the images it approves must
+/// declare their version.
 struct Authority {
     identity: Identity,
     keys: PublicKeys,
     issuers: PublicKeys,
+    version: VersionRequirement,
 }
 
 /// An authority that approved an image, and its bit in the set of recorded
@@ -114,10 +117,11 @@ pub fn describe() {
     debug!("built in authorities: {}", AUTHORITIES.len());
     for authority in AUTHORITIES {
         debug!(
-            "  identity {}, keys: {}, issuers: {}",
+            "  identity {}, keys: {}, issuers: {}, version: {}",
             Guid::from_bytes(authority.identity),
             authority.keys.len(),
-            authority.issuers.len()
+            authority.issuers.len(),
+            authority.version
         );
         for key in authority.keys {
             debug!("    key {}", debug::hex(&Sha256::digest(key)));
@@ -128,23 +132,24 @@ pub fn describe() {
     }
 }
 
-/// Returns whether one of the built-in keys accepts the image.
+/// Returns whether the image must declare its version when one of the
+/// built-in keys accepts it, and `None` when none accepts it.
 /// An accepted image is measured into the TPM together with its authority.
 /// If the measurement fails, the image is rejected.
-pub fn trusts(image: &[u8], device_path: &[u8]) -> bool {
+pub fn trusts(image: &[u8], device_path: &[u8]) -> Option<VersionRequirement> {
     let Ok(view) = PeFile64::parse(image) else {
         error!("the image is not a valid PE image, refusing");
-        return false;
+        return None;
     };
     let signatures = match AttributeCertificateIterator::new(&view) {
         Ok(Some(signatures)) => signatures,
         Ok(None) => {
             verification!("the image has no signature");
-            return false;
+            return None;
         }
         Err(error) => {
             error!("the image signature cannot be read ({error:?}), refusing");
-            return false;
+            return None;
         }
     };
 
@@ -176,14 +181,14 @@ pub fn trusts(image: &[u8], device_path: &[u8]) -> bool {
             continue;
         };
         if !record(&approval, image, device_path) {
-            return false;
+            return None;
         }
-        return true;
+        return Some(approval.authority.version);
     }
 
     // No built-in authority approved the image.
     // This is not a security violation yet as another verifier may still succeed.
-    false
+    None
 }
 
 /// Upon success returns which built-in authority approved the image.

@@ -9,7 +9,8 @@ set -eu
 # An authority keeps certificates in the directory of the role they serve.
 # Those under keys sign images themselves, those under issuers sign the
 # certificates that then sign images. Either may hold several, which is how a
-# key is replaced without retiring the authority.
+# key is replaced without retiring the authority. An optional settings file
+# holds the other choices of an authority.
 #
 # The output is replaced entirely, so an authority whose keys are gone does not
 # stay behind.
@@ -42,6 +43,9 @@ for authority in "$key_directory"/*; do
   name=$(basename "$authority")
   mkdir -p "${output_directory}/${name}"
   cp "${authority}/identity" "${output_directory}/${name}/"
+  if [ -e "${authority}/settings" ]; then
+    cp "${authority}/settings" "${output_directory}/${name}/"
+  fi
 
   public_keys "${authority}/keys" "${output_directory}/${name}/keys"
   public_keys "${authority}/issuers" "${output_directory}/${name}/issuers"

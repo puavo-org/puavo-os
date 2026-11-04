@@ -5,6 +5,8 @@
 //! signature code is needed. To revoke, make a new build with a higher
 //! LIST_VERSION.
 
+use core::fmt;
+
 /// Fixed width of a component name, matching the version section.
 pub const NAME_LENGTH: usize = 128;
 
@@ -13,6 +15,27 @@ pub const VERSION_SECTION_NAME: &[u8; 8] = b".version";
 
 // The logical revocation version this build enforces.
 include!(concat!(env!("OUT_DIR"), "/version.rs"));
+
+/// Whether an image must declare its version. An image that declares one is
+/// always held to the floors.
+#[derive(Clone, Copy)]
+pub enum VersionRequirement {
+    // Only an authority built into the verifier can require a version.
+    #[cfg(feature = "verifier")]
+    Required,
+    Optional,
+}
+
+impl fmt::Display for VersionRequirement {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let name = match self {
+            #[cfg(feature = "verifier")]
+            VersionRequirement::Required => "required",
+            VersionRequirement::Optional => "optional",
+        };
+        formatter.write_str(name)
+    }
+}
 
 /// One component floor: the component name and its minimum allowed version.
 pub struct Component {

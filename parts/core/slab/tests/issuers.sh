@@ -35,10 +35,12 @@ issue_signing_certificate "$WORK/issuer" "$WORK/issued"
 create_untrusted_signer "$WORK/untrusted"
 
 # The bootloader is built with the verifier and the one authority, laid out
-# the way the image build lays out the real ones.
+# the way the image build lays out the real ones. Like the real issuer only
+# authority, it lets images omit their version.
 mkdir --parents "$WORK/keys/test/issuers"
 echo "$AUTHORITY_GUID" > "$WORK/keys/test/identity"
 cp "$WORK/issuer.pem" "$WORK/keys/test/issuers/"
+echo "version optional" > "$WORK/keys/test/settings"
 "$REPOSITORY_ROOT/.aux/generate-verifier-authorities" \
   "$WORK/keys" "$WORK/authorities" || exit 1
 
@@ -98,7 +100,7 @@ assert_contains "the bootloader holds the authority with its issuer" "$output" \
 assert_contains "the issuer key signed the certificate of the issued image" \
   "$issued_log" "a built-in issuer key issued the certificate"
 assert_contains "the issued image was accepted" "$issued_log" \
-  "accepted by a key built in here"
+  "accepted by a built-in key"
 assert_contains "the issued image was loaded" "$issued_log" \
   "issued image loaded"
 assert_contains "the issuer key did not sign the untrusted certificate" \

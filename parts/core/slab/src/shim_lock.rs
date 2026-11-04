@@ -5,7 +5,7 @@
 //! and then to the firmware verifier.
 
 use crate::pe;
-use crate::revocations::{self, VERSION_SECTION_NAME};
+use crate::revocations::{self, VERSION_SECTION_NAME, VersionRequirement};
 use core::ffi::c_void;
 use core::ptr::NonNull;
 use core::sync::atomic::{AtomicPtr, Ordering};
@@ -206,17 +206,24 @@ unsafe extern "efiapi" fn decide_for_firmware(
     decide(file_buffer, size, path)
 }
 
-/// Returns whether the built-in keys accept the image. An accepted image is
-/// also measured into the TPM.
+/// Returns whether the built-in keys accept the image, and if so whether the
+/// image must declare its version. An accepted image is also measured into
+/// the TPM.
 #[cfg(feature = "verifier")]
-fn built_in_keys_accept(image: &[u8], device_path: &[u8]) -> bool {
+fn built_in_keys_accept(
+    image: &[u8],
+    device_path: &[u8],
+) -> Option<VersionRequirement> {
     crate::verifier::trusts(image, device_path)
 }
 
 /// When the built-in verifier is disabled, we only trust the firmware.
 #[cfg(not(feature = "verifier"))]
-fn built_in_keys_accept(_image: &[u8], _device_path: &[u8]) -> bool {
-    false
+fn built_in_keys_accept(
+    _image: &[u8],
+    _device_path: &[u8],
+) -> Option<VersionRequirement> {
+    None
 }
 
 /// Whether the firmware reports Secure Boot as enabled.
@@ -262,7 +269,9 @@ fn firmware_authenticates(
     }
 }
 
-/// Returns whether the built-in keys or the firmware accept the image.
+/// Returns whether the image must declare its version when the built-in keys
+/// or the firmware accept it, and the refusal status otherwise. The firmware
+/// accepts images, such as other operating systems, that declare none.
 ///
 /// The firmware measures an image it accepts and the key that accepted it. The
 /// same is done for an image the built-in keys accept.
@@ -270,7 +279,7 @@ fn signature_accepted(
     buffer: *const c_void,
     size: u32,
     device_path: &[u8],
-) -> Status {
+) -> Result<VersionRequirement, Status> {
     // Check the built-in keys first, because they cover the images we sign.
     // The firmware would search its whole key database before rejecting such
     // an image.
@@ -279,17 +288,18 @@ fn signature_accepted(
         let image = unsafe {
             core::slice::from_raw_parts(buffer as *const u8, size as usize)
         };
-        if built_in_keys_accept(image, device_path) {
+        if let Some(requirement) = built_in_keys_accept(image, device_path) {
             verification!("accepted by a built-in key");
-            return Status::SUCCESS;
+            return Ok(requirement);
         }
     }
 
     let status = firmware_authenticates(buffer, size, device_path);
-    if status == Status::SUCCESS {
-        verification!("accepted by the firmware");
+    if status != Status::SUCCESS {
+        return Err(status);
     }
-    status
+    verification!("accepted by the firmware");
+    Ok(VersionRequirement::Optional)
 }
 
 /// Verifies an image for a caller of this protocol. The result is the same as
@@ -305,13 +315,15 @@ extern "sysv64" fn verify(buffer: *const c_void, size: u32) -> Status {
 fn decide(buffer: *const c_void, size: u32, device_path: &[u8]) -> Status {
     debug!("verifying an image of {size} bytes");
 
-    let status = signature_accepted(buffer, size, device_path);
-    if status != Status::SUCCESS {
-        security_violation!(
-            "image failed Secure Boot verification ({status:?}), refusing"
-        );
-        return status;
-    }
+    let requirement = match signature_accepted(buffer, size, device_path) {
+        Ok(requirement) => requirement,
+        Err(status) => {
+            security_violation!(
+                "image failed Secure Boot verification ({status:?}), refusing"
+            );
+            return status;
+        }
+    };
 
     // The firmware rejects a null image, but with Secure Boot off it is never
     // called, so guard the image before reading it as a slice below.
@@ -325,7 +337,7 @@ fn decide(buffer: *const c_void, size: u32, device_path: &[u8]) -> Status {
         core::slice::from_raw_parts(buffer as *const u8, size as usize)
     };
 
-    if !version_allowed(image) {
+    if !version_allowed(image, requirement) {
         return Status::SECURITY_VIOLATION;
     }
 
@@ -333,13 +345,27 @@ fn decide(buffer: *const c_void, size: u32, device_path: &[u8]) -> Status {
 }
 
 /// Returns whether the image meets the revocation list minimum. An image that
-/// declares no version is allowed, because a signed image cannot fake its
-/// identity, and images without versions, such as other operating systems,
-/// must still boot. A component that is not in the list has no floor.
-fn version_allowed(image: &[u8]) -> bool {
+/// declares no version is allowed when its version is optional, because a
+/// signed image cannot fake its identity, and images without versions, such
+/// as other operating systems, must still boot. A component that is not in
+/// the list has no floor.
+fn version_allowed(image: &[u8], requirement: VersionRequirement) -> bool {
     let Some(section) = pe::read_section(image, VERSION_SECTION_NAME) else {
-        verification!("image declares no version, allowing");
-        return true;
+        return match requirement {
+            VersionRequirement::Optional => {
+                verification!(
+                    "image declares no version, which its authority allows, allowing"
+                );
+                true
+            }
+            #[cfg(feature = "verifier")]
+            VersionRequirement::Required => {
+                security_violation!(
+                    "image declares no version, which its authority requires, refusing"
+                );
+                false
+            }
+        };
     };
     let Some((name, version)) = revocations::parse_identity(section) else {
         error!("image identity malformed, refusing");

@@ -17,8 +17,8 @@
 //!     pub const COMPONENTS: &[Component] =
 //!         &[Component { name: b"grub", minimum_version: 20260101 }];
 //!
-//! An authority entry holds the authority identity and its public keys. Each
-//! key is parsed at build time to detect invalid keys early.
+//! An authority entry holds the authority identity, its public keys, and its
+//! settings. Each key is parsed at build time to detect invalid keys early.
 //!
 //! The authority directory holds one subdirectory per authority. Other files
 //! in a subdirectory are ignored:
@@ -31,8 +31,15 @@
 //!         |   |-- second.der  a secondary public key the authority uses for
 //!         |   |               signing, for example during a key rotation
 //!         |-- issuers
-//!             |-- third.der   a public key the authority uses for issuing
-//!                             code signing certificates
+//!         |   |-- third.der   a public key the authority uses for issuing
+//!         |                   code signing certificates
+//!         |-- settings        optional, one setting per line
+//!
+//! A setting line holds a name and a value. A setting that is not listed
+//! keeps its default:
+//!
+//!     version required    the images the authority approves must declare
+//!                         their version (default), or "optional"
 //!
 //! To replace a key, add another DER file. The authority identity stays the
 //! same. That directory generates:
@@ -48,8 +55,10 @@
 //!         issuers: &[
 //!             include_bytes!("authorities/example/issuers/third.der"),
 //!         ],
+//!         version: VersionRequirement::Optional,
 //!     }];
 
+use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -66,6 +75,8 @@ const DIRECTORY_VARIABLE: &str = "SLAB_VERIFIER_KEYS";
 const IDENTITY_FILE: &str = "identity";
 const KEYS_DIRECTORY: &str = "keys";
 const ISSUERS_DIRECTORY: &str = "issuers";
+const SETTINGS_FILE: &str = "settings";
+const VERSION_SETTING: &str = "version";
 const KEY_EXTENSION: &str = "der";
 
 /// The files the list version and the floors are read from, the date format
@@ -220,11 +231,17 @@ fn generate_authority(authority: &Path) -> TokenStream {
         panic!("{authority:?} holds no {KEY_EXTENSION} key");
     }
 
+    let settings_file = authority.join(SETTINGS_FILE);
+    watch(&settings_file);
+    let settings = generate_settings(&read_optional(&settings_file))
+        .unwrap_or_else(|error| panic!("{settings_file:?}: {error}"));
+
     quote! {
         Authority {
             identity: [#(#identity),*],
             keys: &[#(include_bytes!(#keys)),*],
             issuers: &[#(include_bytes!(#issuers)),*],
+            #settings
         }
     }
 }
@@ -240,6 +257,58 @@ fn list_keys(directory: &Path) -> Vec<String> {
             key.display().to_string()
         })
         .collect()
+}
+
+/// Returns the contents of the specified file, or nothing when the file is
+/// not there.
+fn read_optional(file: &Path) -> String {
+    if !file.exists() {
+        return String::new();
+    }
+
+    fs::read_to_string(file)
+        .unwrap_or_else(|error| panic!("failed to read {file:?}: {error}"))
+}
+
+/// Generates the authority fields from the settings text. A setting that is
+/// not there keeps its default.
+fn generate_settings(written: &str) -> Result<TokenStream, String> {
+    let mut settings = parse_settings(written)?;
+
+    let version = match settings.remove(VERSION_SETTING).unwrap_or("required") {
+        "required" => quote! { VersionRequirement::Required },
+        "optional" => quote! { VersionRequirement::Optional },
+        value => {
+            return Err(format!(
+                "version must be required or optional, not '{value}'"
+            ));
+        }
+    };
+
+    // Every known setting is taken out above, so any left is unknown.
+    if let Some(name) = settings.keys().next() {
+        return Err(format!("unknown setting '{name}'"));
+    }
+
+    Ok(quote! { version: #version })
+}
+
+/// Returns each setting name with its value, one setting per line.
+fn parse_settings(written: &str) -> Result<HashMap<&str, &str>, String> {
+    let mut settings = HashMap::new();
+    for line in written.lines().map(str::trim) {
+        if line.is_empty() {
+            continue;
+        }
+
+        let Some((name, value)) = line.split_once(char::is_whitespace) else {
+            return Err(format!("malformed setting '{line}'"));
+        };
+        if settings.insert(name, value.trim()).is_some() {
+            return Err(format!("setting '{name}' is declared twice"));
+        }
+    }
+    Ok(settings)
 }
 
 /// Returns the GUID from the specified file as bytes.
