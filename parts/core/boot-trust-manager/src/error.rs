@@ -2,6 +2,8 @@ use libcryptsetup_rs::LibcryptErr;
 use std::{io, num::ParseIntError};
 use thiserror::Error;
 
+use crate::luks::ciphers::LuksArea;
+
 #[derive(Error, Debug)]
 pub enum PuavoError {
     #[error("Boot vault is already open")]
@@ -36,6 +38,9 @@ pub enum PuavoError {
 
     #[error("Boot vault is not installed")]
     NoBootVault,
+
+    #[error("Refusing the LUKS device, {0} is using null cipher")]
+    NullCipher(LuksArea),
 
     #[error("Invalid signature database: {0}")]
     MalformedSignatureDatabase(String),
