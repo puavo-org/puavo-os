@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  When Chrome/Chromium installs the Graphical Analysis PWA, it registers
+  "*.gambl" as "application/vnd.vernier.ga" in the user's
+  ~/.local/share/mime (weight 50).  Chrome then passes that type as File.type
+  to the web app, and graphicalanalysis.app only accepts "application/x-gambl"
+  (or an empty type) for its tar-based .gambl format: with any other type it
+  tries to parse the file as XML and fails to open it.  This higher-weight
+  system glob keeps .gambl as "application/x-gambl" regardless of the
+  per-user registration.
+-->
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-gambl">
+    <comment>Vernier Graphical Analysis data</comment>
+    <comment xml:lang="fi">Vernier Graphical Analysis -mittausdata</comment>
+    <sub-class-of type="application/x-tar"/>
+    <glob pattern="*.gambl" weight="80"/>
+  </mime-type>
+</mime-info>
