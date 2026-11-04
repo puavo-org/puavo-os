@@ -27,6 +27,9 @@ echo "==> shim lock"
 echo "==> issuers"
 "$TESTS_DIRECTORY/issuers.sh"
 
+echo "==> version requirement"
+"$TESTS_DIRECTORY/version-requirement.sh"
+
 echo "==> measurements"
 "$TESTS_DIRECTORY/measurements.sh"
 
