@@ -2,6 +2,7 @@ mod common;
 mod configurators;
 mod devices;
 mod hashing;
+mod luks;
 mod secure_boot;
 mod system;
 mod tpm;

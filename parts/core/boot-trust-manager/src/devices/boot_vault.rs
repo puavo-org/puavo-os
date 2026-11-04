@@ -19,7 +19,10 @@ use crate::{
     display::UserDisplay,
     display::recovery_qr,
     error::PuavoError,
-    luks::tokens::{LuksTpmTokenManager, MAX_TOKENS},
+    luks::{
+        ciphers,
+        tokens::{LuksTpmTokenManager, MAX_TOKENS},
+    },
     secure_boot::update::EnrolledDatabase,
     system::{
         diagnostics::{self, DiagnosticsKind},
@@ -344,6 +347,7 @@ impl BootVault {
         device
             .context_handle()
             .load::<()>(Some(EncryptionFormat::Luks2), None)?;
+        ciphers::refuse_null_cipher(&mut device)?;
 
         // First try automatic TPM unlock (no PIN required)
         if self.try_automatic_tpm_unlock(&mut device)? {

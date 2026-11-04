@@ -12,6 +12,7 @@ use std::process::{Command, Stdio};
 use zeroize::Zeroizing;
 
 use crate::error::PuavoError;
+use crate::luks::ciphers;
 use crate::secure_boot::{
     chain::{Device, Measurement},
     validator::Validator,
@@ -237,6 +238,7 @@ impl LuksTpmTokenManager {
         device
             .context_handle()
             .load::<()>(Some(EncryptionFormat::Luks2), None)?;
+        ciphers::refuse_null_cipher(&mut device)?;
         let manager = Self::new(device, device_path);
         Ok(manager)
     }
