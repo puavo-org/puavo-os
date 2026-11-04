@@ -390,6 +390,15 @@ def verify_secure_boot_keys_and_signatures(
     """Verify each EFI binary is signed with the certificate the manifest declares for it."""
     print("verifying Secure Boot keys and signatures")
 
+    grouped = {
+        component
+        for group in manifest.secure_boot_signatures
+        for component in group.components
+    }
+    for component in manifest.secure_boot_signed_components():
+        if component not in grouped:
+            panic(f"'{component}' is in no Secure Boot signature group")
+
     for group in manifest.secure_boot_signatures:
         certificate_path = Path(configuration.key_directory) / group.certificate
         if not certificate_path.is_file():
