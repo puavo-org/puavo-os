@@ -49,12 +49,12 @@ impl Comparison {
 }
 
 /// Checks chains against the PCRs of a machine.
-pub struct Validator<'device> {
-    device: &'device dyn Device,
+pub struct Validator<'device, D: Device> {
+    device: &'device D,
 }
 
-impl<'device> Validator<'device> {
-    pub fn new(device: &'device dyn Device) -> Self {
+impl<'device, D: Device> Validator<'device, D> {
+    pub fn new(device: &'device D) -> Self {
         Self { device }
     }
 

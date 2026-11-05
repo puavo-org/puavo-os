@@ -79,7 +79,7 @@ impl LuksTpmEnrollmentPolicy {
     /// Evaluates every chain of this policy.
     pub fn evaluate(
         &self,
-        device: &dyn Device,
+        device: &impl Device,
     ) -> Result<Bindings, PuavoError> {
         let Some(pcrs) = &self.specific_pcrs else {
             info!("No specific PCRs in policy");

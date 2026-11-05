@@ -33,7 +33,7 @@ impl Report {
     pub fn new(
         policy: &str,
         chains: &BTreeMap<String, Option<Vec<Measurement>>>,
-        device: &dyn Device,
+        device: &impl Device,
     ) -> Self {
         let registers = Validator::new(device)
             .check_policy(chains)

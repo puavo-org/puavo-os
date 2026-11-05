@@ -95,7 +95,7 @@ impl Source {
         &self,
         vendor: Uuid,
         name: &str,
-        device: &dyn Device,
+        device: &impl Device,
     ) -> Result<Vec<u8>, PuavoError> {
         match self {
             Source::Device => device.read_variable(vendor, name),
@@ -178,7 +178,7 @@ impl Measurement {
     /// their source. Variable contents are saved for later authority lookups.
     fn measured<'chain>(
         &'chain self,
-        device: &dyn Device,
+        device: &impl Device,
         variables: &mut BTreeMap<&'chain str, Vec<u8>>,
     ) -> Result<(Vec<u8>, String), PuavoError> {
         match self {
@@ -409,7 +409,7 @@ impl<'chain> Chain<'chain> {
     /// as the firmware does. An empty chain predicts the initial value.
     pub fn predict(
         &self,
-        device: &dyn Device,
+        device: &impl Device,
     ) -> Result<Prediction, PuavoError> {
         let mut value = vec![0u8; <Sha256 as Digest>::output_size()];
         let mut variables: BTreeMap<&str, Vec<u8>> = BTreeMap::new();
