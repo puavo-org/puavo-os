@@ -1,0 +1,42 @@
+#!/bin/sh
+
+set -eu
+
+if ! grep -qx SIGNING_BACKEND=pkcs11 config/signing.conf; then \
+  exec "$@"
+fi
+
+pin_path=$(awk -F';' '
+             $3 ~ /^pin-source/ { sub(/pin-source=/, "", $3); print $3 }
+           ' ./config/boot/slab/secure-boot.uri)
+lock_path="${pin_path}.lock"
+touch "$lock_path"
+exec 3< "$lock_path"
+
+cleanup() {
+  if flock -x 3; then
+    sudo rm -f "$lock_path" "$pin_path"
+  fi
+}
+
+trap cleanup 0 INT TERM
+
+flock -s 3
+if [ -s "$pin_path" ]; then
+  "$@"
+  exit 0
+fi
+
+flock -x 3
+
+printf 'Enter HSM PIN: ' >&2
+stty -echo 2>/dev/null || true
+read -r pin
+stty echo 2>/dev/null || true
+echo >&2
+sudo install -o root -g root -m 600 /dev/null "$pin_path"
+printf %s "$pin" | sudo tee "$pin_path" >/dev/null
+
+flock -s 3
+
+"$@"

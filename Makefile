@@ -225,6 +225,10 @@ $(image_dir):
 $(install_image_dir):
 	$(_sudo) mkdir -p '$(install_image_dir)'
 
+.PHONY: rootfs-image
+rootfs-image:
+	./.aux/run-with-signing-pin $(MAKE) rootfs-image-locked
+
 # Using -comp lzo instead of gzip, because we prefer to optimize decompression
 # speed for faster boots, even though image sizes are slightly bigger than with
 # gzip.  Especially on some hosts the decompression stage of kernel/initrd is
@@ -234,8 +238,8 @@ $(install_image_dir):
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=869771.
 # May be removed only when sure that grub has been updated on all hosts
 # updating to images made with this.
-.PHONY: rootfs-image
-rootfs-image: check-buildhost $(rootfs_dir) $(image_dir)
+.PHONY: rootfs-image-locked
+rootfs-image-locked: check-buildhost $(rootfs_dir) $(image_dir)
 	$(_builder) $(MAKE) -C '/puavo-os' prepare-for-squashfs
 	$(_sudo) rsync -a '$(rootfs_dir)/var/cache/' \
 	    '$(rootfs_dir).var_cache_backup/'
