@@ -171,7 +171,8 @@ pub fn read_nv_u64(index: u32) -> Result<u64, PuavoError> {
 /// - `lockout_auth_path`: Path to the lockout authorization file.
 ///
 /// Returns:
-/// - `Ok(())` if the lockout was cleared successfully or if the auth file does not exist.
+/// - `Ok(())` if the lockout was cleared successfully, if the auth file does
+///   not exist or if the TPM has no lockout auth.
 /// - `Err(PuavoError)` if the command fails.
 pub fn clear_dictionary_lockout<P: AsRef<Path>>(
     lockout_auth_path: P,
@@ -183,6 +184,13 @@ pub fn clear_dictionary_lockout<P: AsRef<Path>>(
             "TPM lockout auth file not found at {:?}, skipping lockout clear",
             path
         );
+        return Ok(());
+    }
+
+    // A single wrong lockout auth locks the lockout auth out for the lockout
+    // recovery time. A TPM with none, such as a new one, would be sent one.
+    if read_permanent()? & LOCKOUT_AUTH_SET_FLAG == 0 {
+        info!("TPM has no lockout auth, skipping lockout clear");
         return Ok(());
     }
 
@@ -243,6 +251,11 @@ pub fn is_in_lockout() -> Result<bool, PuavoError> {
 /// Checks whether the TPM is cleared, meaning neither the owner auth nor the
 /// lockout auth is set.
 pub fn is_cleared() -> Result<bool, PuavoError> {
+    Ok(read_permanent()? & (OWNER_AUTH_SET_FLAG | LOCKOUT_AUTH_SET_FLAG) == 0)
+}
+
+/// Reads the permanent attributes of the TPM.
+fn read_permanent() -> Result<u32, PuavoError> {
     let tcti = TctiNameConf::from_environment_variable()
         .unwrap_or(TctiNameConf::Device(Default::default()));
 
@@ -269,15 +282,13 @@ pub fn is_cleared() -> Result<bool, PuavoError> {
         ));
     };
 
-    let permanent = properties
+    properties
         .iter()
         .find(|property| property.property() == PropertyTag::Permanent)
         .map(|property| property.value())
         .ok_or_else(|| {
             PuavoError::TpmError("TPM permanent flags missing".to_string())
-        })?;
-
-    Ok(permanent & (OWNER_AUTH_SET_FLAG | LOCKOUT_AUTH_SET_FLAG) == 0)
+        })
 }
 
 /// Sets a new random lockout auth and the dictionary attack parameters on
