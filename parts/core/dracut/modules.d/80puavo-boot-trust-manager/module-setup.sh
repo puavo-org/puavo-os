@@ -11,7 +11,7 @@ depends() {
 
 install() {
     inst_multiple /usr/bin/systemd-cryptenroll \
-                  /usr/bin/tpm2_dictionarylockout \
+                  /usr/bin/tpm2 \
                   /usr/sbin/cryptsetup         \
                   /usr/sbin/puavo-boot-trust-manager \
                   /usr/bin/efi-updatevar \
