@@ -1,6 +1,6 @@
 //! Reads the certificate entries of a Secure Boot signature database.
 
-use crate::error::PuavoError;
+use crate::{bytes::ByteReader, error::PuavoError};
 use const_oid::db::rfc4519::COMMON_NAME;
 use glob::Pattern;
 use log::{debug, warn};
@@ -116,7 +116,7 @@ impl SignatureDatabase {
         let malformed = |what: &str| {
             PuavoError::MalformedSignatureDatabase(what.to_string())
         };
-        let mut reader = ByteReader(contents);
+        let mut reader = ByteReader::new(contents);
         let mut entries = Vec::new();
 
         while !reader.is_empty() {
@@ -125,13 +125,13 @@ impl SignatureDatabase {
                 .and_then(|bytes| Uuid::from_slice_le(bytes).ok())
                 .ok_or_else(|| malformed("truncated list type"))?;
             let signature_list_size = reader
-                .read_u32()
+                .read_size()
                 .ok_or_else(|| malformed("truncated list size"))?;
             let header_size = reader
-                .read_u32()
+                .read_size()
                 .ok_or_else(|| malformed("truncated header size"))?;
             let signature_size = reader
-                .read_u32()
+                .read_size()
                 .ok_or_else(|| malformed("truncated signature size"))?;
 
             let signatures_size = signature_list_size
@@ -145,7 +145,7 @@ impl SignatureDatabase {
             reader
                 .take(header_size)
                 .ok_or_else(|| malformed("truncated list header"))?;
-            let mut body = ByteReader(
+            let mut body = ByteReader::new(
                 reader
                     .take(signatures_size)
                     .ok_or_else(|| malformed("truncated list"))?,
@@ -235,28 +235,6 @@ impl SignatureDatabase {
     /// All entries in order.
     pub fn entries(&self) -> &[Entry] {
         &self.entries
-    }
-}
-
-struct ByteReader<'a>(&'a [u8]);
-
-impl<'a> ByteReader<'a> {
-    fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
-
-    /// Takes the specified number of bytes, or None when fewer remain.
-    fn take(&mut self, length: usize) -> Option<&'a [u8]> {
-        let (taken, remaining) = self.0.split_at_checked(length)?;
-        self.0 = remaining;
-        Some(taken)
-    }
-
-    /// Takes a little endian u32, or None when fewer than four bytes remain.
-    fn read_u32(&mut self) -> Option<usize> {
-        let (bytes, remaining) = self.0.split_first_chunk::<4>()?;
-        self.0 = remaining;
-        Some(u32::from_le_bytes(*bytes) as usize)
     }
 }
 

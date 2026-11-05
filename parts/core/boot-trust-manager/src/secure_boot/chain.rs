@@ -155,6 +155,11 @@ pub enum Measurement {
         #[serde(default)]
         value: Source,
     },
+
+    /// A measurement with a name, unique within its chain. Written as
+    /// { "name": "separator", "measurement": "separator" }.
+    #[serde(untagged)]
+    Named { name: String, measurement: Box<Measurement> },
 }
 
 impl fmt::Display for Measurement {
@@ -169,11 +174,48 @@ impl fmt::Display for Measurement {
             Measurement::SlabAuthority { .. } => {
                 formatter.write_str("slab authority")
             }
+            Measurement::Named { name, measurement } => {
+                write!(formatter, "{name} ({measurement})")
+            }
         }
     }
 }
 
 impl Measurement {
+    /// Returns the name of a named measurement.
+    pub fn name(&self) -> Option<&str> {
+        match self {
+            Measurement::Named { name, .. } => Some(name),
+            _ => None,
+        }
+    }
+
+    /// Returns the measurement without its name.
+    pub fn without_name(&self) -> &Measurement {
+        match self {
+            Measurement::Named { measurement, .. } => {
+                measurement.without_name()
+            }
+            _ => self,
+        }
+    }
+
+    /// Returns a copy with the measurement replaced and the name kept.
+    pub fn replace_keeping_name(
+        &self,
+        replace: impl Fn(&Measurement) -> Measurement,
+    ) -> Measurement {
+        match self {
+            Measurement::Named { name, measurement } => Measurement::Named {
+                name: name.clone(),
+                measurement: Box::new(
+                    measurement.replace_keeping_name(replace),
+                ),
+            },
+            _ => replace(self),
+        }
+    }
+
     /// Returns the bytes hashed for this measurement and a description of
     /// their source. Variable contents are saved for later authority lookups.
     fn measured<'chain>(
@@ -250,6 +292,9 @@ impl Measurement {
                 .bytes(),
                 format!("authority GUID of {identity}"),
             )),
+            Measurement::Named { measurement, .. } => {
+                measurement.measured(device, variables)
+            }
         }
     }
 }
@@ -450,6 +495,21 @@ mod tests {
             variable_name_and_contents(&record),
             Some(("db".to_string(), b"contents".to_vec()))
         );
+    }
+
+    #[test]
+    fn named_measurement_does_not_measure_name() {
+        let named = Measurement::Named {
+            name: "separator".to_string(),
+            measurement: Box::new(Measurement::Separator),
+        };
+
+        let device = SystemDevice;
+        let predicted = |measurement: Measurement| {
+            Chain::new(&[measurement]).predict(&device).unwrap().value
+        };
+
+        assert_eq!(predicted(named), predicted(Measurement::Separator));
     }
 
     #[test]

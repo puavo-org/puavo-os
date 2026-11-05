@@ -1,11 +1,14 @@
-//! Reads a captured boot: the event log printed by the measurements binary
-//! and the base value of the counter. All variables and certificates in
+//! Reads a captured boot: the event log printed by the measurements binary,
+//! once as events and once as the bytes the firmware stores, and the base
+//! value of the counter. All variables and certificates in
 //! these tests come from the capture.
 
 mod database;
 mod device;
+mod event_log;
 mod microsoft;
 mod prediction;
+mod quirks;
 pub(super) mod slab;
 mod validator;
 
@@ -19,6 +22,7 @@ use boot_trust_manager::secure_boot::chain::{
     Device, variable_name_and_contents,
 };
 use boot_trust_manager::secure_boot::database::SignatureDatabase;
+use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
 /// Directory of the captures.
@@ -60,8 +64,20 @@ impl Event {
 /// A captured boot.
 pub(super) struct Capture {
     events: Vec<Event>,
+    stored_event_log: Vec<u8>,
     registers: BTreeMap<u32, String>,
     base: u64,
+}
+
+/// The value of a PCR before its first extension.
+pub const INITIAL_REGISTER_VALUE: [u8; 32] = [0; 32];
+
+/// Extends a PCR value with one digest as the TPM does.
+pub fn extend_register(value: &str, digest: &str) -> String {
+    let mut hash = Sha256::new();
+    hash.update(hex::decode(value).unwrap());
+    hash.update(hex::decode(digest).unwrap());
+    hex::encode(hash.finalize())
 }
 
 fn bytes(hex_text: &str) -> Vec<u8> {
@@ -79,6 +95,7 @@ impl Capture {
             .unwrap_or_else(|_| String::from("0"));
 
         let mut events: Vec<Event> = Vec::new();
+        let mut log_bytes = Vec::new();
         let mut registers = BTreeMap::new();
 
         for line in log.lines() {
@@ -99,6 +116,7 @@ impl Capture {
                 ["data", data] => {
                     events.last_mut().unwrap().data.extend(bytes(data))
                 }
+                ["log", data] => log_bytes.extend(bytes(data)),
                 ["pcr", register, BANK, value] => {
                     registers
                         .insert(register.parse().unwrap(), value.to_string());
@@ -107,7 +125,12 @@ impl Capture {
             }
         }
 
-        Self { events, registers, base: base.trim().parse().unwrap() }
+        Self {
+            events,
+            stored_event_log: log_bytes,
+            registers,
+            base: base.trim().parse().unwrap(),
+        }
     }
 
     /// The events of one PCR, in order.
@@ -123,6 +146,11 @@ impl Capture {
             .filter(|event| event.kind == FIRMWARE_VARIABLE)
             .filter_map(|event| event.variable())
             .collect()
+    }
+
+    /// The event log as the firmware stores it.
+    pub fn stored_event_log(&self) -> &[u8] {
+        &self.stored_event_log
     }
 
     /// The final value of a PCR.

@@ -8,7 +8,7 @@ use serde::Serialize;
 use crate::{
     error::PuavoError,
     secure_boot::chain::{Chain, Device, Measurement, Step},
-    tpm::PCR_COUNT,
+    tpm::pcr_index,
 };
 
 /// The prediction of a chain and the current PCR value. The current value is
@@ -66,16 +66,11 @@ impl<'device, D: Device> Validator<'device, D> {
     ) -> Result<Comparison, PuavoError> {
         let prediction = Chain::new(chain).predict(self.device)?;
 
-        let index = register
-            .split(':')
-            .next()
-            .and_then(|index| index.parse::<u32>().ok())
-            .filter(|index| *index < PCR_COUNT)
-            .ok_or_else(|| {
-                PuavoError::MalformedChain(format!(
-                    "'{register}' is not a PCR name"
-                ))
-            })?;
+        let index = pcr_index(register).ok_or_else(|| {
+            PuavoError::MalformedChain(format!(
+                "'{register}' is not a PCR name"
+            ))
+        })?;
 
         let current = match self.device.read_register(index) {
             Ok(value) => Some(value),

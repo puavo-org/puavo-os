@@ -19,6 +19,13 @@ use crate::error::PuavoError;
 /// Number of PCRs in a PC Client TPM.
 pub const PCR_COUNT: u32 = 24;
 
+/// Returns the index of a PCR written as "7:sha256" or "7", or None when it
+/// is not a PCR of a PC Client TPM.
+pub fn pcr_index(expression: &str) -> Option<u32> {
+    let index = expression.split(':').next()?.parse().ok()?;
+    (index < PCR_COUNT).then_some(index)
+}
+
 const IN_LOCKOUT_FLAG: u32 = 1 << 9;
 
 /// Read PCR values from the TPM.

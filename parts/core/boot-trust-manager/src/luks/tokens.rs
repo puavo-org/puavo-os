@@ -16,6 +16,7 @@ use crate::secure_boot::{
     chain::{Device, Measurement},
     validator::Validator,
 };
+use crate::tpm::pcr_index;
 
 pub const MAX_TOKENS: u32 = 32;
 pub const TPM_TOKEN_TYPE: &str = "systemd-tpm2";
@@ -135,7 +136,7 @@ impl LuksTpmEnrollmentPolicy {
         let mut indices: Vec<u32> = pcrs
             .iter()
             .chain(self.public_key_pcrs_expressions.iter())
-            .filter_map(|expression| expression.split(':').next()?.parse().ok())
+            .filter_map(|expression| pcr_index(expression))
             .collect();
 
         indices.sort();

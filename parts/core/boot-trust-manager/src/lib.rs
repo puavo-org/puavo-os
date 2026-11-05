@@ -1,4 +1,5 @@
 pub mod boot_trust_manager;
+pub mod bytes;
 pub mod configurators;
 pub mod devices;
 pub mod display;
