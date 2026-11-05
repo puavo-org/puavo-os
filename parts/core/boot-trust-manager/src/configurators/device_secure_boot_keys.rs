@@ -14,6 +14,7 @@ use crate::{
     display::UserDisplay,
     error::PuavoError,
     luks::tokens::LuksTpmTokenManager,
+    system::shell,
 };
 
 /// Userspace location for the device-specific Secure Boot certificate.
@@ -108,16 +109,10 @@ impl Configurator for DeviceSecureBootKeysConfigurator {
         // Loading the key is not critical, so the boot continues
         // regardless of the outcome.
         let key_directory = boot_vault.resources().mountpoint();
-        match Command::new(LOAD_SCRIPT).arg(key_directory).output() {
-            Ok(output) if output.status.success() => {}
-            Ok(output) => error!(
-                "Failed to load the device Secure Boot key ({}): {}",
-                output.status,
-                String::from_utf8_lossy(&output.stderr).trim()
-            ),
-            Err(error) => {
-                error!("Failed to run {LOAD_SCRIPT}: {error}");
-            }
+        if let Err(error) =
+            shell::run(Command::new(LOAD_SCRIPT).arg(key_directory))
+        {
+            error!("Failed to load the device Secure Boot key: {error}");
         }
         Ok(())
     }

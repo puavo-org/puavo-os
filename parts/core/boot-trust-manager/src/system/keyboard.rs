@@ -2,7 +2,7 @@ use std::process::Command;
 
 use log::{debug, warn};
 
-use crate::system::efi;
+use crate::system::{efi, shell};
 
 const LOADKEYS: &str = "/usr/bin/loadkeys";
 
@@ -41,22 +41,13 @@ fn configured_keymap() -> Option<&'static str> {
 fn load(keymap: &str) -> bool {
     let path = format!("{}/{}.kmap.gz", KEYMAP_DIRECTORY, keymap);
 
-    let status = Command::new(LOADKEYS).arg(&path).status();
-
-    match status {
-        Ok(status) if status.success() => {
-            debug!("Keymap is {}", keymap);
-            true
-        }
-        Ok(status) => {
-            warn!("loadkeys {} failed ({})", path, status);
-            false
-        }
-        Err(error) => {
-            warn!("Failed to execute {}: {}", LOADKEYS, error);
-            false
-        }
+    if let Err(error) = shell::run(Command::new(LOADKEYS).arg(&path)) {
+        warn!("Failed to load the keymap {}: {}", path, error);
+        return false;
     }
+
+    debug!("Keymap is {}", keymap);
+    true
 }
 
 #[cfg(test)]

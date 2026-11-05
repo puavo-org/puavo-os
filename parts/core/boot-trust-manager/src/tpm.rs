@@ -14,7 +14,7 @@ use tss_esapi::{
     tcti_ldr::TctiNameConf,
 };
 
-use crate::error::PuavoError;
+use crate::{error::PuavoError, system::shell};
 
 /// Number of PCRs in a PC Client TPM.
 pub const PCR_COUNT: u32 = 24;
@@ -186,28 +186,13 @@ pub fn clear_dictionary_lockout<P: AsRef<Path>>(
     );
 
     let auth_argument = format!("file:{}", path.display());
-    let output = Command::new("tpm2")
-        .arg("dictionarylockout")
-        .arg("--clear-lockout")
-        .arg("--auth")
-        .arg(&auth_argument)
-        .output()
-        .map_err(|error| {
-            PuavoError::TpmError(format!(
-                "Failed to execute tpm2 dictionarylockout: {}",
-                error
-            ))
-        })?;
-
-    if output.status.success() {
-        Ok(())
-    } else {
-        Err(PuavoError::TpmError(format!(
-            "Failed to clear TPM dictionary lockout (exit code {:?}): {}",
-            output.status.code(),
-            String::from_utf8_lossy(&output.stderr)
-        )))
-    }
+    shell::run(
+        Command::new("tpm2")
+            .arg("dictionarylockout")
+            .arg("--clear-lockout")
+            .arg("--auth")
+            .arg(&auth_argument),
+    )
 }
 
 /// Check if the TPM is currently in dictionary attack lockout mode.
