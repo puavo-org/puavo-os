@@ -3,28 +3,52 @@
   "policy": {
     "tpm2-pcrs": {
       "7:sha256": [
-        { "variable": { "name": "SecureBoot" } },
-        { "variable": { "name": "PK" } },
-        { "variable": { "name": "KEK" } },
-        { "variable": { "name": "db" } },
-        { "variable": { "name": "dbx" } },
-        "separator",
         {
-          "authority": {
-            "database": "db",
-            "entry": { "subject": "Puavo Secure Boot*" }
-          }
-        },
-        "slab-base",
-        {
-          "slab-authority": {
-            "identity": "a2bc8f41-47c7-4379-82a3-f696790b2879"
-          }
+          "name": "secure-boot",
+          "measurement": { "variable": { "name": "SecureBoot" } }
         },
         {
-          "authority": {
-            "database": "db",
-            "entry": { "subject": "Puavo Device Secure Boot Key" }
+          "name": "platform-key",
+          "measurement": { "variable": { "name": "PK" } }
+        },
+        {
+          "name": "key-exchange-keys",
+          "measurement": { "variable": { "name": "KEK" } }
+        },
+        {
+          "name": "signature-database",
+          "measurement": { "variable": { "name": "db" } }
+        },
+        {
+          "name": "revocations",
+          "measurement": { "variable": { "name": "dbx" } }
+        },
+        { "name": "separator", "measurement": "separator" },
+        {
+          "name": "puavo-authority",
+          "measurement": {
+            "authority": {
+              "database": "db",
+              "entry": { "subject": "Puavo Secure Boot*" }
+            }
+          }
+        },
+        { "name": "slab-base", "measurement": "slab-base" },
+        {
+          "name": "uki-authority",
+          "measurement": {
+            "slab-authority": {
+              "identity": "a2bc8f41-47c7-4379-82a3-f696790b2879"
+            }
+          }
+        },
+        {
+          "name": "device-authority",
+          "measurement": {
+            "authority": {
+              "database": "db",
+              "entry": { "subject": "Puavo Device Secure Boot Key" }
+            }
           }
         }
       ],

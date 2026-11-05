@@ -1,0 +1,30 @@
+{
+  "7:sha256": [
+    {
+      "after": ["revocations", "separator"],
+      "measurement": {
+        "authority": {
+          "database": "db",
+          "entry": { "subject": "Microsoft Corporation UEFI CA 2011" }
+        }
+      },
+      "variants": [
+        {
+          "authority": {
+            "database": "db",
+            "entry": { "subject": "Microsoft Option ROM UEFI CA 2023" }
+          }
+        }
+      ]
+    },
+    {
+      "after": ["revocations", "separator"],
+      "measurement": {
+        "authority": {
+          "database": "db",
+          "entry": { "subject": "Microsoft Option ROM UEFI CA 2023" }
+        }
+      }
+    }
+  ]
+}
