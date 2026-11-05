@@ -13,7 +13,7 @@ generate_ek() {
 
   echo "generating ${name} EK..." >&2
 
-  if tpm2_createek --key-algorithm="$algorithm" \
+  if tpm2 createek --key-algorithm="$algorithm" \
     --ek-context="${working_directory}/ek.ctx" \
     --public="${working_directory}/ek.pub" \
     --format=tss 2>/dev/null; then

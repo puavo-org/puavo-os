@@ -12,5 +12,5 @@ panic() {
 
 # Clear the TPM to ensure clean state for installation.
 # This resets all hierarchies and removes any existing lockout auth.
-tpm2_clear 2>/dev/null \
+tpm2 clear 2>/dev/null \
   || panic "cannot clear TPM, please reset it in BIOS settings"

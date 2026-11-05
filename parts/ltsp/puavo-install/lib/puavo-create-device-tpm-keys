@@ -17,10 +17,10 @@ mkdir -p "$output_directory"
 umask 077 && dd if=/dev/urandom of="$tpm_lockout_auth_file" bs=32 count=1 2>/dev/null
 
 # Set lockout hierarchy authorization
-tpm2_changeauth --object-context=lockout "file:${tpm_lockout_auth_file}"
+tpm2 changeauth --object-context=lockout "file:${tpm_lockout_auth_file}"
 
 # Configure dictionary attack lockout parameters
-tpm2_dictionarylockout \
+tpm2 dictionarylockout \
   --setup-parameters \
   --max-tries=32 \
   --recovery-time=60 \
