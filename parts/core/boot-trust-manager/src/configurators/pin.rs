@@ -8,6 +8,7 @@ use crate::{
     error::PuavoError,
     luks::tokens::LuksTpmTokenManager,
     system::{efi, locale, reboot, secure_boot},
+    tpm,
 };
 
 /// Reason for PIN configurator activation
@@ -31,12 +32,19 @@ enum PinPromptOutcome {
 
 /// What the user decided about a full reconfiguration.
 enum Reconfiguration {
-    /// Go ahead, the firmware is in Setup Mode.
+    /// Go ahead, the firmware is in Setup Mode and the TPM is cleared.
     Proceed,
     /// Change nothing.
     Declined,
-    /// Restart, so the Secure Boot keys can be cleared in the firmware setup.
-    RebootForSetupMode,
+    /// Restart, so the Secure Boot keys and the TPM can be cleared in the
+    /// firmware setup.
+    RebootForFirmwareSetup,
+}
+
+/// Whether the TPM has any auth set.
+enum TpmState {
+    Cleared,
+    Owned,
 }
 
 /// Minimum number of characters required for a PIN.
@@ -135,10 +143,24 @@ impl PinConfigurator {
         }
     }
 
+    /// Reads whether the TPM is cleared. A TPM that cannot be read counts as
+    /// owned.
+    fn read_tpm_state() -> TpmState {
+        match tpm::is_cleared() {
+            Ok(true) => TpmState::Cleared,
+            Ok(false) => TpmState::Owned,
+            Err(error) => {
+                warn!("Cannot read whether the TPM is cleared: {}", error);
+                TpmState::Owned
+            }
+        }
+    }
+
     /// Asks whether to do a full reconfiguration. When the firmware is not
-    /// in Setup Mode, also asks whether to restart.
+    /// in Setup Mode or the TPM is not cleared, also asks whether to restart.
     fn ask_reconfiguration(
         display: &dyn UserDisplay,
+        tpm_state: TpmState,
     ) -> Result<Reconfiguration, PuavoError> {
         let strings = locale::strings();
 
@@ -148,23 +170,26 @@ impl PinConfigurator {
             return Ok(Reconfiguration::Declined);
         }
 
-        // The Secure Boot keys can only be written in Setup Mode.
-        if efi::is_in_setup_mode() {
+        // The Secure Boot keys can only be written in Setup Mode. A token
+        // bound to the TPM cannot unlock the disk if the TPM is cleared later.
+        if efi::is_in_setup_mode() && matches!(tpm_state, TpmState::Cleared) {
             return Ok(Reconfiguration::Proceed);
         }
 
-        if display.ask_yes_no(strings.setup_mode_reboot_question)? {
-            return Ok(Reconfiguration::RebootForSetupMode);
+        if display.ask_yes_no(strings.firmware_setup_reboot_question)? {
+            return Ok(Reconfiguration::RebootForFirmwareSetup);
         }
 
         Ok(Reconfiguration::Declined)
     }
 
-    /// Writes the Secure Boot keys of this device to the firmware and adds a
-    /// temporary enrollment for the next boot. Requests a restart.
+    /// Sets a new lockout auth on the TPM, writes the Secure Boot keys of this
+    /// device to the firmware and adds a temporary enrollment for the next
+    /// boot. Requests a restart.
     fn reconfigure(boot_vault: &BootVault) -> Result<(), PuavoError> {
         let mountpoint = boot_vault.resources().mountpoint();
 
+        tpm::create_lockout_auth(mountpoint)?;
         secure_boot::update_database(mountpoint)?;
         secure_boot::enroll_keys(mountpoint)?;
         enrollment::add_reset_enrollment()?;
@@ -237,8 +262,9 @@ impl Configurator for PinConfigurator {
         let reconfigured = match reason {
             PinChangeReason::EfiVariableRequest => false,
             PinChangeReason::RecoveryKeyUnlock => {
-                match Self::ask_reconfiguration(display)? {
-                    Reconfiguration::RebootForSetupMode => {
+                let tpm_state = Self::read_tpm_state();
+                match Self::ask_reconfiguration(display, tpm_state)? {
+                    Reconfiguration::RebootForFirmwareSetup => {
                         info!("Restarting so the keys can be cleared");
                         reboot::request();
                         return Ok(());
@@ -288,7 +314,7 @@ mod tests {
 
     use super::{
         MIN_PIN_LENGTH, PinConfigurator, PinValidation, Reconfiguration,
-        validate_pin,
+        TpmState, validate_pin,
     };
     use crate::{
         display::UserDisplay,
@@ -342,10 +368,15 @@ mod tests {
     }
 
     /// Returns the decision for the specified answers.
-    fn decide(setup_mode: bool, answers: &[bool]) -> Reconfiguration {
+    fn decide(
+        setup_mode: bool,
+        tpm_state: TpmState,
+        answers: &[bool],
+    ) -> Reconfiguration {
         firmware(setup_mode);
         let decision = PinConfigurator::ask_reconfiguration(
             &ScriptedDisplay::new(answers),
+            tpm_state,
         )
         .unwrap();
         efi::reset_provider();
@@ -355,22 +386,37 @@ mod tests {
 
     #[test]
     #[serial]
-    fn reconfiguration_in_setup_mode_goes_ahead() {
-        assert!(matches!(decide(true, &[true]), Reconfiguration::Proceed));
+    fn reconfiguration_with_cleared_tpm_in_setup_mode_goes_ahead() {
+        assert!(matches!(
+            decide(true, TpmState::Cleared, &[true]),
+            Reconfiguration::Proceed
+        ));
     }
 
     #[test]
     #[serial]
     fn declined_reconfiguration_changes_nothing() {
-        assert!(matches!(decide(true, &[false]), Reconfiguration::Declined));
+        assert!(matches!(
+            decide(true, TpmState::Cleared, &[false]),
+            Reconfiguration::Declined
+        ));
     }
 
     #[test]
     #[serial]
     fn reconfiguration_outside_setup_mode_offers_a_restart() {
         assert!(matches!(
-            decide(false, &[true, true]),
-            Reconfiguration::RebootForSetupMode
+            decide(false, TpmState::Cleared, &[true, true]),
+            Reconfiguration::RebootForFirmwareSetup
+        ));
+    }
+
+    #[test]
+    #[serial]
+    fn reconfiguration_with_owned_tpm_offers_a_restart() {
+        assert!(matches!(
+            decide(true, TpmState::Owned, &[true, true]),
+            Reconfiguration::RebootForFirmwareSetup
         ));
     }
 
@@ -378,7 +424,7 @@ mod tests {
     #[serial]
     fn declined_restart_changes_nothing() {
         assert!(matches!(
-            decide(false, &[true, false]),
+            decide(false, TpmState::Cleared, &[true, false]),
             Reconfiguration::Declined
         ));
     }

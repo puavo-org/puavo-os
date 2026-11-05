@@ -19,7 +19,13 @@ use crate::{error::PuavoError, system::shell};
 /// Number of PCRs in a PC Client TPM.
 pub const PCR_COUNT: u32 = 24;
 
+const OWNER_AUTH_SET_FLAG: u32 = 1 << 0;
+const LOCKOUT_AUTH_SET_FLAG: u32 = 1 << 2;
 const IN_LOCKOUT_FLAG: u32 = 1 << 9;
+
+/// Command that sets a new lockout auth and saves it to a directory.
+const CREATE_LOCKOUT_AUTH_COMMAND: &str =
+    "/usr/lib/puavo-ltsp-install/puavo-create-device-tpm-keys";
 
 /// Read PCR values from the TPM.
 ///
@@ -232,4 +238,52 @@ pub fn is_in_lockout() -> Result<bool, PuavoError> {
 
     // If we fail to find the permanent flags, assume not locked out
     Ok(false)
+}
+
+/// Checks whether the TPM is cleared, meaning neither the owner auth nor the
+/// lockout auth is set.
+pub fn is_cleared() -> Result<bool, PuavoError> {
+    let tcti = TctiNameConf::from_environment_variable()
+        .unwrap_or(TctiNameConf::Device(Default::default()));
+
+    let mut context = Context::new(tcti).map_err(|error| {
+        PuavoError::TpmError(format!("Failed to create TPM context: {}", error))
+    })?;
+
+    let (capability_data, _more_data) = context
+        .get_capability(
+            CapabilityType::TpmProperties,
+            PropertyTag::Permanent.into(),
+            1,
+        )
+        .map_err(|error| {
+            PuavoError::TpmError(format!(
+                "Failed to get TPM permanent flags: {}",
+                error
+            ))
+        })?;
+
+    let TpmProperties(properties) = capability_data else {
+        return Err(PuavoError::TpmError(
+            "TPM permanent flags missing".to_string(),
+        ));
+    };
+
+    let permanent = properties
+        .iter()
+        .find(|property| property.property() == PropertyTag::Permanent)
+        .map(|property| property.value())
+        .ok_or_else(|| {
+            PuavoError::TpmError("TPM permanent flags missing".to_string())
+        })?;
+
+    Ok(permanent & (OWNER_AUTH_SET_FLAG | LOCKOUT_AUTH_SET_FLAG) == 0)
+}
+
+/// Sets a new random lockout auth and the dictionary attack parameters on
+/// the TPM. The auth is saved to the specified directory.
+pub fn create_lockout_auth(directory: &Path) -> Result<(), PuavoError> {
+    info!("Setting a new TPM lockout auth, saved to {:?}", directory);
+
+    shell::run(Command::new(CREATE_LOCKOUT_AUTH_COMMAND).arg(directory))
 }
