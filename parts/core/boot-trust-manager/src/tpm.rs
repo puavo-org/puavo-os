@@ -186,14 +186,15 @@ pub fn clear_dictionary_lockout<P: AsRef<Path>>(
     );
 
     let auth_argument = format!("file:{}", path.display());
-    let output = Command::new("tpm2_dictionarylockout")
+    let output = Command::new("tpm2")
+        .arg("dictionarylockout")
         .arg("--clear-lockout")
         .arg("--auth")
         .arg(&auth_argument)
         .output()
         .map_err(|error| {
             PuavoError::TpmError(format!(
-                "Failed to execute tpm2_dictionarylockout: {}",
+                "Failed to execute tpm2 dictionarylockout: {}",
                 error
             ))
         })?;
