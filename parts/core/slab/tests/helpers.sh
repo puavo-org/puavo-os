@@ -120,7 +120,7 @@ swtpm_stop() {
 # for tpm2-tools.
 #   $1  index
 nv_value() {
-  printf '%d' "0x$(tpm2_nvread "$1" --size=8 \
+  printf '%d' "0x$(tpm2 nvread "$1" --size=8 \
     | od --address-radix=n --format=x1 | tr --delete ' \n')"
 }
 
@@ -136,7 +136,7 @@ slab_version() {
 increment_counter() {
   step=0
   while [ "$step" -lt "$1" ]; do
-    tpm2_nvincrement "$COUNTER_INDEX" >/dev/null || return 1
+    tpm2 nvincrement "$COUNTER_INDEX" >/dev/null || return 1
     step=$((step + 1))
   done
 }

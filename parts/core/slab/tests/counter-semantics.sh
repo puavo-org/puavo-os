@@ -19,28 +19,28 @@ trap cleanup EXIT
 swtpm_start "$STATE" tools
 
 define_counter() {
-  tpm2_nvdefine "$COUNTER_INDEX" -C o -a "$ATTRIBUTES" >/dev/null 2>&1 \
-    || tpm2_nvdefine "$COUNTER_INDEX" -C o -a "$ATTRIBUTES" -s 8 >/dev/null 2>&1
+  tpm2 nvdefine "$COUNTER_INDEX" -C o -a "$ATTRIBUTES" >/dev/null 2>&1 \
+    || tpm2 nvdefine "$COUNTER_INDEX" -C o -a "$ATTRIBUTES" -s 8 >/dev/null 2>&1
 }
 
 FAILED=0
 
 define_counter
-tpm2_nvincrement "$COUNTER_INDEX" >/dev/null 2>&1
-tpm2_nvincrement "$COUNTER_INDEX" >/dev/null 2>&1
+tpm2 nvincrement "$COUNTER_INDEX" >/dev/null 2>&1
+tpm2 nvincrement "$COUNTER_INDEX" >/dev/null 2>&1
 value_before_lock=$(nv_value "$COUNTER_INDEX")
 
-tpm2_nvwritelock "$COUNTER_INDEX" >/dev/null 2>&1
-if tpm2_nvincrement "$COUNTER_INDEX" >/dev/null 2>&1; then
+tpm2 nvwritelock "$COUNTER_INDEX" >/dev/null 2>&1
+if tpm2 nvincrement "$COUNTER_INDEX" >/dev/null 2>&1; then
   echo "FAIL: increment succeeded after write lock"
   FAILED=1
 else
   echo "PASS: write lock blocked the increment"
 fi
 
-tpm2_nvundefine "$COUNTER_INDEX" -C o >/dev/null 2>&1
+tpm2 nvundefine "$COUNTER_INDEX" -C o >/dev/null 2>&1
 define_counter
-tpm2_nvincrement "$COUNTER_INDEX" >/dev/null 2>&1
+tpm2 nvincrement "$COUNTER_INDEX" >/dev/null 2>&1
 value_after_redefine=$(nv_value "$COUNTER_INDEX")
 
 # A redefined counter must not come back lower, or an older revocation list

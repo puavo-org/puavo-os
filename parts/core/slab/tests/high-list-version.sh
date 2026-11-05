@@ -23,7 +23,7 @@ trap cleanup EXIT
 # Prints the dictionary attack lockout counter. Needs a swtpm started for
 # tpm2-tools.
 lockout_counter() {
-  tpm2_getcap properties-variable \
+  tpm2 getcap properties-variable \
     | sed --quiet 's/^TPM2_PT_LOCKOUT_COUNTER: //p'
 }
 
@@ -77,8 +77,8 @@ assert_contains "the boot reached chainload" "$boot_log" \
 echo "INFO: a boot raising the counter by ${HIGH_VERSION} took ${elapsed}s"
 
 swtpm_start "$STATE" tools
-attributes=$(tpm2_nvreadpublic "$COUNTER_INDEX")
-base_attributes=$(tpm2_nvreadpublic "$BASE_INDEX")
+attributes=$(tpm2 nvreadpublic "$COUNTER_INDEX")
+base_attributes=$(tpm2 nvreadpublic "$BASE_INDEX")
 lockout_after_boot=$(lockout_counter)
 version_after_boot=$(slab_version)
 swtpm_stop
