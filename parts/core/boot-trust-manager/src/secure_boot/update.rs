@@ -252,7 +252,9 @@ impl SecureBootDatabaseUpdate {
         pending: &Path,
     ) -> Option<LuksTpmEnrollmentPolicy> {
         let name = self.variable.name();
-        let reads_variable = |measurement: &Measurement| match measurement {
+        let reads_variable = |measurement: &Measurement| match measurement
+            .without_name()
+        {
             Measurement::Variable { name: measured, .. } => measured == name,
             _ => false,
         };
@@ -267,10 +269,10 @@ impl SecureBootDatabaseUpdate {
                 return measurement.clone();
             }
 
-            Measurement::Variable {
+            measurement.replace_keeping_name(|_| Measurement::Variable {
                 name: name.to_string(),
                 value: Source::Path(pending.to_path_buf()),
-            }
+            })
         };
 
         let restated = pcrs
@@ -371,6 +373,36 @@ mod tests {
             Measurement::Variable {
                 name: "db".to_string(),
                 value: Source::Path(pending),
+            }
+        );
+    }
+
+    #[test]
+    fn updated_database_keeps_the_name_of_its_variable() {
+        let image = create_image(20260909090909);
+        let update = read_update(&image, Variable::Db);
+        let pending = pending(Variable::Db);
+
+        let mut policy = create_policy();
+        let chain = policy.specific_pcrs.as_mut().unwrap();
+        let first =
+            &mut chain.get_mut("7:sha256").unwrap().as_mut().unwrap()[0];
+        *first = Measurement::Named {
+            name: "signature-database".to_string(),
+            measurement: Box::new(first.clone()),
+        };
+
+        let after = update.policy_after(&policy, &pending).unwrap();
+        let chain = after.specific_pcrs.unwrap();
+
+        assert_eq!(
+            chain["7:sha256"].as_ref().unwrap()[0],
+            Measurement::Named {
+                name: "signature-database".to_string(),
+                measurement: Box::new(Measurement::Variable {
+                    name: "db".to_string(),
+                    value: Source::Path(pending),
+                }),
             }
         );
     }

@@ -7,10 +7,9 @@ use std::path::Path;
 use boot_trust_manager::secure_boot::chain::{
     Chain, Entry, Measurement, Source,
 };
-use sha2::{Digest, Sha256};
 
 use super::{
-    AUTHORITY, Capture, CapturedDevice, REGISTER,
+    AUTHORITY, Capture, CapturedDevice, REGISTER, extend_register,
     write_variables_into_directory,
 };
 
@@ -25,14 +24,6 @@ const MEASUREMENTS_CERTIFICATE: &str = "Capture Measurements";
 
 /// Shim measures its SBAT level as a variable with this name.
 const SHIM_LEVEL: &str = "SbatLevel";
-
-/// Extends a PCR value with one digest as the TPM does.
-fn extend(value: &str, digest: &str) -> String {
-    let mut hash = Sha256::new();
-    hash.update(hex::decode(value).unwrap());
-    hash.update(hex::decode(digest).unwrap());
-    hex::encode(hash.finalize())
-}
 
 /// The measurements the firmware made before shim ran, reading the variables
 /// from files in the directory.
@@ -90,7 +81,7 @@ fn chain_and_shim_events_reproduce_register() {
     // value then matches only if the predicted part is correct.
     let mut value = predicted.value;
     for event in logged.iter().skip(predicted.steps.len()) {
-        value = extend(&value, &event.digest);
+        value = extend_register(&value, &event.digest);
     }
 
     assert_eq!(value, capture.register(REGISTER));

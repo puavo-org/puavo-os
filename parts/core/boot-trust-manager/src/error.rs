@@ -60,6 +60,12 @@ pub enum PuavoError {
     #[error("A policy chain could not be evaluated")]
     ChainNotEvaluated,
 
+    #[error("Invalid event log: {0}")]
+    MalformedEventLog(String),
+
+    #[error("The quirks need {needed} chains, at most {allowed} are allowed")]
+    TooManyQuirkChains { needed: usize, allowed: usize },
+
     #[error(
         "Failed to set up disk encryption. No enrollment matches the current state of this machine."
     )]

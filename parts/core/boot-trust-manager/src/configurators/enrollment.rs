@@ -14,7 +14,7 @@ use crate::{
     error::PuavoError,
     hashing::Hashed,
     luks::tokens::{Bindings, LuksTpmEnrollmentPolicy, LuksTpmTokenManager},
-    secure_boot::chain::SystemDevice,
+    secure_boot::{chain::SystemDevice, quirks::Quirks},
     system::{efi, locale},
     tpm::read_pcrs_as_string,
 };
@@ -339,17 +339,22 @@ impl EnrollmentConfigurator {
         EnrollmentSetState { enrollments }
     }
 
-    /// Enroll all items to the specified device.
-    /// Wipes all the previous TPM tokens.
+    /// Enroll all items to the specified device, one token for each
+    /// binding of an item. Wipes all the previous TPM tokens.
     fn wipe_and_enroll_to_device(
         token_manager: &mut LuksTpmTokenManager,
         recovery_key_path: &Path,
         pin: Option<&Zeroizing<String>>,
-        evaluated: &[(EnrollmentItemConfiguration, Bindings)],
+        evaluated: &[(EnrollmentItemConfiguration, Vec<Bindings>)],
     ) -> Result<(), PuavoError> {
         let mut wipe = true;
 
-        for (item, bindings) in evaluated {
+        let items_with_bindings =
+            evaluated.iter().flat_map(|(item, all_bindings)| {
+                all_bindings.iter().map(move |bindings| (item, bindings))
+            });
+
+        for (item, bindings) in items_with_bindings {
             let policy = &item.policy;
 
             if policy.public_keys.is_empty() {
@@ -380,27 +385,46 @@ impl EnrollmentConfigurator {
         Ok(())
     }
 
-    /// Evaluates every enrollment. At least one must match the current state
+    /// Evaluates every enrollment, once for each chain that the quirks of
+    /// this machine expand it into. At least one must match the current state
     /// of the machine, otherwise no token would match and the disk could not
     /// be unlocked. The others may match a future state.
     fn evaluate(
         items: Vec<EnrollmentItemConfiguration>,
-    ) -> Result<Vec<(EnrollmentItemConfiguration, Bindings)>, PuavoError> {
+    ) -> Result<Vec<(EnrollmentItemConfiguration, Vec<Bindings>)>, PuavoError>
+    {
+        let policies: Vec<&LuksTpmEnrollmentPolicy> =
+            items.iter().map(|item| &item.policy).collect();
+        let quirks = Quirks::find_active(&policies, &SystemDevice);
+
         let mut evaluated = Vec::with_capacity(items.len());
 
         for item in items {
-            match item.policy.evaluate(&SystemDevice) {
-                Ok(bindings) => evaluated.push((item, bindings)),
-                Err(error) => error!(
-                    "Failed to evaluate '{}' on this machine: {}",
-                    item.name, error
-                ),
+            let mut all_bindings = Vec::new();
+
+            // A quirk measurement and each variant get a token of their own.
+            for policy in quirks.expand(&item.policy) {
+                match policy.evaluate(&SystemDevice) {
+                    Ok(bindings) => all_bindings.push(bindings),
+                    Err(error) => error!(
+                        "Failed to evaluate '{}' on this machine: {}",
+                        item.name, error
+                    ),
+                }
+            }
+
+            if !all_bindings.is_empty() {
+                evaluated.push((item, all_bindings));
             }
         }
 
         let describing: Vec<&str> = evaluated
             .iter()
-            .filter(|(_, bindings)| bindings.describes_current_state)
+            .filter(|(_, all_bindings)| {
+                all_bindings
+                    .iter()
+                    .any(|bindings| bindings.describes_current_state)
+            })
             .map(|(item, _)| item.name.as_str())
             .collect();
 
