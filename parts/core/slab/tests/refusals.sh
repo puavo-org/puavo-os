@@ -23,7 +23,7 @@ below_minimum="$WORK/below-minimum"
 mkdir -p "$below_minimum"
 stale_stage="$below_minimum/grubx64.efi"
 cp "$BINARY_DIRECTORY/slab.efi" "$stale_stage"
-"$REPOSITORY_ROOT/.aux/add-bootloader-version-section" "$stale_stage" grub 0
+"$SCRIPTS_DIRECTORY/add-bootloader-version-section" "$stale_stage" grub 0
 state=$(mktemp -d)
 disk=$(make_boot_disk "$BINARY_DIRECTORY/slab.efi" "$stale_stage" \
   "$below_minimum")

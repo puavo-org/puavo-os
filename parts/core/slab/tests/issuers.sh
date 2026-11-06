@@ -41,7 +41,7 @@ mkdir --parents "$WORK/keys/test/issuers"
 echo "$AUTHORITY_GUID" > "$WORK/keys/test/identity"
 cp "$WORK/issuer.pem" "$WORK/keys/test/issuers/"
 echo "version optional" > "$WORK/keys/test/settings"
-"$REPOSITORY_ROOT/.aux/generate-verifier-authorities" \
+"$SCRIPTS_DIRECTORY/generate-verifier-authorities" \
   "$WORK/keys" "$WORK/authorities" || exit 1
 
 slab=$(build_with_verifier "$WORK/authorities" "$WORK/target") || exit 1

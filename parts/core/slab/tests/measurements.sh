@@ -43,7 +43,7 @@ virt-fw-vars -i "${OVMF_VARIABLES}" -o "${STATE}/vars.fd" \
 
 # Slab refuses a next stage without a version section.
 cp "${BINARY_DIRECTORY}/measurements.efi" "${WORK}/measurements.efi"
-"${REPOSITORY_ROOT}/.aux/add-bootloader-version-section" \
+"${SCRIPTS_DIRECTORY}/add-bootloader-version-section" \
   "${WORK}/measurements.efi" measurements 1
 
 sbsign --key "${WORK}/db_slab.key" --cert "${WORK}/db_slab.crt" \

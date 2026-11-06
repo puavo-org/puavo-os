@@ -52,7 +52,7 @@ sbsign --key "$WORK/db_grub.key" --cert "$WORK/db_grub.crt" \
 make_test_image() {
   cp "$BINARY_DIRECTORY/slab.efi" "$WORK/$1.unsigned.efi"
   if [ "$#" -ge 3 ]; then
-    "$REPOSITORY_ROOT/.aux/add-bootloader-version-section" \
+    "$SCRIPTS_DIRECTORY/add-bootloader-version-section" \
       "$WORK/$1.unsigned.efi" "$2" "$3"
   fi
   sbsign --key "$WORK/db_grub.key" --cert "$WORK/db_grub.crt" \

@@ -4,7 +4,7 @@
 
 TESTS_DIRECTORY="$(cd "$(dirname "$0")" && pwd)"
 SLAB_DIRECTORY="$(cd "$TESTS_DIRECTORY/.." && pwd)"
-REPOSITORY_ROOT="$(git -C "$SLAB_DIRECTORY" rev-parse --show-toplevel)"
+SCRIPTS_DIRECTORY="$SLAB_DIRECTORY/scripts"
 BINARY_DIRECTORY="$SLAB_DIRECTORY/target/x86_64-unknown-uefi/debug"
 
 OVMF_CODE=/usr/share/OVMF/OVMF_CODE_4M.fd
@@ -73,10 +73,12 @@ configured_version() {
   cat "${SLAB_DIRECTORY}/config/version"
 }
 
-# Builds a real GRUB image to serve as the next stage.
+# Builds GRUB to serve as the next stage.
 #   $1  output path
 build_next_stage() {
-  sh "$REPOSITORY_ROOT/.aux/create-grub-bootloader" x86_64-efi "$1"
+  grub-mkimage --format x86_64-efi --prefix /EFI/puavo/grub --output "$1" \
+    normal echo halt chain search search_fs_uuid fat part_gpt
+  "$SCRIPTS_DIRECTORY/add-bootloader-version-section" "$1" grub
 }
 
 # Copies the OVMF variable template into a state directory and enables slab
@@ -158,8 +160,7 @@ boot_qemu() {
 
 # Builds a GPT boot disk and echoes its path. The ESP holds slab as the
 # removable loader, the next stage at the next stage path, and a configuration
-# that finds its filesystem by UUID, loads the embedded font, prints the
-# marker, and halts. A harness can override the configuration and place
+# that finds its filesystem by UUID, prints the marker, and halts. A harness can override the configuration and place
 # extra images next to the next stage.
 #   $1  slab binary
 #   $2  next stage binary
@@ -183,8 +184,6 @@ make_boot_disk() {
     configuration="$work_directory/grub.cfg"
     cat > "$configuration" <<EOF
 search --no-floppy --fs-uuid --set=root $FILESYSTEM_UUID
-loadfont (memdisk)/boot/grub/fonts/unicode.pf2
-lsfonts
 echo "$NEXT_STAGE_MARKER"
 halt
 EOF
