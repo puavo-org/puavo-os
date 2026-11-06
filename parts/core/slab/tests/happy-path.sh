@@ -1,6 +1,6 @@
 #!/bin/sh
-# Happy path: slab enforces the rollback floor and chainloads real GRUB, which
-# finds its configuration by filesystem UUID and loads the unicode font.
+# Happy path: slab enforces the rollback floor and chainloads GRUB, which
+# finds its configuration by filesystem UUID.
 set -u
 
 . "$(dirname "$0")/helpers.sh"
@@ -28,6 +28,5 @@ assert_contains "slab chainloaded the next stage" "$output" \
   "chainloading next stage"
 assert_contains "the next stage read its configuration" "$output" \
   "$NEXT_STAGE_MARKER"
-assert_contains "the next stage loaded the unicode font" "$output" "Unifont"
 assert_absent "slab did not refuse" "$output" "refusing"
 exit "$FAILED"

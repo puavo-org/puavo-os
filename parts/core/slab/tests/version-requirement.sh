@@ -54,7 +54,7 @@ echo "version optional" > "$WORK/authorities/optional/settings"
 
 # Converts the authorities into the form the slab build reads, then builds
 # slab with them built in.
-"$REPOSITORY_ROOT/.aux/generate-verifier-authorities" \
+"$SCRIPTS_DIRECTORY/generate-verifier-authorities" \
   "$WORK/authorities" "$WORK/generated-authorities" || exit 1
 slab=$(build_with_verifier "$WORK/generated-authorities" "$WORK/target") \
   || exit 1
@@ -81,7 +81,7 @@ sbsign --key "$WORK/db_grub.key" --cert "$WORK/db_grub.crt" \
 # The measurements image declares no version, so a copy gets one.
 unversioned="$BINARY_DIRECTORY/measurements.efi"
 cp "$unversioned" "$WORK/versioned.efi"
-"$REPOSITORY_ROOT/.aux/add-bootloader-version-section" \
+"$SCRIPTS_DIRECTORY/add-bootloader-version-section" \
   "$WORK/versioned.efi" measurements 1
 
 # The three cases: no version under each authority, and a version under the

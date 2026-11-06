@@ -2,6 +2,8 @@
 
 set -eu
 
+SLAB_SCRIPTS="$(dirname "$0")/../parts/core/slab/scripts"
+
 tmpdir=''
 
 cleanup() {
@@ -153,7 +155,7 @@ bootsplash_image="${art_directory}/bootsplash.bmp"
 
 # Add version for revocation purposes.
 version_section="${tmpdir}/version.section"
-"$(dirname "$0")/add-bootloader-version-section" \
+"${SLAB_SCRIPTS}/add-bootloader-version-section" \
   --write-section "$version_section" puavo
 
 sbat="sbat,1,SBAT Version,sbat,1,https://github.com/rhboot/shim/blob/main/SBAT.md

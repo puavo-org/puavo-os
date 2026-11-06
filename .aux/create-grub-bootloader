@@ -1,6 +1,8 @@
 #!/bin/sh
 set -eu
 
+SLAB_SCRIPTS="$(dirname "$0")/../parts/core/slab/scripts"
+
 panic() {
   echo "error: $1" >&2
   exit 1
@@ -85,4 +87,4 @@ grub-mkstandalone \
   --install-modules="$modules" \
   --output="$output"
 
-"$(dirname "$0")/add-bootloader-version-section" "$output" grub
+"${SLAB_SCRIPTS}/add-bootloader-version-section" "$output" grub
