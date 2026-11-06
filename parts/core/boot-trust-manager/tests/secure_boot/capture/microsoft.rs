@@ -14,7 +14,7 @@ use super::{
 };
 
 /// The capture directory.
-pub(super) const PROFILE: &str = "microsoft-boot";
+pub const PROFILE: &str = "microsoft-boot";
 
 /// The certificate that verified shim.
 const MICROSOFT: &str = "Microsoft Corporation UEFI CA 2011";

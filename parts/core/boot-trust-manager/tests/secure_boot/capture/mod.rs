@@ -9,7 +9,7 @@ mod event_log;
 mod microsoft;
 mod prediction;
 mod quirks;
-pub(super) mod slab;
+pub mod slab;
 mod validator;
 
 use std::collections::BTreeMap;
@@ -29,7 +29,7 @@ use uuid::Uuid;
 const CAPTURES: &str = "tests/fixtures/secure-boot";
 
 /// The PCR these chains predict.
-pub(super) const REGISTER: u32 = 7;
+pub const REGISTER: u32 = 7;
 
 /// The digest bank read from the capture. The firmware logs several.
 const BANK: &str = "SHA256";
@@ -43,7 +43,7 @@ const FIRMWARE_VARIABLE: &str = "EFI_VARIABLE_DRIVER_CONFIG";
 const AUTHORITY: &str = "EFI_VARIABLE_AUTHORITY";
 
 /// One event of the capture.
-pub(super) struct Event {
+pub struct Event {
     register: u32,
     kind: String,
     digest: String,
@@ -52,7 +52,7 @@ pub(super) struct Event {
 
 impl Event {
     /// Returns the variable measured in this event, or None for other events.
-    pub(super) fn variable(&self) -> Option<(String, Vec<u8>)> {
+    pub fn variable(&self) -> Option<(String, Vec<u8>)> {
         if ![FIRMWARE_VARIABLE, AUTHORITY].contains(&self.kind.as_str()) {
             return None;
         }
@@ -62,7 +62,7 @@ impl Event {
 }
 
 /// A captured boot.
-pub(super) struct Capture {
+pub struct Capture {
     events: Vec<Event>,
     stored_event_log: Vec<u8>,
     registers: BTreeMap<u32, String>,
@@ -86,7 +86,7 @@ fn bytes(hex_text: &str) -> Vec<u8> {
 
 impl Capture {
     /// Reads a capture by the name of its directory.
-    pub(super) fn read(profile: &str) -> Self {
+    pub fn read(profile: &str) -> Self {
         let directory =
             Path::new(env!("CARGO_MANIFEST_DIR")).join(CAPTURES).join(profile);
 
@@ -134,13 +134,13 @@ impl Capture {
     }
 
     /// The events of one PCR, in order.
-    pub(super) fn events_of(&self, register: u32) -> Vec<&Event> {
+    pub fn events_of(&self, register: u32) -> Vec<&Event> {
         self.events.iter().filter(|event| event.register == register).collect()
     }
 
     /// The variables the firmware measured, in order. Authority events are
     /// excluded, because they contain one entry, not the whole variable.
-    pub(super) fn measured_variables(&self) -> Vec<(String, Vec<u8>)> {
+    pub fn measured_variables(&self) -> Vec<(String, Vec<u8>)> {
         self.events_of(REGISTER)
             .iter()
             .filter(|event| event.kind == FIRMWARE_VARIABLE)
@@ -154,14 +154,14 @@ impl Capture {
     }
 
     /// The final value of a PCR.
-    pub(super) fn register(&self, register: u32) -> &str {
+    pub fn register(&self, register: u32) -> &str {
         &self.registers[&register]
     }
 }
 
 /// A fake device that returns the variables, the counter base and the PCR
 /// value of the captured boot, so the tests do not read the real machine.
-pub(super) struct CapturedDevice {
+pub struct CapturedDevice {
     variables: BTreeMap<String, Vec<u8>>,
     base: u64,
     /// The PCR value, if any.
@@ -170,7 +170,7 @@ pub(super) struct CapturedDevice {
 
 impl CapturedDevice {
     /// Creates the device for a capture.
-    pub(super) fn of(capture: &Capture) -> Self {
+    pub fn of(capture: &Capture) -> Self {
         Self {
             variables: capture.measured_variables().into_iter().collect(),
             base: capture.base,
@@ -204,7 +204,7 @@ impl Device for CapturedDevice {
 
 /// Writes the measured variables into files named after the variables and
 /// returns the directory with the names in measurement order.
-pub(super) fn write_variables_into_directory(
+pub fn write_variables_into_directory(
     capture: &Capture,
 ) -> (TempDir, Vec<String>) {
     let directory = TempDir::new().unwrap();
@@ -220,7 +220,7 @@ pub(super) fn write_variables_into_directory(
 
 /// Writes the certificate of the database entry whose subject matches the
 /// pattern to a file beside the variables and returns its path.
-pub(super) fn certificate_file_by_subject_pattern(
+pub fn certificate_file_by_subject_pattern(
     directory: &Path,
     pattern: &str,
 ) -> PathBuf {
