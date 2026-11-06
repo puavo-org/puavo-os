@@ -23,10 +23,8 @@ use uefi_raw::protocol::network::pxe::{
     PxeBaseCodeProtocol, PxeBaseCodeTftpOpcode,
 };
 
-/// The path of the next stage on the partition.
-const NEXT_STAGE_PATH: &CStr16 = cstr16!("\\EFI\\puavo\\grub\\grubx64.efi");
-/// The path of the next stage on the server.
-const NEXT_STAGE_SERVER_PATH: &CStr8 = cstr8!("efi64/grubx64.efi");
+// The paths of the next stage on the partition and on the server.
+include!(concat!(env!("OUT_DIR"), "/paths.rs"));
 
 /// Bytes reserved for building the next stage device path.
 const DEVICE_PATH_BUFFER_SIZE: usize = 128;

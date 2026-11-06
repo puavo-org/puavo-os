@@ -71,11 +71,11 @@ configuration="$WORK/issuers.cfg"
 cat > "$configuration" <<EOF
 search --no-floppy --fs-uuid --set=root $FILESYSTEM_UUID
 echo "$ISSUED_MARKER"
-if chainloader /EFI/puavo/issued.efi; then
+if chainloader /EFI/test/issued.efi; then
   echo "issued image loaded"
 fi
 echo "$UNTRUSTED_MARKER"
-if chainloader /EFI/puavo/untrusted.efi; then
+if chainloader /EFI/test/untrusted.efi; then
   echo "untrusted image loaded"
 fi
 halt

@@ -5,6 +5,10 @@
 TESTS_DIRECTORY="$(cd "$(dirname "$0")" && pwd)"
 SLAB_DIRECTORY="$(cd "$TESTS_DIRECTORY/.." && pwd)"
 SCRIPTS_DIRECTORY="$SLAB_DIRECTORY/scripts"
+
+# Every slab the harnesses build reads its next stage from the test paths.
+export SLAB_PATHS_OVERRIDE="$TESTS_DIRECTORY/paths"
+
 BINARY_DIRECTORY="$SLAB_DIRECTORY/target/x86_64-unknown-uefi/debug"
 
 OVMF_CODE=/usr/share/OVMF/OVMF_CODE_4M.fd
@@ -76,7 +80,7 @@ configured_version() {
 # Builds GRUB to serve as the next stage.
 #   $1  output path
 build_next_stage() {
-  grub-mkimage --format x86_64-efi --prefix /EFI/puavo/grub --output "$1" \
+  grub-mkimage --format x86_64-efi --prefix /EFI/test --output "$1" \
     normal echo halt chain search search_fs_uuid fat part_gpt
   "$SCRIPTS_DIRECTORY/add-bootloader-version-section" "$1" grub
 }
@@ -166,7 +170,7 @@ boot_qemu() {
 #   $2  next stage binary
 #   $3  work directory to build in
 #   $4  optional configuration file, empty or absent for the default
-#   $5… optional extra files copied to ::/EFI/puavo/
+#   $5… optional extra files copied to ::/EFI/test/
 make_boot_disk() {
   slab_binary="$1"
   next_stage_binary="$2"
@@ -176,9 +180,9 @@ make_boot_disk() {
   esp="$work_directory/esp.img"
   dd if=/dev/zero of="$esp" bs=1M count=96 status=none
   mkfs.vfat -F32 -i "$VOLUME_ID" "$esp" >/dev/null
-  mmd -i "$esp" ::/EFI ::/EFI/BOOT ::/EFI/puavo ::/EFI/puavo/grub
+  mmd -i "$esp" ::/EFI ::/EFI/BOOT ::/EFI/test
   mcopy -i "$esp" "$slab_binary" ::/EFI/BOOT/BOOTX64.EFI
-  mcopy -i "$esp" "$next_stage_binary" ::/EFI/puavo/grub/grubx64.efi
+  mcopy -i "$esp" "$next_stage_binary" ::/EFI/test/grubx64.efi
 
   if [ -z "$configuration" ]; then
     configuration="$work_directory/grub.cfg"
@@ -188,12 +192,12 @@ echo "$NEXT_STAGE_MARKER"
 halt
 EOF
   fi
-  mcopy -i "$esp" "$configuration" ::/EFI/puavo/grub/grub.cfg
+  mcopy -i "$esp" "$configuration" ::/EFI/test/grub.cfg
 
   if [ "$#" -ge 5 ]; then
     shift 4
     for extra_file in "$@"; do
-      mcopy -i "$esp" "$extra_file" ::/EFI/puavo/
+      mcopy -i "$esp" "$extra_file" ::/EFI/test/
     done
   fi
 
