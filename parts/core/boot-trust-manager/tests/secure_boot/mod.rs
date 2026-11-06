@@ -1,3 +1,3 @@
-pub(crate) mod capture;
+pub mod capture;
 mod chain;
 mod database;
