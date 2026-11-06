@@ -1,5 +1,6 @@
-//! Generates the list version and the components from the configuration, and
-//! one entry per authority from the authority directory.
+//! Generates the list version, the components and the next stage paths from
+//! the configuration, and one entry per authority from the authority
+//! directory.
 //!
 //! The version file holds the logical revocation version. Raise it by one for
 //! regular bumps. In case of major revocations, raise it by two, if the build
@@ -85,6 +86,10 @@ const VERSION_FILE: &str = "config/version";
 const VERSION_OVERRIDE_VARIABLE: &str = "SLAB_LIST_VERSION_OVERRIDE";
 const RELEASE_PROFILE: &str = "release";
 const FLOORS_FILE: &str = "config/floors";
+const PATHS_DIRECTORY: &str = "config/paths";
+const PATHS_OVERRIDE_VARIABLE: &str = "SLAB_PATHS_OVERRIDE";
+const ESP_PATH_FILE: &str = "esp";
+const NETWORK_PATH_FILE: &str = "network";
 const FLOOR_FORMAT: &[time::format_description::BorrowedFormatItem<'_>] =
     format_description!("[year][month][day]");
 const FLOOR_MAXIMUM_AGE_YEARS: u64 = 2;
@@ -93,9 +98,11 @@ const YEAR_IN_FLOOR: u64 = 10000;
 fn main() {
     println!("cargo:rerun-if-env-changed={DIRECTORY_VARIABLE}");
     println!("cargo:rerun-if-env-changed={VERSION_OVERRIDE_VARIABLE}");
+    println!("cargo:rerun-if-env-changed={PATHS_OVERRIDE_VARIABLE}");
 
     generate_version();
     generate_floors();
+    generate_paths();
 
     if env::var_os("CARGO_FEATURE_VERIFIER").is_some() {
         generate_verifier_data();
@@ -128,6 +135,39 @@ fn generate_version() {
     let output = PathBuf::from(env::var("OUT_DIR").unwrap()).join("version.rs");
     fs::write(&output, constant.to_string())
         .unwrap_or_else(|error| panic!("failed to write {output:?}: {error}"));
+}
+
+/// Generates the next stage paths from the paths directory, or from the
+/// override directory when set. Refuses the override in a release build.
+fn generate_paths() {
+    let directory = match env::var(PATHS_OVERRIDE_VARIABLE) {
+        Ok(directory) => {
+            if env::var("PROFILE").unwrap() == RELEASE_PROFILE {
+                panic!("{PATHS_OVERRIDE_VARIABLE} is for test builds only");
+            }
+            PathBuf::from(directory)
+        }
+        Err(_) => PathBuf::from(PATHS_DIRECTORY),
+    };
+    let esp = read_path(&directory.join(ESP_PATH_FILE));
+    let network = read_path(&directory.join(NETWORK_PATH_FILE));
+
+    let constants = quote! {
+        const NEXT_STAGE_PATH: &CStr16 = cstr16!(#esp);
+        const NEXT_STAGE_SERVER_PATH: &CStr8 = cstr8!(#network);
+    };
+
+    let output = PathBuf::from(env::var("OUT_DIR").unwrap()).join("paths.rs");
+    fs::write(&output, constants.to_string())
+        .unwrap_or_else(|error| panic!("failed to write {output:?}: {error}"));
+}
+
+/// Returns the path written in the file.
+fn read_path(file: &Path) -> String {
+    watch(file);
+    let written = fs::read_to_string(file)
+        .unwrap_or_else(|error| panic!("failed to read {file:?}: {error}"));
+    written.trim().to_string()
 }
 
 /// Generates the components from the floors file.

@@ -73,16 +73,16 @@ cp "$BINARY_DIRECTORY/slab.efi" "$WORK/unsigned.efi"
 configuration="$WORK/shim-lock.cfg"
 cat > "$configuration" <<EOF
 search --no-floppy --fs-uuid --set=root $FILESYSTEM_UUID
-if chainloader /EFI/puavo/unversioned.efi; then
+if chainloader /EFI/test/unversioned.efi; then
   echo "unversioned image loaded"
 fi
-if chainloader /EFI/puavo/at-minimum.efi; then
+if chainloader /EFI/test/at-minimum.efi; then
   echo "at-minimum image loaded"
 fi
-if chainloader /EFI/puavo/below-minimum.efi; then
+if chainloader /EFI/test/below-minimum.efi; then
   echo "below-minimum image loaded"
 fi
-if chainloader /EFI/puavo/unsigned.efi; then
+if chainloader /EFI/test/unsigned.efi; then
   echo "unsigned image loaded"
 fi
 halt

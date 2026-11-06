@@ -99,15 +99,15 @@ configuration="$WORK/version-requirement.cfg"
 cat > "$configuration" <<EOF
 search --no-floppy --fs-uuid --set=root $FILESYSTEM_UUID
 echo "$REQUIRED_MARKER"
-if chainloader /EFI/puavo/required.efi; then
+if chainloader /EFI/test/required.efi; then
   echo "required image loaded"
 fi
 echo "$OPTIONAL_MARKER"
-if chainloader /EFI/puavo/optional.efi; then
+if chainloader /EFI/test/optional.efi; then
   echo "optional image loaded"
 fi
 echo "$VERSIONED_MARKER"
-if chainloader /EFI/puavo/versioned.signed.efi; then
+if chainloader /EFI/test/versioned.signed.efi; then
   echo "versioned image loaded"
 fi
 halt
