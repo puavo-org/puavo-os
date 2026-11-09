@@ -616,6 +616,8 @@ class packages {
     , 'gnome-settings-daemon'
     , 'gnome-shell'
     , 'gnome-shell-extensions'
+    , 'gnome-shell-extension-gsconnect'
+    , 'gnome-shell-extension-gsconnect-browsers'
     , 'gnome-shell-extension-tiling-assistant'
     , 'gnome-shell-extension-user-theme'
     , 'gnome-sushi'
