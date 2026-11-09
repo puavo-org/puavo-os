@@ -28,7 +28,6 @@ class gnome_shell_extensions {
 
     [ 'appindicatorsupport@rgcjonas.gmail.com'
     , 'dash-to-panel@jderose9.github.com'
-    , 'hide-overview-search-entry@puavo.org'
     , 'hostinfo@puavo.org'
     , 'Move_Clock@rmy.pobox.com'
     , 'panel-to-bottom@davron'
