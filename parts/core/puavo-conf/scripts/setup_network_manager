@@ -591,7 +591,7 @@ Dir.glob("#{ Nm_config_directory }/*") do |nm_conf_path|
     autoconnect_written = false
 
     tmpfile = "#{ nm_conf_path }.tmp"
-    File.open(tmpfile, 'w') do |f|
+    File.open(tmpfile, 'w', 0600) do |f|
       lines.each do |line|
         case line
           when /^type=/
