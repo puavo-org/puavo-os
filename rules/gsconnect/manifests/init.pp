@@ -6,6 +6,10 @@ class gsconnect {
     '/etc/X11/Xsession.d/46puavo-setup-gsconnect':
       require => Package['x11-common'],
       source  => 'puppet:///modules/gsconnect/46puavo-setup-gsconnect';
+
+    '/usr/local/bin/puavo-gsconnect':
+      mode   => '0755',
+      source => 'puppet:///modules/gsconnect/puavo-gsconnect';
   }
 
   ::puavo_conf::definition {

@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -eu
+
+if [ "$(puavo-conf puavo.desktop.gsconnect.enable)" != 'true' ]; then
+  echo 'this feature is disabled by puavo-conf' >&2
+  exit 1
+fi
+
+dconf write /org/gnome/shell/extensions/gsconnect/enabled true
+
+exec gnome-extensions prefs gsconnect@andyholmes.github.io
