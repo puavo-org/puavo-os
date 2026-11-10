@@ -31,3 +31,10 @@ CONFIG_INTEGRITY_MACHINE_KEYRING=n
 ##
 CONFIG_TRUSTED_KEYS=y
 CONFIG_TRUSTED_KEYS_TPM=y
+
+##
+## dm-verity root hash signatures
+##
+## Trust only the image's own key for root hashes, not every db certificate.
+##
+CONFIG_DM_VERITY_VERIFY_ROOTHASH_SIG_PLATFORM_KEYRING=n
