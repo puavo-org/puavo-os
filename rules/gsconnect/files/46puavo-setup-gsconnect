@@ -1,4 +1,12 @@
-if [ "$(puavo-conf puavo.desktop.gsconnect.enable)" = 'true' ]; then
+if [ "$(puavo-conf puavo.desktop.gsconnect.enable)" = 'true' ] \
+  && dconf dump /org/gnome/shell/extensions/gsconnect/device/ \
+       | awk -F= '
+           BEGIN { paired = 0; status = 1 }
+           $1 == "paired" && $2 == "true" { paired = 1 }
+           $1 == "type"   && $2 ~ "phone" && paired { status = 0 }
+           $0 == "" { paired = 0 }
+           END { exit(status) }
+         '; then
   dconf write /org/gnome/shell/extensions/gsconnect/enabled true
 else
   dconf write /org/gnome/shell/extensions/gsconnect/enabled false
