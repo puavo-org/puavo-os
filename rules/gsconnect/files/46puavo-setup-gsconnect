@@ -1,3 +1,5 @@
+dconf write /org/gnome/shell/extensions/gsconnect/discoverable false
+
 if puavo-gsconnect check-for-paired-devices; then
   dconf write /org/gnome/shell/extensions/gsconnect/enabled true
 else

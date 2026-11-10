@@ -28,6 +28,9 @@ case "$cmd" in
     exit 1
     ;;
   '')
+    if ! have_paired_devices; then
+      dconf write /org/gnome/shell/extensions/gsconnect/discoverable true
+    fi
     dconf write /org/gnome/shell/extensions/gsconnect/enabled true
     exec gnome-extensions prefs gsconnect@andyholmes.github.io
     ;;
