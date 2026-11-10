@@ -1,4 +1,5 @@
 class gsconnect {
+  include ::gsconnect::dconf
   include ::packages
   include ::puavo_conf
 
