@@ -1,0 +1,5 @@
+if [ "$(puavo-conf puavo.desktop.gsconnect.enable)" = 'true' ]; then
+  dconf write /org/gnome/shell/extensions/gsconnect/enabled true
+else
+  dconf write /org/gnome/shell/extensions/gsconnect/enabled false
+fi

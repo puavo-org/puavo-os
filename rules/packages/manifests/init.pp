@@ -251,6 +251,7 @@ class packages {
     , 'shared-mime-info'
     , 'suckless-tools'
     , 'unclutter'
+    , 'x11-common'
     , 'xmobar'
     , 'xmonad' ]:
       tag => [ 'tag_desktop', 'tag_debian_desktop', ];
