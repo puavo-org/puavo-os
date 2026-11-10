@@ -2,11 +2,39 @@
 
 set -eu
 
+have_paired_devices() {
+  dconf dump /org/gnome/shell/extensions/gsconnect/device/ \
+    | awk -F= '
+        BEGIN { paired = 0; status = 1 }
+        $1 == "paired" && $2 == "true" { paired = 1 }
+        $1 == "type"   && $2 ~ "phone" && paired { status = 0 }
+        $0 == "" { paired = 0 }
+        END { exit(status) }
+      '
+}
+
 if [ "$(puavo-conf puavo.desktop.gsconnect.enable)" != 'true' ]; then
   echo 'this feature is disabled by puavo-conf' >&2
   exit 1
 fi
 
-dconf write /org/gnome/shell/extensions/gsconnect/enabled true
+cmd="${1:-}"
 
-exec gnome-extensions prefs gsconnect@andyholmes.github.io
+case "$cmd" in
+  check-for-paired-devices)
+    if have_paired_devices; then
+      exit 0
+    fi
+    exit 1
+    ;;
+  '')
+    dconf write /org/gnome/shell/extensions/gsconnect/enabled true
+    exec gnome-extensions prefs gsconnect@andyholmes.github.io
+    ;;
+  *)
+    echo "unknown subcommand: '${cmd}'" >&2
+    exit 1
+    ;;
+esac
+
+exit 0
