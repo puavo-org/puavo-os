@@ -1,7 +1,7 @@
 //! Records TPM event log during boot. Used for generating test data.
 //!
-//! Prints the event log and the PCR values between two marker lines and then
-//! shuts the machine down.
+//! Prints the event log and the PCR values between two marker lines, then the
+//! binary event log as hex between two more, and shuts the machine down.
 
 #![no_main]
 #![no_std]
@@ -11,10 +11,12 @@ extern crate alloc;
 use alloc::string::String;
 use core::fmt::Write;
 use core::ops::{Range, RangeInclusive};
+use core::{ptr, slice};
 
 use uefi::proto::tcg::v2::Tcg;
 use uefi::runtime::{self, ResetType};
 use uefi::{Status, boot, entry, println};
+use uefi_raw::protocol::tcg::v2::{Tcg2EventLogFormat, Tcg2Protocol};
 
 /// Bytes of hex per line, short enough for the console width.
 const BYTES_PER_LINE: usize = 32;
@@ -26,6 +28,8 @@ const REGISTERS: RangeInclusive<u32> = 0..=15;
 /// output.
 const BEGIN: &str = "measurements begin";
 const COMPLETE: &str = "measurements complete";
+const LOG_BEGIN: &str = "event log begin";
+const LOG_COMPLETE: &str = "event log complete";
 
 // TPM 2.0 Library Specification, Part 2 and Part 3.
 const NO_SESSIONS: u16 = 0x8001;
@@ -103,6 +107,49 @@ fn print_log(tcg: &mut Tcg) {
     }
 }
 
+/// Prints the binary event log as hex, for event log tools.
+fn print_binary_log(tcg: &mut Tcg) {
+    // The uefi crate parses the log but does not give its start, so the
+    // protocol is called directly. Tcg is a transparent wrapper of it.
+    let protocol: *mut Tcg2Protocol = ptr::from_mut(tcg).cast();
+    let mut location = 0;
+    let mut last_entry = 0;
+    let mut truncated = 0;
+    let status = unsafe {
+        ((*protocol).get_event_log)(
+            protocol,
+            Tcg2EventLogFormat::TCG_2,
+            &mut location,
+            &mut last_entry,
+            &mut truncated,
+        )
+    };
+    if status.is_error() {
+        println!("error: failed to read the event log: {status:?}");
+        return;
+    }
+
+    // The log ends with the data of its last event.
+    let Ok(log) = tcg.get_event_log_v2() else {
+        println!("error: failed to read the event log");
+        return;
+    };
+    let Some(last) = log.iter().last() else {
+        println!("error: the event log is empty");
+        return;
+    };
+    let end = last.event_data().as_ptr_range().end as u64;
+    let bytes = unsafe {
+        slice::from_raw_parts(location as *const u8, (end - location) as usize)
+    };
+
+    println!("{LOG_BEGIN}");
+    for line in bytes.chunks(BYTES_PER_LINE) {
+        println!("log {}", hex(line));
+    }
+    println!("{LOG_COMPLETE}");
+}
+
 /// Prints the value of each PCR.
 fn print_registers(tcg: &mut Tcg) {
     for register in REGISTERS {
@@ -139,6 +186,7 @@ fn main() -> Status {
     print_log(&mut tcg);
     print_registers(&mut tcg);
     println!("{COMPLETE}");
+    print_binary_log(&mut tcg);
 
     runtime::reset(ResetType::SHUTDOWN, Status::SUCCESS, None);
 }
