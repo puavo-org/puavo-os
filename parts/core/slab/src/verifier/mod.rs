@@ -147,7 +147,7 @@ pub fn trusts(image: &[u8], device_path: &[u8]) -> bool {
             return false;
         }
         Err(error) => {
-            error!("the image signature cannot be read ({error:?}), refusing");
+            error!("failed to read the image signature ({error:?}), refusing");
             return false;
         }
     };
@@ -167,7 +167,7 @@ pub fn trusts(image: &[u8], device_path: &[u8]) -> bool {
             Ok(signature) => signature,
             Err(error) => {
                 verification!(
-                    "skipping a signature that cannot be read ({error:?})"
+                    "failed to read a signature ({error:?}), skipping it"
                 );
                 continue;
             }
@@ -207,7 +207,7 @@ fn approving_authority(
     // The digest of the file against the one stored in SpcIndirectDataContent.
     let mut digest = Sha256::new();
     if let Err(error) = authenticode_digest(view as &dyn PeTrait, &mut digest) {
-        error!("the image cannot be hashed ({error:?}), refusing");
+        error!("failed to hash the image ({error:?}), refusing");
         return None;
     }
     if digest.finalize().as_slice() != signature.digest() {
@@ -251,7 +251,7 @@ fn approving_authority(
     let approval = match signer.signed_attrs.as_ref().map(Encode::to_der) {
         Some(Ok(approval)) => approval,
         Some(Err(error)) => {
-            error!("the signed attributes cannot be encoded ({error:?})");
+            error!("failed to encode the signed attributes ({error:?})");
             return None;
         }
         None => {
@@ -391,7 +391,7 @@ fn approved_digest(signer: &SignerInfo) -> Option<OctetString> {
     match value.to_der().as_deref().map(OctetString::from_der) {
         Ok(Ok(digest)) => Some(digest),
         _ => {
-            debug!("the message digest cannot be read");
+            debug!("failed to read the message digest");
             None
         }
     }
@@ -403,7 +403,7 @@ fn approved_content_type(signer: &SignerInfo) -> Option<ObjectIdentifier> {
     match value.to_der().as_deref().map(ObjectIdentifier::from_der) {
         Ok(Ok(content_type)) => Some(content_type),
         _ => {
-            debug!("the content type cannot be read");
+            debug!("failed to read the content type");
             None
         }
     }

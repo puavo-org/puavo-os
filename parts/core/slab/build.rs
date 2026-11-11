@@ -200,7 +200,7 @@ fn generate_verifier_data() {
     let file =
         PathBuf::from(env::var("OUT_DIR").unwrap()).join("authorities.rs");
     fs::write(&file, table.to_string())
-        .unwrap_or_else(|error| panic!("cannot write {file:?}: {error}"));
+        .unwrap_or_else(|error| panic!("failed to write {file:?}: {error}"));
 }
 
 /// Generates a data structure for the specified authority directory.
@@ -249,7 +249,7 @@ fn list_keys(directory: &Path) -> Vec<String> {
 /// Returns the GUID from the specified file as bytes.
 fn identity_of(file: &Path) -> [u8; 16] {
     let written = fs::read_to_string(file)
-        .unwrap_or_else(|error| panic!("cannot read {file:?}: {error}"));
+        .unwrap_or_else(|error| panic!("failed to read {file:?}: {error}"));
     let identity =
         written.trim().parse::<uuid::Uuid>().unwrap_or_else(|error| {
             panic!("{file:?} does not name anyone: {error}")
@@ -260,7 +260,7 @@ fn identity_of(file: &Path) -> [u8; 16] {
 /// Parses the specified certificate and its RSA key.
 fn parse_certificate(file: &Path) {
     let written = fs::read(file)
-        .unwrap_or_else(|error| panic!("cannot read {file:?}: {error}"));
+        .unwrap_or_else(|error| panic!("failed to read {file:?}: {error}"));
     let certificate = Certificate::from_der(&written).unwrap_or_else(|error| {
         panic!("{file:?} is not a certificate: {error}")
     });
@@ -300,8 +300,9 @@ fn find_keys(directory: &Path) -> Vec<PathBuf> {
 
 /// Returns the paths to the entries in the specified directory.
 fn entries_of(directory: &Path) -> impl Iterator<Item = PathBuf> {
-    let entries = fs::read_dir(directory)
-        .unwrap_or_else(|error| panic!("cannot read {directory:?}: {error}"));
+    let entries = fs::read_dir(directory).unwrap_or_else(|error| {
+        panic!("failed to read {directory:?}: {error}")
+    });
     entries.filter_map(|entry| Some(entry.ok()?.path()))
 }
 

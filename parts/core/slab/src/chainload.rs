@@ -237,7 +237,7 @@ fn set_device(handle: Handle) {
 
     let opened = boot::open_protocol_exclusive::<LoadedImage>(handle);
     let Ok(mut loaded) = opened else {
-        debug!("cannot open the next stage image to set its device");
+        debug!("failed to open the next stage image to set its device");
         return;
     };
     let Some(loaded) = loaded.get_mut() else {

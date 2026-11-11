@@ -61,7 +61,7 @@ pub fn enforce(tcg: &mut Tcg) {
             shutdown();
         }
         Err(_) => {
-            error!("cannot read counter public area, refusing");
+            error!("failed to read the counter public area, refusing");
             shutdown();
         }
     }
@@ -81,7 +81,7 @@ pub fn enforce(tcg: &mut Tcg) {
 
     if list_version + VERSIONS_BEHIND_ALLOWED < floor {
         security_violation!(
-            "this device could not start because its startup software is too old, please contact your administrator"
+            "this device failed to start because its startup software is too old, please contact your administrator"
         );
         shutdown();
     }
@@ -93,7 +93,7 @@ pub fn enforce(tcg: &mut Tcg) {
 
     // Lock write access to the counter to prevent misuse.
     if let Err(error) = tpm::write_lock(tcg, COUNTER_INDEX) {
-        error_with_tpm_code("could not write-lock the counter", error);
+        error_with_tpm_code("failed to write-lock the counter", error);
         shutdown();
     }
 
@@ -129,19 +129,19 @@ fn ensure_indices(tcg: &mut Tcg) -> Option<(u64, u64)> {
 /// counter's start value so the floor starts at zero.
 fn initialize_indices(tcg: &mut Tcg) -> Result<(), ()> {
     tpm::define_counter(tcg, COUNTER_INDEX).map_err(|error| {
-        error_with_tpm_code("could not define the counter index", error)
+        error_with_tpm_code("failed to define the counter index", error)
     })?;
     tpm::increment_counter(tcg, COUNTER_INDEX).map_err(|error| {
-        error_with_tpm_code("could not initialize the counter", error)
+        error_with_tpm_code("failed to initialize the counter", error)
     })?;
     let initial = tpm::read_value(tcg, COUNTER_INDEX).map_err(|error| {
-        error_with_tpm_code("could not read the initial counter", error)
+        error_with_tpm_code("failed to read the initial counter", error)
     })?;
     tpm::define_base(tcg, BASE_INDEX).map_err(|error| {
-        error_with_tpm_code("could not define the base index", error)
+        error_with_tpm_code("failed to define the base index", error)
     })?;
     tpm::write_value(tcg, BASE_INDEX, initial)
-        .map_err(|error| error_with_tpm_code("could not write the base", error))
+        .map_err(|error| error_with_tpm_code("failed to write the base", error))
 }
 
 /// Raises the counter to the target. The counter only rises, so
@@ -155,13 +155,13 @@ fn raise_counter_to(tcg: &mut Tcg, current: u64, target: u64) {
     let mut value = current;
     while value < target {
         if let Err(error) = tpm::increment_counter(tcg, COUNTER_INDEX) {
-            error_with_tpm_code("could not raise the counter", error);
+            error_with_tpm_code("failed to raise the counter", error);
             shutdown();
         }
         value = match tpm::read_value(tcg, COUNTER_INDEX) {
             Ok(current_value) => current_value,
             Err(error) => {
-                error_with_tpm_code("could not read the raised counter", error);
+                error_with_tpm_code("failed to read the raised counter", error);
                 shutdown();
             }
         };

@@ -8,7 +8,7 @@ set -u
 
 . "$(dirname "$0")/helpers.sh"
 
-OUTDATED_LIST_MESSAGE='this device could not start because its startup software is too old'
+OUTDATED_LIST_MESSAGE='this device failed to start because its startup software is too old'
 
 build_slab
 
