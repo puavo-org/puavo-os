@@ -28,7 +28,7 @@ diff -ruN gnome-shell-extension-gsconnect.0/src/service/device.js gnome-shell-ex
 +            this.paired && this.type === 'phone') {
 +
 +            const now = GLib.get_monotonic_time();
-+            const minimumDisconnection = 30 * GLib.USEC_PER_SEC;
++            const minimumDisconnection = 300 * GLib.USEC_PER_SEC;
 +
 +            if (this._disconnectedAt === null ||
 +                now - this._disconnectedAt >= minimumDisconnection) {
