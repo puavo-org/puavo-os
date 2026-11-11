@@ -84,10 +84,11 @@ struct Authority {
     issuers: BuiltInCertificates,
 }
 
-/// An authority that approved an image, and its bit in the set of recorded
-/// authorities.
+/// An authority that approved an image, the certificate of the key or the
+/// issuer that matched, and its bit in the set of recorded authorities.
 struct Approval {
     authority: &'static Authority,
+    certificate: BuiltInCertificate,
     bit: usize,
 }
 
@@ -99,7 +100,10 @@ const _: () = assert!(
     AUTHORITIES.len() <= usize::BITS as usize,
     "more authorities than there are bits to remember them by"
 );
-static RECORDED: AtomicUsize = AtomicUsize::new(0);
+static RECORDED_AUTHORITIES: AtomicUsize = AtomicUsize::new(0);
+// The same for certificates, kept apart so a failure to record one never
+// records the other twice.
+static RECORDED_CERTIFICATES: AtomicUsize = AtomicUsize::new(0);
 
 /// Returns the preferred load address of the image, for the image load event.
 /// Returns zero when the image cannot be parsed.
@@ -287,7 +291,11 @@ fn authority_that_signed(
             {
                 // The shift is in range, because the assertion above limits
                 // the table to the number of bits in usize.
-                return Some(Approval { authority, bit: 1 << index });
+                return Some(Approval {
+                    authority,
+                    certificate: key,
+                    bit: 1 << index,
+                });
             }
         }
     }
@@ -342,7 +350,11 @@ fn find_issuing_authority(
                 verification!("a built-in issuer key issued the certificate");
                 // The shift stays in range because the assertion above
                 // keeps the table no longer than there are bits to shift by.
-                return Some(Approval { authority, bit: 1 << index });
+                return Some(Approval {
+                    authority,
+                    certificate: issuer,
+                    bit: 1 << index,
+                });
             }
         }
     }
@@ -397,17 +409,23 @@ fn approved_content_type(signer: &SignerInfo) -> Option<ObjectIdentifier> {
     }
 }
 
-/// Records the authority that approved the image and the image itself.
-/// Returns whether both were recorded.
+/// Records the authority that approved the image, its certificate, and the
+/// image itself. Returns whether all were recorded.
 fn record(approval: &Approval, image: &[u8], device_path: &[u8]) -> bool {
     if !record_authority(approval) {
         security_violation!(
-            "the authority cannot be recorded, refusing to rely on it"
+            "failed to record the authority, refusing to rely on it"
+        );
+        return false;
+    }
+    if !record_certificate(approval) {
+        security_violation!(
+            "failed to record the certificate, refusing to rely on it"
         );
         return false;
     }
     if !record_image(image, device_path) {
-        security_violation!("the image cannot be recorded, refusing to run it");
+        security_violation!("failed to record the image, refusing to run it");
         return false;
     }
     true
@@ -417,7 +435,7 @@ fn record(approval: &Approval, image: &[u8], device_path: &[u8]) -> bool {
 fn record_authority(approval: &Approval) -> bool {
     // An authority is marked recorded only after a successful write, so after
     // a failure the next image tries again.
-    if RECORDED.load(Ordering::Relaxed) & approval.bit != 0 {
+    if RECORDED_AUTHORITIES.load(Ordering::Relaxed) & approval.bit != 0 {
         verification!("the authority is already recorded");
         return true;
     }
@@ -428,11 +446,38 @@ fn record_authority(approval: &Approval) -> bool {
     };
     match records::authority(&mut tcg, &approval.authority.identity) {
         Ok(()) => {
-            RECORDED.fetch_or(approval.bit, Ordering::Relaxed);
+            RECORDED_AUTHORITIES.fetch_or(approval.bit, Ordering::Relaxed);
             true
         }
         Err(error) => {
-            error!("could not record the authority: {error:?}");
+            error!("failed to record the authority: {error:?}");
+            false
+        }
+    }
+}
+
+/// Extends the authority identity and its certificate into PCR 14, unless the
+/// authority already has a certificate recorded.
+fn record_certificate(approval: &Approval) -> bool {
+    // A certificate is marked recorded only after a successful write, so after
+    // a failure the next image tries again.
+    if RECORDED_CERTIFICATES.load(Ordering::Relaxed) & approval.bit != 0 {
+        verification!("the certificate is already recorded");
+        return true;
+    }
+
+    let Some(mut tcg) = rollback::open_tcg() else {
+        verification!("no TPM, the certificate is not recorded");
+        return true;
+    };
+    let identity = &approval.authority.identity;
+    match records::certificate(&mut tcg, identity, approval.certificate) {
+        Ok(()) => {
+            RECORDED_CERTIFICATES.fetch_or(approval.bit, Ordering::Relaxed);
+            true
+        }
+        Err(error) => {
+            error!("failed to record the certificate: {error:?}");
             false
         }
     }
@@ -448,7 +493,7 @@ fn record_image(image: &[u8], device_path: &[u8]) -> bool {
     {
         Ok(()) => true,
         Err(error) => {
-            error!("could not record the image: {error:?}");
+            error!("failed to record the image: {error:?}");
             false
         }
     }
