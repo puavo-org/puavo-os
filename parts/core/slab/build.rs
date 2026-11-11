@@ -18,8 +18,9 @@
 //!     pub const COMPONENTS: &[Component] =
 //!         &[Component { name: b"grub", minimum_version: 20260101 }];
 //!
-//! An authority entry holds the authority identity, its public keys, and its
-//! settings. Each key is parsed at build time to detect invalid keys early.
+//! An authority entry holds the authority identity, the certificates of its
+//! keys, and its settings. Each certificate is parsed at build time to detect
+//! invalid ones early.
 //!
 //! The authority directory holds one subdirectory per authority. Other files
 //! in a subdirectory are ignored:
@@ -28,12 +29,14 @@
 //!     |-- example
 //!         |-- identity        the identity of the authority
 //!         |-- keys
-//!         |   |-- first.der   a public key the authority uses for signing
-//!         |   |-- second.der  a secondary public key the authority uses for
-//!         |   |               signing, for example during a key rotation
+//!         |   |-- first.der   a certificate of a key the authority uses for
+//!         |   |               signing
+//!         |   |-- second.der  a certificate of a secondary key the authority
+//!         |   |               uses for signing, for example during a key
+//!         |   |               rotation
 //!         |-- issuers
-//!         |   |-- third.der   a public key the authority uses for issuing
-//!         |                   code signing certificates
+//!         |   |-- third.der   a certificate of a key the authority uses for
+//!         |                   issuing code signing certificates
 //!         |-- settings        optional, one setting per line
 //!
 //! A setting line holds a name and a value. A setting that is not listed
@@ -70,6 +73,8 @@ use rsa::RsaPublicKey;
 use rsa::pkcs1::DecodeRsaPublicKey;
 use time::macros::format_description;
 use time::{Date, OffsetDateTime};
+use x509_cert::Certificate;
+use x509_cert::der::Decode;
 
 /// The authority directory variable and the file names in an authority.
 const DIRECTORY_VARIABLE: &str = "SLAB_VERIFIER_KEYS";
@@ -268,7 +273,7 @@ fn generate_authority(authority: &Path) -> TokenStream {
     let keys = list_keys(&keys_directory);
     let issuers = list_keys(&issuers_directory);
     if keys.is_empty() && issuers.is_empty() {
-        panic!("{authority:?} holds no {KEY_EXTENSION} key");
+        panic!("{authority:?} holds no {KEY_EXTENSION} certificate");
     }
 
     let settings_file = authority.join(SETTINGS_FILE);
@@ -286,14 +291,14 @@ fn generate_authority(authority: &Path) -> TokenStream {
     }
 }
 
-/// Returns the keys in the specified directory as paths to include, after
-/// making sure each one can be read as a key.
+/// Returns the certificates in the specified directory as paths to include,
+/// after making sure each one holds an RSA key.
 fn list_keys(directory: &Path) -> Vec<String> {
     find_keys(directory)
         .iter()
         .map(|key| {
             watch(key);
-            test_key(key);
+            parse_certificate(key);
             key.display().to_string()
         })
         .collect()
@@ -362,13 +367,18 @@ fn identity_of(file: &Path) -> [u8; 16] {
     identity.to_bytes_le()
 }
 
-/// Tests the specified key by trying to parse it.
-fn test_key(file: &Path) {
+/// Parses the specified certificate and its RSA key.
+fn parse_certificate(file: &Path) {
     let written = fs::read(file)
         .unwrap_or_else(|error| panic!("cannot read {file:?}: {error}"));
-    RsaPublicKey::from_pkcs1_der(&written).unwrap_or_else(|error| {
-        panic!("{file:?} is not a public key: {error}")
+    let certificate = Certificate::from_der(&written).unwrap_or_else(|error| {
+        panic!("{file:?} is not a certificate: {error}")
     });
+    let key = &certificate.tbs_certificate.subject_public_key_info;
+    RsaPublicKey::from_pkcs1_der(key.subject_public_key.raw_bytes())
+        .unwrap_or_else(|error| {
+            panic!("{file:?} does not hold an RSA key: {error}")
+        });
 }
 
 /// Returns subdirectory paths in sorted order.
@@ -379,7 +389,8 @@ fn directories_in(directory: &Path) -> Vec<PathBuf> {
     found
 }
 
-/// Returns the paths to the keys in the specified directory in sorted order,
+/// Returns the paths to the certificates in the specified directory in sorted
+/// order,
 /// and nothing at all when the directory is not there.
 fn find_keys(directory: &Path) -> Vec<PathBuf> {
     // An authority may lack its keys or its issuers directory, as one that only

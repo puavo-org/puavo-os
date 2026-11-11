@@ -2,9 +2,9 @@
 //! certificates included in the signature.
 //!
 //! Only one level of issuance is checked. The signer certificate must be
-//! issued by the issuer key the caller passes, so no chain is built and no
-//! intermediate certificate is followed. The issuer key is trusted as it is,
-//! so no certificate of the issuer is checked.
+//! issued by the key of the issuer certificate the caller passes, so no chain
+//! is built and no intermediate certificate is followed. The issuer
+//! certificate is trusted as it is, so its own validity is not checked.
 
 use alloc::vec::Vec;
 use cms::cert::CertificateChoices;
@@ -69,20 +69,17 @@ pub fn find_signer_certificate(
     None
 }
 
-/// Returns whether the issuer key signed the certificate. The key is an RSA
-/// public key in PKCS #1 DER form.
-pub fn is_issued_by(certificate: &Certificate, issuer_key: &[u8]) -> bool {
+/// Returns whether the key of the issuer certificate signed the certificate.
+/// The issuer certificate is in DER form.
+pub fn is_issued_by(certificate: &Certificate, issuer: &[u8]) -> bool {
     if certificate.signature_algorithm.oid != SHA_256_WITH_RSA_ENCRYPTION {
         verification!("the certificate is not signed with RSA and SHA-256");
         return false;
     }
 
-    let issuer = match RsaPublicKey::from_pkcs1_der(issuer_key) {
-        Ok(issuer) => issuer,
-        Err(error) => {
-            error!("failed to read the issuer key ({error:?})");
-            return false;
-        }
+    let Some(issuer) = read_key(issuer) else {
+        error!("failed to read the issuer key");
+        return false;
     };
     let Ok(to_be_signed) = certificate.tbs_certificate.to_der() else {
         verification!("failed to encode the signed part of the certificate");
@@ -110,6 +107,17 @@ pub fn allows_code_signing(certificate: &Certificate) -> bool {
             purposes.0.iter().any(|purpose| *purpose == ID_KP_CODE_SIGNING)
         }
         _ => false,
+    }
+}
+
+/// Returns the public key of a certificate in DER form.
+pub fn read_key(certificate: &[u8]) -> Option<RsaPublicKey> {
+    match Certificate::from_der(certificate) {
+        Ok(certificate) => read_public_key(&certificate),
+        Err(error) => {
+            verification!("failed to read the certificate ({error:?})");
+            None
+        }
     }
 }
 
@@ -175,8 +183,6 @@ mod tests {
         LazyLock::new(|| read_fixture("issuer.der"));
     static UNTRUSTED: LazyLock<Vec<u8>> =
         LazyLock::new(|| read_fixture("untrusted.der"));
-    static ISSUER_CERTIFICATE: LazyLock<Vec<u8>> =
-        LazyLock::new(|| read_fixture("issuer-certificate.der"));
 
     #[test]
     fn the_certificate_of_the_signer_is_found() {
@@ -222,7 +228,7 @@ mod tests {
 
     #[test]
     fn an_issuer_certificate_does_not_allow_code_signing() {
-        let issuer = Certificate::from_der(&ISSUER_CERTIFICATE).unwrap();
+        let issuer = Certificate::from_der(&ISSUER).unwrap();
         assert!(!allows_code_signing(&issuer));
     }
 

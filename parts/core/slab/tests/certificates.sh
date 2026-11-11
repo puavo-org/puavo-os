@@ -35,10 +35,3 @@ create_untrusted_signer() {
     -addext 'extendedKeyUsage=codeSigning' \
     -keyout "$1.key" -out "$1.pem" 2>/dev/null
 }
-
-# Writes the public key of a private key in the form a built-in key is stored.
-#   $1  private key
-#   $2  output file
-write_public_key() {
-  openssl rsa -in "$1" -RSAPublicKey_out -outform DER -out "$2" 2>/dev/null
-}

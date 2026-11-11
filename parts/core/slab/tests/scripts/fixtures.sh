@@ -3,7 +3,7 @@
 set -eu
 
 # Generates the files the unit tests read: an issuer, a signature made with
-# a certificate the issuer signed, an untrusted key, and an authorities
+# a certificate the issuer signed, an untrusted certificate, and an authorities
 # directory the bootloader is built with.
 #   $1  directory to generate into
 
@@ -24,9 +24,7 @@ mkdir --parents "$output_directory"
 
 create_issuer "${work_directory}/issuer"
 openssl x509 -in "${work_directory}/issuer.pem" -outform DER \
-  -out "${output_directory}/issuer-certificate.der"
-write_public_key "${work_directory}/issuer.key" \
-  "${output_directory}/issuer.der"
+  -out "${output_directory}/issuer.der"
 
 # The certificate code reads only the certificates and the signer of a
 # signature, so any signed content works.
@@ -40,8 +38,8 @@ openssl cms -sign -binary -md sha256 -outform DER \
   -out "${output_directory}/signature.pkcs7"
 
 create_untrusted_signer "${work_directory}/untrusted"
-write_public_key "${work_directory}/untrusted.key" \
-  "${output_directory}/untrusted.der"
+openssl x509 -in "${work_directory}/untrusted.pem" -outform DER \
+  -out "${output_directory}/untrusted.der"
 
 authority_directory="${output_directory}/authorities/test"
 mkdir --parents "${authority_directory}/issuers"

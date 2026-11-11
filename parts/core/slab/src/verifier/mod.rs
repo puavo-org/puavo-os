@@ -41,6 +41,8 @@
 //! Alternatively, a built-in key may have issued the certificate that made S,
 //! which is included in the signature. Check 3 is then made with the key of
 //! that certificate, and the certificate is verified with the built-in key.
+//!
+//! Each built-in key is embedded as its certificate.
 
 mod certificates;
 mod records;
@@ -63,8 +65,6 @@ use core::sync::atomic::{AtomicUsize, Ordering};
 use der::asn1::{Any, OctetString};
 use der::{Decode, Encode};
 use object::read::pe::{ImageOptionalHeader, PeFile64};
-use rsa::RsaPublicKey;
-use rsa::pkcs1::DecodeRsaPublicKey;
 use rsa::pkcs1v15::{Signature, VerifyingKey};
 use rsa::signature::Verifier;
 use sha2::{Digest, Sha256};
@@ -73,17 +73,17 @@ use uefi::Guid;
 /// An authority whose signatures are accepted, and its public keys.
 type Identity = [u8; 16];
 
-/// A built-in public key, and a list of them.
-type PublicKey = &'static [u8];
-type PublicKeys = &'static [PublicKey];
+/// A built-in certificate in DER form, and a list of them.
+type BuiltInCertificate = &'static [u8];
+type BuiltInCertificates = &'static [BuiltInCertificate];
 
-/// An authority whose signatures are accepted, the keys it signs with, the
-/// keys it issues certificates with, and whether the images it approves must
-/// declare their version.
+/// An authority whose signatures are accepted, the certificates of the keys it
+/// signs with, the certificates of the keys it issues certificates with, and
+/// whether the images it approves must declare their version.
 struct Authority {
     identity: Identity,
-    keys: PublicKeys,
-    issuers: PublicKeys,
+    keys: BuiltInCertificates,
+    issuers: BuiltInCertificates,
     version: VersionRequirement,
 }
 
@@ -282,12 +282,9 @@ fn authority_that_signed(
 ) -> Option<Approval> {
     for (index, authority) in AUTHORITIES.iter().enumerate() {
         for key in authority.keys {
-            let public_key = match RsaPublicKey::from_pkcs1_der(key) {
-                Ok(public_key) => public_key,
-                Err(error) => {
-                    error!("a built-in key is unreadable ({error:?})");
-                    continue;
-                }
+            let Some(public_key) = certificates::read_key(key) else {
+                error!("a built-in key is unreadable");
+                continue;
             };
             if VerifyingKey::<Sha256>::new(public_key)
                 .verify(approval, signature)
