@@ -27,7 +27,7 @@ case "$cmd" in
     fi
     exit 1
     ;;
-  '')
+  ''|preferences)
     if ! have_paired_devices; then
       dconf write /org/gnome/shell/extensions/gsconnect/discoverable true
     fi
