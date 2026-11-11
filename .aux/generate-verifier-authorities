@@ -4,7 +4,7 @@ set -eu
 
 # Generates the authorities a bootloader is built to accept, from the key
 # directories that hold them. An authority keeps its identity and its
-# certificates together, and a build needs the public keys of those.
+# certificates together, and a build needs those in DER form.
 #
 # An authority keeps certificates in the directory of the role they serve.
 # Those under keys sign images themselves, those under issuers sign the
@@ -21,16 +21,15 @@ usage="usage: $(basename "$0") <key-directory> <output-directory>"
 key_directory=${1:?$usage}
 output_directory=${2:?$usage}
 
-# Writes the public key of every certificate in directory $1 into $2.
-public_keys() {
+# Writes every certificate in directory $1 into $2 in DER form.
+write_der_certificates() {
   for certificate in "$1"/*.pem; do
     [ -f "$certificate" ] || continue
 
     certificate_name=$(basename "$certificate" .pem)
     mkdir -p "$2"
-    openssl x509 -in "$certificate" -pubkey -noout \
-      | openssl rsa -pubin -RSAPublicKey_out -outform DER \
-        -out "${2}/${certificate_name}.der" 2> /dev/null
+    openssl x509 -in "$certificate" -outform DER \
+      -out "${2}/${certificate_name}.der"
   done
 }
 
@@ -43,6 +42,8 @@ for authority in "$key_directory"/*; do
   mkdir -p "${output_directory}/${name}"
   cp "${authority}/identity" "${output_directory}/${name}/"
 
-  public_keys "${authority}/keys" "${output_directory}/${name}/keys"
-  public_keys "${authority}/issuers" "${output_directory}/${name}/issuers"
+  write_der_certificates "${authority}/keys" \
+    "${output_directory}/${name}/keys"
+  write_der_certificates "${authority}/issuers" \
+    "${output_directory}/${name}/issuers"
 done
