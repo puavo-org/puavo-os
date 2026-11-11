@@ -1,0 +1,32 @@
+commit 553fb1f3b10a1eb2e2d7b4ffeaa94fa6c2a4fd80
+Author: Jesse de Gans <jessedegans@hotmail.com>
+Date:   Mon Jun 1 12:18:46 2026 +0200
+
+    share: sanitize remote-supplied filename to prevent path traversal
+    
+    The Share plugin built the save path directly from packet.body.filename
+    without sanitization, so a paired device could send '../' or an absolute
+    path and write outside the download directory (made worse by the 'open'
+    flag, which auto-launches the received file). Reduce the filename to a
+    single basename before building the destination path.
+
+diff --git a/src/service/plugins/share.js b/src/service/plugins/share.js
+index ef28893b..54d6c830 100644
+--- a/src/service/plugins/share.js
++++ b/src/service/plugins/share.js
+@@ -129,7 +129,14 @@ const SharePlugin = GObject.registerClass({
+ 
+     _getFile(filename) {
+         const dirpath = this._ensureReceiveDirectory();
+-        const basepath = GLib.build_filenamev([dirpath, filename]);
++
++        // Remote-supplied filename is untrusted; collapse to a basename so it can't escape the download dir via '../' or an absolute path.
++        let basename = GLib.path_get_basename(filename);
++        if (!basename || basename === '.' || basename === '..' ||
++            basename.includes('/'))
++            basename = 'unnamed-file';
++
++        const basepath = GLib.build_filenamev([dirpath, basename]);
+         let filepath = basepath;
+         let copyNum = 0;
+ 
