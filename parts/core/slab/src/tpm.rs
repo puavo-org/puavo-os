@@ -65,6 +65,11 @@ pub const PCR_4: u32 = 4;
 // PCR that the disk key is sealed to and the base is extended into.
 pub const PCR_7: u32 = 7;
 
+// PCR that the certificates of the approving authorities are extended into,
+// for remote attestation. Used only with the verifier feature.
+#[cfg(feature = "verifier")]
+pub const PCR_14: u32 = 14;
+
 // The log data of the base extension event.
 const BASE_EVENT_DATA: &[u8] = b"slab-base";
 
