@@ -33,6 +33,9 @@ echo "==> version requirement"
 echo "==> measurements"
 "$TESTS_DIRECTORY/measurements.sh"
 
+echo "==> attestation"
+"$TESTS_DIRECTORY/attestation.sh"
+
 echo "==> previous revocation list"
 "$TESTS_DIRECTORY/previous-revocation-list.sh"
 
