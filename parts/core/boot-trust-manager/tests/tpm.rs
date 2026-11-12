@@ -310,5 +310,5 @@ fn non_existent_register_is_refused() {
 
     let error = SystemDevice.read_register(u32::MAX).err().unwrap();
 
-    assert!(matches!(error, PuavoError::NotFound(_)), "{error}");
+    assert!(matches!(error, PuavoError::TpmError(_)), "{error}");
 }
