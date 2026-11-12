@@ -143,7 +143,10 @@ fn configure_sets_new_pin() {
     // Create display that provides PIN and confirmation
     let pin_display: Box<dyn UserDisplay> = Box::new(
         TestDisplay::with_passwords(vec!["1234", "1234"])
-            .with_yes_no_responses(vec![true]), // "Change PIN?" -> yes
+            .with_yes_no_responses(vec![
+                false, // "Reconfigure?" -> no
+                true,  // "Change PIN?" -> yes
+            ]),
     );
 
     configurator
@@ -175,8 +178,9 @@ fn configure_removes_pin_when_empty() {
     // Create display that provides empty PIN and confirms removal
     let pin_display: Box<dyn UserDisplay> = Box::new(
         TestDisplay::with_passwords(vec![""]).with_yes_no_responses(vec![
-            true, // "Change PIN?" -> yes
-            true, // "Remove PIN protection?" -> yes
+            false, // "Reconfigure?" -> no
+            true,  // "Change PIN?" -> yes
+            true,  // "Remove PIN protection?" -> yes
         ]),
     );
 
@@ -208,8 +212,10 @@ fn configure_cancelled_by_user() {
 
     // Create display that cancels the PIN change
     let pin_display: Box<dyn UserDisplay> = Box::new(
-        TestDisplay::with_passwords(vec!["1234"])
-            .with_yes_no_responses(vec![false]), // "Change PIN?" -> no
+        TestDisplay::with_passwords(vec!["1234"]).with_yes_no_responses(vec![
+            false, // "Reconfigure?" -> no
+            false, // "Change PIN?" -> no
+        ]),
     );
 
     configurator
@@ -242,8 +248,9 @@ fn configure_retries_on_pin_mismatch() {
             "abcd", "abcd", // Second attempt: match
         ])
         .with_yes_no_responses(vec![
-            true, // "Change PIN?" -> yes (first attempt)
-            true, // "Change PIN?" -> yes (retry after mismatch)
+            false, // "Reconfigure?" -> no
+            true,  // "Change PIN?" -> yes (first attempt)
+            true,  // "Change PIN?" -> yes (retry after mismatch)
         ]),
     );
 
@@ -274,6 +281,7 @@ fn configure_cancels_pin_removal() {
             "1234", "1234", // Second attempt: valid PIN with confirmation
         ])
         .with_yes_no_responses(vec![
+            false, // "Reconfigure?" -> no
             true,  // "Change PIN?" -> yes (first attempt)
             false, // "Remove PIN protection?" -> no (cancel removal)
             true,  // "Change PIN?" -> yes (retry after cancellation)
@@ -308,7 +316,10 @@ fn configure_handles_display_error() {
 
     // Create display that will fail when asking for password
     let pin_display: Box<dyn UserDisplay> = Box::new(
-        TestDisplay::with_passwords(vec![]).with_yes_no_responses(vec![true]), // "Change PIN?" -> yes
+        TestDisplay::with_passwords(vec![]).with_yes_no_responses(vec![
+            false, // "Reconfigure?" -> no
+            true,  // "Change PIN?" -> yes
+        ]),
     );
 
     // The configure should propagate the display error instead of looping infinitely.

@@ -1,4 +1,7 @@
-use std::cell::{Cell, RefCell};
+use std::{
+    cell::{Cell, RefCell},
+    collections::VecDeque,
+};
 
 use boot_trust_manager::display::UserDisplay;
 use boot_trust_manager::error::PuavoError;
@@ -6,10 +9,10 @@ use zeroize::Zeroizing;
 
 /// A test display that can be configured with sequences of responses.
 pub struct TestDisplay {
-    /// Sequence of passwords to return
-    passwords: RefCell<Vec<String>>,
-    /// Sequence of yes/no responses to return
-    yes_no_responses: RefCell<Vec<bool>>,
+    /// Sequence of passwords to return, first one first
+    passwords: RefCell<VecDeque<String>>,
+    /// Sequence of yes/no responses to return, first one first
+    yes_no_responses: RefCell<VecDeque<bool>>,
     /// Maximum number of password attempts before failing
     max_attempts: u32,
     /// Current attempt count
@@ -22,8 +25,8 @@ impl TestDisplay {
     /// Create a display that returns the same password for all prompts.
     pub fn with_password(password: &str) -> Self {
         Self {
-            passwords: RefCell::new(vec![password.to_string()]),
-            yes_no_responses: RefCell::new(Vec::new()),
+            passwords: RefCell::new(VecDeque::from([password.to_string()])),
+            yes_no_responses: RefCell::new(VecDeque::new()),
             max_attempts: u32::MAX,
             attempts: Cell::new(0),
             prompts: RefCell::new(Vec::new()),
@@ -36,7 +39,7 @@ impl TestDisplay {
             passwords: RefCell::new(
                 passwords.into_iter().map(String::from).collect(),
             ),
-            yes_no_responses: RefCell::new(Vec::new()),
+            yes_no_responses: RefCell::new(VecDeque::new()),
             max_attempts: u32::MAX,
             attempts: Cell::new(0),
             prompts: RefCell::new(Vec::new()),
@@ -56,7 +59,7 @@ impl TestDisplay {
 
     /// Set a sequence of yes/no responses to return.
     pub fn with_yes_no_responses(mut self, responses: Vec<bool>) -> Self {
-        self.yes_no_responses = RefCell::new(responses);
+        self.yes_no_responses = RefCell::new(responses.into());
         self
     }
 }
@@ -76,13 +79,16 @@ impl UserDisplay for TestDisplay {
 
         self.passwords
             .borrow_mut()
-            .pop()
+            .pop_front()
             .map(Zeroizing::new)
             .ok_or(PuavoError::UnlockError)
     }
 
     fn ask_yes_no(&self, _prompt: &str) -> Result<bool, PuavoError> {
-        self.yes_no_responses.borrow_mut().pop().ok_or(PuavoError::UnlockError)
+        self.yes_no_responses
+            .borrow_mut()
+            .pop_front()
+            .ok_or(PuavoError::UnlockError)
     }
 
     fn show_message(&self, _text: &str) -> Result<(), PuavoError> {
