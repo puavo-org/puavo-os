@@ -34,7 +34,8 @@ case "$cmd" in
       dconf write /org/gnome/shell/extensions/gsconnect/discoverable true
     fi
     dconf write /org/gnome/shell/extensions/gsconnect/enabled true
-    exec gnome-extensions prefs gsconnect@andyholmes.github.io
+    /usr/share/gnome-shell/extensions/gsconnect@andyholmes.github.io/gsconnect-preferences || true
+    dconf write /org/gnome/shell/extensions/gsconnect/discoverable false
     ;;
   *)
     echo "unknown subcommand: '${cmd}'" >&2
