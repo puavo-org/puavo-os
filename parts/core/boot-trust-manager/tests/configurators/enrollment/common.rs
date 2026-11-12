@@ -9,10 +9,13 @@ use boot_trust_manager::{
 };
 use zeroize::Zeroizing;
 
-use crate::common::{display::TestDisplay, fixture_directory, luks, tpm};
+use crate::common::{display::TestDisplay, efi, fixture_directory, luks, tpm};
 
 pub fn setup() -> luks::TestImages {
     tpm::reset();
+
+    // Enrollments bind the Secure Boot state and are skipped without it.
+    efi::with_secure_boot_enabled();
     luks::setup("enrollment")
 }
 
