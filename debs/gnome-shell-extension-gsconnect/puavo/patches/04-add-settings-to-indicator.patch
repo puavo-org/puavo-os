@@ -1,6 +1,6 @@
 diff -ruN gnome-shell-extension-gsconnect.0/src/shell/device.js gnome-shell-extension-gsconnect.1/src/shell/device.js
 --- gnome-shell-extension-gsconnect.0/src/shell/device.js	2025-03-29 16:00:28.000000000 +0200
-+++ gnome-shell-extension-gsconnect.1/src/shell/device.js	2026-11-12 12:37:58.509180938 +0200
++++ gnome-shell-extension-gsconnect.1/src/shell/device.js	2026-11-12 13:33:35.146883683 +0200
 @@ -4,6 +4,7 @@
  
  import Clutter from 'gi://Clutter';
@@ -9,7 +9,7 @@ diff -ruN gnome-shell-extension-gsconnect.0/src/shell/device.js gnome-shell-exte
  import St from 'gi://St';
  
  import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
-@@ -343,6 +344,30 @@
+@@ -343,6 +344,32 @@
          }
  
          this.addMenuItem(actions);
@@ -25,14 +25,16 @@ diff -ruN gnome-shell-extension-gsconnect.0/src/shell/device.js gnome-shell-exte
 +            new Tooltip({ parent: button, text: _('Mobile Settings') });
 +
 +            button.connect('clicked', () => {
-+                this._getTopMenu().close();
-+
 +                const app = Shell.AppSystem.get_default().lookup_app(
 +                    'puavo-gsconnect.desktop'
 +                );
 +
-+                if (app)
++                if (app) {
++                    this._getTopMenu().close();
 +                    app.activate();
++                } else {
++                    console.error('GSConnect: puavo-gsconnect.desktop not found');
++                }
 +            });
 +
 +            actions.box.add_child(button);

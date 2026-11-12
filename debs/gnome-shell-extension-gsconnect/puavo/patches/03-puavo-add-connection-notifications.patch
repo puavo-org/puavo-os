@@ -1,6 +1,6 @@
 diff -ruN gnome-shell-extension-gsconnect.0/src/service/device.js gnome-shell-extension-gsconnect.1/src/service/device.js
 --- gnome-shell-extension-gsconnect.0/src/service/device.js	2025-03-29 16:00:28.000000000 +0200
-+++ gnome-shell-extension-gsconnect.1/src/service/device.js	2026-11-11 13:21:43.216910200 +0200
++++ gnome-shell-extension-gsconnect.1/src/service/device.js	2026-11-12 13:33:23.246489983 +0200
 @@ -101,6 +101,8 @@
          this._outputLock = false;
          this._outputQueue = [];
@@ -10,7 +10,7 @@ diff -ruN gnome-shell-extension-gsconnect.0/src/service/device.js gnome-shell-ex
          // GSettings
          this.settings = new Gio.Settings({
              settings_schema: Config.GSCHEMA.lookup(
-@@ -347,9 +349,38 @@
+@@ -347,9 +349,45 @@
          if (this.connected === !!this.channel)
              return;
  
@@ -42,6 +42,13 @@ diff -ruN gnome-shell-extension-gsconnect.0/src/service/device.js gnome-shell-ex
 +                    title: _('Phone Connected'),
 +                    body: _('%s is now connected').format(this.name),
 +                    icon: new Gio.ThemedIcon({name: 'smartphone-symbolic'}),
++                    buttons: [
++                        {
++                            action: 'openPuavoGSConnect',
++                            label: _('Settings'),
++                            parameter: null,
++                        }
++                    ],
 +                });
 +            }
 +        }
@@ -49,3 +56,29 @@ diff -ruN gnome-shell-extension-gsconnect.0/src/service/device.js gnome-shell-ex
          this._triggerPlugins();
      }
  
+@@ -520,6 +558,25 @@
+         });
+         clearCache.connect('activate', this._clearCache.bind(this));
+         this.add_action(clearCache);
++
++        const openSettings = new Gio.SimpleAction({
++            name: 'openPuavoGSConnect',
++        });
++
++        openSettings.connect('activate', () => {
++            try {
++                const app = Gio.DesktopAppInfo.new('puavo-gsconnect.desktop');
++                if (app) {
++                    app.launch([], null);
++                } else {
++                    log('GSConnect: puavo-gsconnect.desktop not found');
++                }
++            } catch (e) {
++                logError(e);
++            }
++        });
++
++        this.add_action(openSettings);
+     }
+ 
+     /**
