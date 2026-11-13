@@ -7,4 +7,5 @@ pub mod mount;
 pub mod process;
 pub mod reboot;
 pub mod secure_boot;
+pub mod shell;
 pub mod udev;

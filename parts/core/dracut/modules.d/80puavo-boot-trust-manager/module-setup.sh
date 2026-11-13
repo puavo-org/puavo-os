@@ -11,7 +11,7 @@ depends() {
 
 install() {
     inst_multiple /usr/bin/systemd-cryptenroll \
-                  /usr/bin/tpm2_dictionarylockout \
+                  /usr/bin/tpm2 \
                   /usr/sbin/cryptsetup         \
                   /usr/sbin/puavo-boot-trust-manager \
                   /usr/bin/efi-updatevar \
@@ -24,9 +24,10 @@ install() {
                   /usr/bin/openssl \
                   /usr/bin/grep
 
-    # A full reconfiguration writes the Secure Boot keys of the device with
-    # the same scripts as the installer.
-    inst_multiple /usr/lib/puavo-core/update-secure-boot-db \
+    # A full reconfiguration sets the TPM lockout auth and writes the Secure
+    # Boot keys of the device with the same scripts as the installer.
+    inst_multiple /usr/lib/puavo-ltsp-install/puavo-create-device-tpm-keys \
+                  /usr/lib/puavo-core/update-secure-boot-db \
                   /usr/lib/puavo-core/update-secure-boot-dbx \
                   /usr/lib/puavo-ltsp-install/puavo-setup-secure-boot \
                   /usr/lib/puavo-ltsp-install/puavo-prepare-secure-boot \

@@ -10,17 +10,23 @@ fi
 
 output_directory="${1:-/images/boot/addons}"
 tpm_lockout_auth_file="${output_directory}/tpm.lockout.auth"
+new_lockout_auth_file="${tpm_lockout_auth_file}.new"
 
 mkdir -p "$output_directory"
 
+# Keep the old auth until the TPM has taken the new one, so a failure leaves
+# the directory matching the TPM.
+trap 'rm -f "$new_lockout_auth_file"' EXIT
+
 # Generate random lockout auth
-umask 077 && dd if=/dev/urandom of="$tpm_lockout_auth_file" bs=32 count=1 2>/dev/null
+umask 077 && dd if=/dev/urandom of="$new_lockout_auth_file" bs=32 count=1 2>/dev/null
 
 # Set lockout hierarchy authorization
-tpm2_changeauth --object-context=lockout "file:${tpm_lockout_auth_file}"
+tpm2 changeauth --object-context=lockout "file:${new_lockout_auth_file}"
+mv "$new_lockout_auth_file" "$tpm_lockout_auth_file"
 
 # Configure dictionary attack lockout parameters
-tpm2_dictionarylockout \
+tpm2 dictionarylockout \
   --setup-parameters \
   --max-tries=32 \
   --recovery-time=60 \

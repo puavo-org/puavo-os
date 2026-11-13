@@ -14,7 +14,7 @@ use tss_esapi::{
     tcti_ldr::TctiNameConf,
 };
 
-use crate::error::PuavoError;
+use crate::{error::PuavoError, system::shell};
 
 /// Number of PCRs in a PC Client TPM.
 pub const PCR_COUNT: u32 = 24;
@@ -26,7 +26,13 @@ pub fn pcr_index(expression: &str) -> Option<u32> {
     (index < PCR_COUNT).then_some(index)
 }
 
+const OWNER_AUTH_SET_FLAG: u32 = 1 << 0;
+const LOCKOUT_AUTH_SET_FLAG: u32 = 1 << 2;
 const IN_LOCKOUT_FLAG: u32 = 1 << 9;
+
+/// Command that sets a new lockout auth and saves it to a directory.
+const CREATE_LOCKOUT_AUTH_COMMAND: &str =
+    "/usr/lib/puavo-ltsp-install/puavo-create-device-tpm-keys";
 
 /// Read PCR values from the TPM.
 ///
@@ -172,7 +178,8 @@ pub fn read_nv_u64(index: u32) -> Result<u64, PuavoError> {
 /// - `lockout_auth_path`: Path to the lockout authorization file.
 ///
 /// Returns:
-/// - `Ok(())` if the lockout was cleared successfully or if the auth file does not exist.
+/// - `Ok(())` if the lockout was cleared successfully, if the auth file does
+///   not exist or if the TPM has no lockout auth.
 /// - `Err(PuavoError)` if the command fails.
 pub fn clear_dictionary_lockout<P: AsRef<Path>>(
     lockout_auth_path: P,
@@ -187,33 +194,26 @@ pub fn clear_dictionary_lockout<P: AsRef<Path>>(
         return Ok(());
     }
 
+    // A single wrong lockout auth locks the lockout auth out for the lockout
+    // recovery time. A TPM with none, such as a new one, would be sent one.
+    if read_permanent()? & LOCKOUT_AUTH_SET_FLAG == 0 {
+        info!("TPM has no lockout auth, skipping lockout clear");
+        return Ok(());
+    }
+
     debug!(
         "Clearing TPM dictionary attack lockout using auth file: {:?}",
         path
     );
 
     let auth_argument = format!("file:{}", path.display());
-    let output = Command::new("tpm2_dictionarylockout")
-        .arg("--clear-lockout")
-        .arg("--auth")
-        .arg(&auth_argument)
-        .output()
-        .map_err(|error| {
-            PuavoError::TpmError(format!(
-                "Failed to execute tpm2_dictionarylockout: {}",
-                error
-            ))
-        })?;
-
-    if output.status.success() {
-        Ok(())
-    } else {
-        Err(PuavoError::TpmError(format!(
-            "Failed to clear TPM dictionary lockout (exit code {:?}): {}",
-            output.status.code(),
-            String::from_utf8_lossy(&output.stderr)
-        )))
-    }
+    shell::run(
+        Command::new("tpm2")
+            .arg("dictionarylockout")
+            .arg("--clear-lockout")
+            .arg("--auth")
+            .arg(&auth_argument),
+    )
 }
 
 /// Check if the TPM is currently in dictionary attack lockout mode.
@@ -253,4 +253,55 @@ pub fn is_in_lockout() -> Result<bool, PuavoError> {
 
     // If we fail to find the permanent flags, assume not locked out
     Ok(false)
+}
+
+/// Checks whether the TPM is cleared, meaning neither the owner auth nor the
+/// lockout auth is set.
+pub fn is_cleared() -> Result<bool, PuavoError> {
+    Ok(read_permanent()? & (OWNER_AUTH_SET_FLAG | LOCKOUT_AUTH_SET_FLAG) == 0)
+}
+
+/// Reads the permanent attributes of the TPM.
+fn read_permanent() -> Result<u32, PuavoError> {
+    let tcti = TctiNameConf::from_environment_variable()
+        .unwrap_or(TctiNameConf::Device(Default::default()));
+
+    let mut context = Context::new(tcti).map_err(|error| {
+        PuavoError::TpmError(format!("Failed to create TPM context: {}", error))
+    })?;
+
+    let (capability_data, _more_data) = context
+        .get_capability(
+            CapabilityType::TpmProperties,
+            PropertyTag::Permanent.into(),
+            1,
+        )
+        .map_err(|error| {
+            PuavoError::TpmError(format!(
+                "Failed to get TPM permanent flags: {}",
+                error
+            ))
+        })?;
+
+    let TpmProperties(properties) = capability_data else {
+        return Err(PuavoError::TpmError(
+            "TPM permanent flags missing".to_string(),
+        ));
+    };
+
+    properties
+        .iter()
+        .find(|property| property.property() == PropertyTag::Permanent)
+        .map(|property| property.value())
+        .ok_or_else(|| {
+            PuavoError::TpmError("TPM permanent flags missing".to_string())
+        })
+}
+
+/// Sets a new random lockout auth and the dictionary attack parameters on
+/// the TPM. The auth is saved to the specified directory.
+pub fn create_lockout_auth(directory: &Path) -> Result<(), PuavoError> {
+    info!("Setting a new TPM lockout auth, saved to {:?}", directory);
+
+    shell::run(Command::new(CREATE_LOCKOUT_AUTH_COMMAND).arg(directory))
 }

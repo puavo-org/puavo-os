@@ -4,7 +4,7 @@ use std::{path::Path, process::Command};
 
 use log::info;
 
-use crate::error::PuavoError;
+use crate::{error::PuavoError, system::shell::run};
 
 /// Command that writes the Secure Boot keys of a directory to the firmware.
 const ENROLL_KEYS_COMMAND: &str =
@@ -13,21 +13,6 @@ const ENROLL_KEYS_COMMAND: &str =
 /// Command that builds and signs the database of a directory of keys.
 const UPDATE_DATABASE_COMMAND: &str =
     "/usr/lib/puavo-ltsp-install/puavo-update-device-db";
-
-/// Runs a command and returns an error if it fails.
-fn run(command: &mut Command) -> Result<(), PuavoError> {
-    let output = command.output().map_err(PuavoError::IoError)?;
-
-    if output.status.success() {
-        return Ok(());
-    }
-
-    Err(PuavoError::ShellError(format!(
-        "{:?} failed: {}",
-        command.get_program(),
-        String::from_utf8_lossy(&output.stderr)
-    )))
-}
 
 #[cfg(not(test))]
 const SCRIPT_DIRECTORY: &str = "/usr/lib/puavo-core";

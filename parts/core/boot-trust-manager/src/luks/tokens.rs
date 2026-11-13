@@ -17,6 +17,7 @@ use crate::secure_boot::{
     chain::{Device, Measurement},
     validator::Validator,
 };
+use crate::system::shell;
 use crate::tpm::pcr_index;
 
 pub const MAX_TOKENS: u32 = 32;
@@ -393,26 +394,18 @@ impl LuksTpmTokenManager {
         // the process cannot hang boot indefinitely.
         // This is a critical operation, so the timeout must be
         // long enough to cover slow TPMs.
-        let output = Command::new("systemd-cryptenroll")
-            .args(&arguments)
-            // Security note: NEWPIN must be passed via environment variable as
-            // standard input does not work and there does not seem to be any
-            // other reliable way. While systemd erases the variable, it
-            // remains briefly visible via /proc.
-            .env("NEWPIN", pin.map(|pin| pin.as_str()).unwrap_or_default())
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .output()
-            .map_err(PuavoError::IoError)?;
-
-        if !output.status.success() {
-            let standard_error =
-                String::from_utf8_lossy(&output.stderr).to_string();
-            return Err(PuavoError::ShellError(standard_error));
-        }
-
-        Ok(())
+        shell::run(
+            Command::new("systemd-cryptenroll")
+                .args(&arguments)
+                // Security note: NEWPIN must be passed via environment variable
+                // as standard input does not work and there does not seem to be
+                // any other reliable way. While systemd erases the variable, it
+                // remains briefly visible via /proc.
+                .env("NEWPIN", pin.map(|pin| pin.as_str()).unwrap_or_default())
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped()),
+        )
     }
 
     /// Tests the validity of the specified token.

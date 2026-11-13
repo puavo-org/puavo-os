@@ -28,7 +28,7 @@ for _ in $(seq 1 50); do
           ln -sf "$tpmrm_device" /dev/tpmrm0
 
         # Configure max tries, recovery time and lockout recovery time to five minutes
-        tpm2_dictionarylockout --setup-parameters \
+        tpm2 dictionarylockout --setup-parameters \
             --max-tries=8 --recovery-time=300 --lockout-recovery-time=300 --auth=''
         exit 0
     done

@@ -12,8 +12,8 @@ BASE_INDEX=0x01514B01
 
 undefine_if_present() {
   # Remove the NV index if it is present.
-  if tpm2_nvreadpublic "$1" >/dev/null 2>&1; then
-    tpm2_nvundefine "$1" -C o
+  if tpm2 nvreadpublic "$1" >/dev/null 2>&1; then
+    tpm2 nvundefine "$1" -C o
     echo "reset $1"
   fi
 }
