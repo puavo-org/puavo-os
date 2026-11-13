@@ -1,21 +1,13 @@
 diff -ruN gnome-shell-extension-gsconnect.0/src/extension.js gnome-shell-extension-gsconnect.1/src/extension.js
 --- gnome-shell-extension-gsconnect.0/src/extension.js	2025-03-29 16:00:28.000000000 +0200
-+++ gnome-shell-extension-gsconnect.1/src/extension.js	2026-11-13 08:55:22.157760932 +0200
-@@ -335,7 +335,7 @@
-         this._indicator.visible = false;
- 
-         // Create the toggle menu and associate it with the indicator
--        this.quickSettingsItems.push(new ServiceToggle());
-+        // this.quickSettingsItems.push(new ServiceToggle());
++++ gnome-shell-extension-gsconnect.1/src/extension.js	2026-11-13 14:28:18.911996933 +0200
+@@ -339,6 +339,9 @@
  
          // Add the indicator to the panel and the toggle to the menu
          QuickSettingsMenu.addExternalIndicator(this);
-@@ -343,7 +343,7 @@
++
++        for (const item of this.quickSettingsItems)
++            item.hide();
+     }
  
      destroy() {
-         // Set enabled state to false to kill the service on destroy
--        this.quickSettingsItems.forEach(item => item.destroy());
-+        // this.quickSettingsItems.forEach(item => item.destroy());
-         // Destroy the indicator
-         this._indicator.destroy();
-         super.destroy();
