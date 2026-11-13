@@ -37,6 +37,9 @@ class packages::purged {
     # (runs dpkg-query without speed considerations)
     , 'im-config'
 
+    # do not install kdeconnect
+    , 'kdeconnect'
+
     # various HTML api docs. not quite needed in image
     , 'libglib2.0-doc'
     , 'libgtk-3-doc'

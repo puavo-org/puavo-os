@@ -1,0 +1,55 @@
+#!/bin/sh
+
+set -eu
+
+exec 3< /usr/local/bin/puavo-gsconnect
+if ! flock -nx 3; then
+  echo 'did not get a lock on puavo-gsconnect, exiting' >&2
+  exit 1
+fi
+
+have_paired_devices() {
+  dconf dump /org/gnome/shell/extensions/gsconnect/device/ \
+    | awk -F= '
+        BEGIN { paired = 0; status = 1 }
+        $1 == "paired" && $2 == "true" { paired = 1 }
+        $1 == "type"   && $2 ~ "phone" && paired { status = 0 }
+        $0 == "" { paired = 0 }
+        END { exit(status) }
+      '
+}
+
+if [ "$(puavo-conf puavo.desktop.gsconnect.enable)" != 'true' ]; then
+  echo 'this feature is disabled by puavo-conf' >&2
+  exit 1
+fi
+
+cmd="${1:-}"
+
+case "$cmd" in
+  check-for-paired-devices)
+    if have_paired_devices; then
+      exit 0
+    fi
+    exit 1
+    ;;
+  ''|preferences)
+    if have_paired_devices; then
+      dconf write /org/gnome/shell/extensions/gsconnect/discoverable false
+    else
+      dconf write /org/gnome/shell/extensions/gsconnect/discoverable true
+    fi
+    dconf write /org/gnome/shell/extensions/gsconnect/enabled true
+    /usr/share/gnome-shell/extensions/gsconnect@andyholmes.github.io/gsconnect-preferences || true
+    dconf write /org/gnome/shell/extensions/gsconnect/discoverable false
+    if ! have_paired_devices; then
+      dconf write /org/gnome/shell/extensions/gsconnect/enabled false
+    fi
+    ;;
+  *)
+    echo "unknown subcommand: '${cmd}'" >&2
+    exit 1
+    ;;
+esac
+
+exit 0

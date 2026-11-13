@@ -12,6 +12,7 @@ class desktop::puavodesktop {
   include ::desktop::mimedefaults
   include ::gnome_shell_extensions::puavodesktop
   include ::gnome_shell_helper
+  include ::gsconnect
   include ::packages
   include ::puavomenu
   include ::puavo_suspend_tricks

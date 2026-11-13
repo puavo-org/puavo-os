@@ -251,6 +251,7 @@ class packages {
     , 'shared-mime-info'
     , 'suckless-tools'
     , 'unclutter'
+    , 'x11-common'
     , 'xmobar'
     , 'xmonad' ]:
       tag => [ 'tag_desktop', 'tag_debian_desktop', ];
@@ -616,6 +617,8 @@ class packages {
     , 'gnome-settings-daemon'
     , 'gnome-shell'
     , 'gnome-shell-extensions'
+    , 'gnome-shell-extension-gsconnect'
+    , 'gnome-shell-extension-gsconnect-browsers'
     , 'gnome-shell-extension-tiling-assistant'
     , 'gnome-shell-extension-user-theme'
     , 'gnome-sushi'
