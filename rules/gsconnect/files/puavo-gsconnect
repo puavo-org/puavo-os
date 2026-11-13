@@ -42,6 +42,9 @@ case "$cmd" in
     dconf write /org/gnome/shell/extensions/gsconnect/enabled true
     /usr/share/gnome-shell/extensions/gsconnect@andyholmes.github.io/gsconnect-preferences || true
     dconf write /org/gnome/shell/extensions/gsconnect/discoverable false
+    if ! have_paired_devices; then
+      dconf write /org/gnome/shell/extensions/gsconnect/enabled false
+    fi
     ;;
   *)
     echo "unknown subcommand: '${cmd}'" >&2
