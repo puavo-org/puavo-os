@@ -833,14 +833,14 @@ class packages {
   @packages::kernels::kernel_package {
     'default':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-6.12.113+deb13.1-amd64-unsigned',
-      version      => '6.12.113+deb13.1-amd64';
+      package_name => 'linux-image-6.12.116+deb13.1-amd64-unsigned',
+      version      => '6.12.116+deb13.1-amd64';
 
     'modern':
       dkms_modules   => [ $hpuefi_module ],
-      extra_packages => [ 'linux-modules-7.2.9+deb13-amd64' ],
-      package_name   => 'linux-binary-unsigned-7.2.9+deb13-amd64',
-      version        => '7.2.9+deb13-amd64';
+      extra_packages => [ 'linux-modules-7.2.12+deb13-amd64' ],
+      package_name   => 'linux-binary-unsigned-7.2.12+deb13-amd64',
+      version        => '7.2.12+deb13-amd64';
   }
 
   # special packages for "hsm"-image
