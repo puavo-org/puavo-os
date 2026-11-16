@@ -11,9 +11,16 @@ fi
 
 ntp_server="ntp.${puavo_topdomain}"
 
-# XXX when about the case where this should listen?
-cat <<EOF > /etc/openntpd/ntpd.conf.tmp
-server ${ntp_server}
-EOF
+do_listen=false
+if "$(puavo-conf puavo.service.openntpd.server.enabled)" = 'true' ]; then
+  do_listen=true
+fi
+
+{
+  if $do_listen; then
+    echo 'listen on *'
+  fi
+  echo "server ${ntp_server}"
+} > /etc/openntpd/ntpd.conf.tmp
 
 mv /etc/openntpd/ntpd.conf.tmp /etc/openntpd/ntpd.conf
