@@ -11,11 +11,9 @@ fi
 
 ntp_server="ntp.${puavo_topdomain}"
 
-mkdir -p /etc/systemd/timesyncd.conf.d
-cat <<EOF > /etc/systemd/timesyncd.conf.d/puavo.conf.tmp
-[Time]
-NTP=${ntp_server}
+# XXX when about the case where this should listen?
+cat <<EOF > /etc/openntpd/ntpd.conf.tmp
+server ${ntp_server}
 EOF
 
-mv /etc/systemd/timesyncd.conf.d/puavo.conf.tmp \
-   /etc/systemd/timesyncd.conf.d/puavo.conf
+mv /etc/openntpd/ntpd.conf.tmp /etc/openntpd/ntpd.conf

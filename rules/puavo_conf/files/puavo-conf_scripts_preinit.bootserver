@@ -23,7 +23,7 @@ setup_dbus
 setup_keyboard
 set_timezone
 setup_locale
-setup_timesyncd
+setup_openntpd
 setup_modules
 manage_module_blacklist
 cleanup_crash_dumps

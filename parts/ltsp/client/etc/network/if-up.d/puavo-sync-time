@@ -25,8 +25,8 @@ fi
 
   case "${IFACE:-}" in
     vpn*)
-      ntp_server=$(awk -F= '$1 == "NTP" { print $2; exit(0) }' \
-                     /etc/systemd/timesyncd.conf.d/puavo.conf)
+      ntp_server=$(awk '$1 == "server" { print $2; exit(0) }' \
+                     /etc/openntpd/ntpd.conf)
       if [ -n "$ntp_server" ]; then
         if ntpdig -Ss -M 10000 "$ntp_server"; then
           sync_done=true
@@ -36,15 +36,14 @@ fi
   esac
 
   if ! $sync_done; then
-    fallback_ntp_servers=$(awk -F= '$1 ~ /FallbackNTP/ { print $2; exit(0) }' \
-                             /etc/systemd/timesyncd.conf)
+    fallback_ntp_servers='
+      0.debian.pool.ntp.org 1.debian.pool.ntp.org
+      2.debian.pool.ntp.org 3.debian.pool.ntp.org
+    '
     for ntp_server in $fallback_ntp_servers; do
       if ntpdig -Ss -M 10000 "$ntp_server"; then
         break
       fi
     done
   fi
-
-  # this triggers a dbus call to systemd-timesyncd and also activates it
-  timedatectl timesync-status
 ) &
