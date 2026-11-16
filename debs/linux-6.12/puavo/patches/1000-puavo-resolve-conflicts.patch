@@ -1,0 +1,48 @@
+diff -ruN linux-6.12.orig/drivers/iommu/intel/iommu.c linux-6.12/drivers/iommu/intel/iommu.c
+--- linux-6.12.orig/drivers/iommu/intel/iommu.c	2026-11-16 09:03:56.000000000 +0200
++++ linux-6.12/drivers/iommu/intel/iommu.c	2026-11-16 09:10:23.733562736 +0200
+@@ -224,6 +224,8 @@
+ EXPORT_SYMBOL_GPL(intel_iommu_enabled);
+ 
+ static int dmar_map_intgpu = IS_ENABLED(CONFIG_INTEL_IOMMU_DEFAULT_ON);
++static int dmar_map_ipts = 1;
++static int dmar_map_ipu = 1;
+ static int intel_iommu_superpage = 1;
+ static int iommu_identity_mapping;
+ static int iommu_skip_te_disable;
+@@ -231,6 +233,8 @@
+ 
+ #define IDENTMAP_AZALIA		4
+ #define IDENTMAP_INTGPU		8
++#define IDENTMAP_IPU		16	/* puavo:  8 -> 16 */
++#define IDENTMAP_IPTS		32	/* puavo: 16 -> 32 */
+ 
+ const struct iommu_ops intel_iommu_ops;
+ static const struct iommu_dirty_ops intel_dirty_ops;
+@@ -2096,6 +2100,13 @@
+ 			return IOMMU_DOMAIN_IDENTITY;
+ 	}
+ 
++		if ((iommu_identity_mapping & IDENTMAP_IPU) && IS_INTEL_IPU(pdev))
++			return IOMMU_DOMAIN_IDENTITY;
++
++		if ((iommu_identity_mapping & IDENTMAP_IPTS) && IS_IPTS(pdev))
++			return IOMMU_DOMAIN_IDENTITY;
++
++
+ 	return 0;
+ }
+ 
+@@ -2397,6 +2408,12 @@
+ 	if (!dmar_map_intgpu)
+ 		iommu_identity_mapping |= IDENTMAP_INTGPU;
+ 
++	if (!dmar_map_ipu)
++		iommu_identity_mapping |= IDENTMAP_IPU;
++
++	if (!dmar_map_ipts)
++		iommu_identity_mapping |= IDENTMAP_IPTS;
++
+ 	check_tylersburg_isoch();
+ 
+ 	/*
