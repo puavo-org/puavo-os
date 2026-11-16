@@ -1,0 +1,132 @@
+Slightly adapted for Puavo.
+
+From 7d779abb11a864c866efa1f0c0d0775f1e207b6b Mon Sep 17 00:00:00 2001
+From: Zdenek Dohnal <zdohnal@redhat.com>
+Date: Wed, 14 Sep 2022 14:58:00 +0200
+Subject: [PATCH] Add FrequentNetifUpdate option/directive
+
+---
+ configure.ac               | 14 ++++++++++++++
+ utils/cups-browsed.c       | 17 +++++++++++++++--
+ utils/cups-browsed.conf.5  | 12 ++++++++++++
+ utils/cups-browsed.conf.in |  9 +++++++++
+ 4 files changed, 50 insertions(+), 2 deletions(-)
+
+
+diff -ruN cups-filters.orig/configure.ac cups-filters/configure.ac
+--- cups-filters.orig/configure.ac	2026-11-16 12:39:42.572237380 +0200
++++ cups-filters/configure.ac	2026-11-16 12:40:11.308948444 +0200
+@@ -871,6 +871,19 @@
+ )
+ AC_DEFINE_UNQUOTED([SHELL], "$with_shell", [Path for a modern shell])
+ 
++# =========================================================
++# Turn on/off network interface updates for each found entry
++# ==========================================================
++AC_ARG_ENABLE([frequent_netif_update],
++              [AS_HELP_STRING([--enable-frequent-netif-update], [Enable network interface update after each found entry to prevent network issues])],
++              [FREQUENT_NETIF_UPDATE=$enableval],
++              [FREQUENT_NETIF_UPDATE=yes]
++)
++
++AS_IF([test "x$FREQUENT_NETIF_UPDATE" != "xno"],
++      [AC_DEFINE([FREQUENT_NETIF_UPDATE], [1], [Define whether we want network interface update after each found entry])]
++)
++
+ # =====================
+ # Prepare all .in files
+ # =====================
+@@ -947,6 +960,7 @@
+ 	pclm:            ${enable_pclm}
+ 	local queue naming for remote CUPS queues: ${REMOTE_CUPS_LOCAL_QUEUE_NAMING}
+ 	keep generated queues during shutdown:     ${SAVING_CREATED_QUEUES}
++	update network interfaces after each found entry:     ${FREQUENT_NETIF_UPDATE}
+ 	all ipp printer auto-setup: ${enable_auto_setup_all}
+ 	only driverless auto-setup: ${enable_auto_setup_driverless_only}
+ 	only local auto-setup: ${enable_auto_setup_local_only}
+diff -ruN cups-filters.orig/utils/cups-browsed.c cups-filters/utils/cups-browsed.c
+--- cups-filters.orig/utils/cups-browsed.c	2026-11-16 12:39:42.996245733 +0200
++++ cups-filters/utils/cups-browsed.c	2026-11-16 12:40:55.330319644 +0200
+@@ -490,6 +490,11 @@
+ static guint autoshutdown_exec_id = 0;
+ static const char *default_printer = NULL;
+ static unsigned int notify_lease_duration = 30 * 86400;
++#ifdef FREQUENT_NETIF_UPDATE
++static int FrequentNetifUpdate = 1;
++#else 
++static int FrequentNetifUpdate = 0;
++#endif
+ 
+ static int debug_stderr = 0;
+ static int debug_logfile = 0;
+@@ -9705,7 +9710,7 @@
+      or legacy CUPS, needed for the is_local_hostname() function calls.
+      During DNS-SD discovery the update is already done by the Avahi
+      event handler function. */
+-  if (type == NULL || type[0] == '\0')
++  if (FrequentNetifUpdate && (type == NULL || type[0] == '\0'))
+     update_netifs(NULL);
+ 
+   /* Check if we have already created a queue for the discovered
+@@ -10107,7 +10112,8 @@
+ 
+   /* Ignore local queues of the cupsd we are serving for, identifying them
+      via UUID */
+-  update_netifs(NULL);
++  if (FrequentNetifUpdate)
++    update_netifs(NULL);
+   if ((flags & AVAHI_LOOKUP_RESULT_LOCAL) || !strcasecmp(ifname, "lo") ||
+       is_local_hostname(host_name)) {
+     update_local_printers ();
+@@ -11972,6 +11978,13 @@
+       else if (!strcasecmp(value, "no") || !strcasecmp(value, "false") ||
+ 	       !strcasecmp(value, "off") || !strcasecmp(value, "0"))
+ 	AutoClustering = 0;
++    } else if (!strcasecmp(line, "FrequentNetifUpdate") && value) {
++      if (!strcasecmp(value, "yes") || !strcasecmp(value, "true") ||
++	  !strcasecmp(value, "on") || !strcasecmp(value, "1"))
++	FrequentNetifUpdate = 1;
++      else if (!strcasecmp(value, "no") || !strcasecmp(value, "false") ||
++	       !strcasecmp(value, "off") || !strcasecmp(value, "0"))
++	FrequentNetifUpdate = 0;
+     } else if (!strcasecmp(line, "Cluster") && value) {
+       ptr = value;
+       ptr2 = NULL;
+diff -ruN cups-filters.orig/utils/cups-browsed.conf.5 cups-filters/utils/cups-browsed.conf.5
+--- cups-filters.orig/utils/cups-browsed.conf.5	2023-01-25 03:38:24.000000000 +0200
++++ cups-filters/utils/cups-browsed.conf.5	2026-11-16 12:40:11.312948558 +0200
+@@ -1005,6 +1005,18 @@
+         NotifLeaseDuration 86400
+ .fam T
+ .fi
++FrequentNetifUpdate turns on/off the network interface update routines
++which happen for each found entry, which can slow up cups-browsed significantly
++if we are on a network with many shared printers or if we use BrowsePoll to a server
++with many queues. Network interface updates after receiving D-BUS notification
++from NetworkManager won't be turned off with the directive. The default value
++is 'Yes'.
++.PP
++.nf
++.fam C
++        FrequentNetifUpdate Yes
++.fam T
++.fi
+ .SH SEE ALSO
+ 
+ \fBcups-browsed\fP(8)
+diff -ruN cups-filters.orig/utils/cups-browsed.conf.in cups-filters/utils/cups-browsed.conf.in
+--- cups-filters.orig/utils/cups-browsed.conf.in	2023-01-25 03:38:24.000000000 +0200
++++ cups-filters/utils/cups-browsed.conf.in	2026-11-16 12:40:11.312948558 +0200
+@@ -774,3 +774,12 @@
+ # and doing specific actions when a D-BUS notification comes.
+ 
+ # NotifLeaseDuration 86400
++
++# FrequentNetifUpdate turns on/off the network interface update routines
++# which happen for each found entry, which can slow up cups-browsed significantly
++# if we are on a network with many shared printers or if we use BrowsePoll to a server
++# with many queues. Network interface updates after receiving D-BUS notification
++# from NetworkManager won't be turned off with the directive. The default value
++# is 'Yes'.
++#
++# FrequentNetifUpdate Yes
