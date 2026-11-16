@@ -218,7 +218,7 @@ $(install_image_dir):
 
 .PHONY: update-mime-database
 update-mime-database:
-	$(_sudo) /usr/lib/puavo-ltsp-client/update-mime-database
+	$(_sudo) /usr/lib/puavo-ltsp-client/update-mime-database --force
 
 # Using -comp lzo instead of gzip, because we prefer to optimize decompression
 # speed for faster boots, even though image sizes are slightly bigger than with

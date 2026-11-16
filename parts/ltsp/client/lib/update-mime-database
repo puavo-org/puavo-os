@@ -2,8 +2,9 @@
 
 set -eu
 
-if [ -s /var/lib/puavo-pkg/.update_mime_database ]; then
-  update-mime-database /usr/share/mime
+if [ "${1:-}" = '--force' ] \
+  || [ -s /var/lib/puavo-pkg/.update_mime_database ]; then
+    update-mime-database /usr/share/mime
 fi
 
 cat /dev/null > /var/lib/puavo-pkg/.update_mime_database
