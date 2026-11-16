@@ -1,6 +1,6 @@
 diff -ruN linux-6.12.orig/drivers/iommu/intel/iommu.c linux-6.12/drivers/iommu/intel/iommu.c
---- linux-6.12.orig/drivers/iommu/intel/iommu.c	2026-11-16 09:03:56.000000000 +0200
-+++ linux-6.12/drivers/iommu/intel/iommu.c	2026-11-16 09:10:23.733562736 +0200
+--- linux-6.12.orig/drivers/iommu/intel/iommu.c	2026-11-16 09:42:32.676944712 +0200
++++ linux-6.12/drivers/iommu/intel/iommu.c	2026-11-16 09:44:25.764027930 +0200
 @@ -224,6 +224,8 @@
  EXPORT_SYMBOL_GPL(intel_iommu_enabled);
  
@@ -19,21 +19,20 @@ diff -ruN linux-6.12.orig/drivers/iommu/intel/iommu.c linux-6.12/drivers/iommu/i
  
  const struct iommu_ops intel_iommu_ops;
  static const struct iommu_dirty_ops intel_dirty_ops;
-@@ -2096,6 +2100,13 @@
- 			return IOMMU_DOMAIN_IDENTITY;
- 	}
+@@ -2094,6 +2098,12 @@
  
+ 		if ((iommu_identity_mapping & IDENTMAP_INTGPU) && IS_INTGPU_DEVICE(pdev))
+ 			return IOMMU_DOMAIN_IDENTITY;
++
 +		if ((iommu_identity_mapping & IDENTMAP_IPU) && IS_INTEL_IPU(pdev))
 +			return IOMMU_DOMAIN_IDENTITY;
 +
 +		if ((iommu_identity_mapping & IDENTMAP_IPTS) && IS_IPTS(pdev))
 +			return IOMMU_DOMAIN_IDENTITY;
-+
-+
- 	return 0;
- }
+ 	}
  
-@@ -2397,6 +2408,12 @@
+ 	return 0;
+@@ -2397,6 +2407,12 @@
  	if (!dmar_map_intgpu)
  		iommu_identity_mapping |= IDENTMAP_INTGPU;
  
