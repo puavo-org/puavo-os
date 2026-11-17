@@ -62,6 +62,8 @@ boot_from_server() {
   fi
 
   swtpm_start "$state"
+  # The firmware network stack starts only with a random number source, which
+  # the emulated CPU lacks without KVM.
   # shellcheck disable=SC2086
   timeout "$BOOT_TIMEOUT" qemu-system-x86_64 $acceleration \
     -machine q35 -smp 4 -m 4G \
@@ -69,6 +71,7 @@ boot_from_server() {
     -drive if=pflash,format=raw,file="$state/vars.fd" \
     -netdev "user,id=net0,tftp=$root,bootfile=slabx64.efi" \
     -device virtio-net-pci,netdev=net0,bootindex=1 \
+    -device virtio-rng-pci \
     -chardev socket,id=chrtpm,path="$state/sock" \
     -tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-crb,tpmdev=tpm0 \
     -display none -serial stdio -no-reboot </dev/null 2>&1
