@@ -1,3 +1,4 @@
+use crate::system::usage::{self, Usage};
 use crate::{display::UserDisplay, error::PuavoError};
 
 use std::io::{self, BufRead, Write};
@@ -34,6 +35,16 @@ impl UserDisplay for ConsoleDisplay {
         print!("{}: ", prompt);
         io::stdout().flush().unwrap();
 
+        // When the program is used as a tool, the passwords come on standard
+        // input, not from the terminal.
+        if usage::current() == Usage::Tool {
+            let mut password = Zeroizing::new(String::new());
+            read_line(&mut password)?;
+            let length = password.trim_end_matches(['\r', '\n']).len();
+            password.truncate(length);
+            return Ok(password);
+        }
+
         let password = rpassword::read_password()?;
         Ok(Zeroizing::new(password))
     }
@@ -55,7 +66,7 @@ impl UserDisplay for ConsoleDisplay {
             let _ = io::stdout().flush();
 
             let mut input = String::new();
-            io::stdin().lock().read_line(&mut input)?;
+            read_line(&mut input)?;
 
             match input.trim().to_lowercase().as_str() {
                 "y" | "yes" => return Ok(true),
@@ -94,4 +105,13 @@ impl UserDisplay for ConsoleDisplay {
     fn clear(&self) -> Result<(), PuavoError> {
         Ok(())
     }
+}
+
+/// Reads a line of standard input. The end of the input is an error, since
+/// no answer can follow it.
+fn read_line(line: &mut String) -> Result<(), PuavoError> {
+    if io::stdin().lock().read_line(line)? == 0 {
+        return Err(io::Error::from(io::ErrorKind::UnexpectedEof).into());
+    }
+    Ok(())
 }

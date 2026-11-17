@@ -17,7 +17,10 @@ use crate::secure_boot::{
     chain::{Device, Measurement},
     validator::Validator,
 };
-use crate::system::shell;
+use crate::system::{
+    shell,
+    usage::{self, Usage},
+};
 use crate::tpm::pcr_index;
 
 pub const MAX_TOKENS: u32 = 32;
@@ -383,10 +386,14 @@ impl LuksTpmTokenManager {
                 ));
 
                 // Specify the signature file explicitly to enforce verification
-                arguments.push(
-                    "--tpm2-signature=/run/systemd/tpm2-pcr-signature.json"
-                        .to_string(),
-                );
+                // Tool should not be required to have the PCR signature file,
+                // because it is not mandatory
+                if usage::current() == Usage::Boot {
+                    arguments.push(
+                        "--tpm2-signature=/run/systemd/tpm2-pcr-signature.json"
+                            .to_string(),
+                    );
+                }
             }
             _ => {}
         }

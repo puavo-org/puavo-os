@@ -17,7 +17,10 @@ use boot_trust_manager::{
     boot_trust_manager::{BootTrustManager, BootTrustManagerConfiguration},
     error::PuavoError,
     secure_boot::{self, prediction, update::PENDING_DIRECTORY},
-    system::reboot,
+    system::{
+        reboot,
+        usage::{self, Usage},
+    },
 };
 use std::path::{Path, PathBuf};
 
@@ -41,6 +44,15 @@ enum Commands {
     },
     /// Run configurators and automatically unmount everything afterwards
     Manage,
+    /// Unlock a disk with a recovery key and run the configurators as a
+    /// tool. They ask what to repair. The key and the answers come from
+    /// standard input
+    Reset {
+        /// Device node path containing the EFI partition with boot vault and
+        /// primary encrypted partition
+        #[arg(long = "device")]
+        device: Option<String>,
+    },
     /// Print the PCR values a policy predicts and their current values
     Predict {
         /// Path to an enrollment policy file
@@ -76,6 +88,12 @@ fn main() -> Result<(), i32> {
     .try_init();
 
     let command = configuration.command.clone();
+    let usage = match command {
+        Commands::Reset { .. } => Usage::Tool,
+        _ => Usage::Boot,
+    };
+    usage::set(usage);
+
     let manager_config = BootTrustManagerConfiguration {
         force_console: configuration.force_console,
     };
@@ -83,7 +101,8 @@ fn main() -> Result<(), i32> {
 
     let result = match command {
         Commands::Close { mountpoint } => manager.close(mountpoint),
-        Commands::Manage => manager.manage(),
+        Commands::Manage => manager.manage(None),
+        Commands::Reset { device } => manager.manage(device),
         Commands::Predict { policy } => prediction::predict(&policy),
         Commands::Open { device } => manager.open(device),
         Commands::UpdateSecureBoot { databases, keys } => {
@@ -98,12 +117,18 @@ fn main() -> Result<(), i32> {
 
     // Return with success code if the device is not encrypted,
     // the boot vault is not installed, or no EFI boot device
-    // is found, which is expected on legacy systems.
+    // is found, which is expected on legacy systems. When the program is used
+    // as a tool, the given disk should have them, so their absence is an
+    // error.
     let exit = result.or_else(|error| match error {
         PuavoError::NoBootVault
         | PuavoError::NoPrimaryLuksPartition
         | PuavoError::NoEFIBootDisk(_)
-        | PuavoError::NoEFIPartition => Ok(()),
+        | PuavoError::NoEFIPartition
+            if usage == Usage::Boot =>
+        {
+            Ok(())
+        }
         // Printed to standard error so the cause is visible regardless of
         // the log level.
         error => {

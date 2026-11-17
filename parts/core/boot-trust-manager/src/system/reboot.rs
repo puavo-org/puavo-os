@@ -2,6 +2,8 @@ use log::{debug, error, info};
 use nix::libc::{RB_AUTOBOOT, reboot, sync};
 use std::sync::atomic::{AtomicBool, Ordering};
 
+use crate::system::usage::{self, Usage};
+
 /// Set when something requires the machine to reboot upon program exit.
 static REBOOT_REQUESTED: AtomicBool = AtomicBool::new(false);
 
@@ -20,6 +22,11 @@ pub fn is_requested() -> bool {
 pub fn reboot_if_requested() {
     if !is_requested() {
         debug!("Reboot was not requested");
+        return;
+    }
+
+    if usage::current() == Usage::Tool {
+        info!("Reboot requested, but tool mode ignores it");
         return;
     }
 

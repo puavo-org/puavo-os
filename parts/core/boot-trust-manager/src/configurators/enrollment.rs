@@ -15,7 +15,10 @@ use crate::{
     hashing::Hashed,
     luks::tokens::{Bindings, LuksTpmEnrollmentPolicy, LuksTpmTokenManager},
     secure_boot::{chain::SystemDevice, quirks::Quirks},
-    system::{efi, locale},
+    system::{
+        efi, locale,
+        usage::{self, Usage},
+    },
     tpm::read_pcrs_as_string,
 };
 
@@ -388,7 +391,8 @@ impl EnrollmentConfigurator {
     /// Evaluates every enrollment, once for each chain that the quirks of
     /// this machine expand it into. At least one must match the current state
     /// of the machine, otherwise no token would match and the disk could not
-    /// be unlocked. The others may match a future state.
+    /// be unlocked. The others may match a future state. When the program is
+    /// used as a tool, none needs to match the running system.
     fn evaluate(
         items: Vec<EnrollmentItemConfiguration>,
     ) -> Result<Vec<(EnrollmentItemConfiguration, Vec<Bindings>)>, PuavoError>
@@ -428,11 +432,15 @@ impl EnrollmentConfigurator {
             .map(|(item, _)| item.name.as_str())
             .collect();
 
-        if describing.is_empty() {
+        if describing.is_empty() && usage::current() == Usage::Boot {
             return Err(PuavoError::NoEnrollmentDescribesMachine);
         }
 
-        info!("This machine is described by {}", describing.join(", "));
+        if describing.is_empty() {
+            info!("No enrollment describes the running system");
+        } else {
+            info!("This machine is described by {}", describing.join(", "));
+        }
         Ok(evaluated)
     }
 
@@ -472,6 +480,12 @@ impl EnrollmentConfigurator {
         let items: Vec<EnrollmentItemConfiguration> =
             evaluated.iter().map(|(item, _)| item.clone()).collect();
         Self::build_state_from_configurations(&items).save(&resources)?;
+
+        // Unlock restrictions should be ignored when the program is used as
+        // a tool
+        if usage::current() == Usage::Tool {
+            return Ok(());
+        }
 
         let restrictions = UnlockRestrictions::from_current_state();
         if let Err(error) = resources.write_unlock_restrictions(&restrictions) {

@@ -27,6 +27,7 @@ use crate::{
         mount::{MountGuard, unmount},
         reboot,
         udev::filesystem_type,
+        usage::{self, Usage},
     },
     tpm,
 };
@@ -65,10 +66,11 @@ impl BootTrustManager {
 
     /// Finds active configurators, shows progress on the
     /// selected display (console or Plymouth), executes any activated
-    /// configurators sequentially.
+    /// configurators sequentially on the disk at a device node path, or on
+    /// the current EFI boot disk.
     ///
     /// If no configurators are active, this returns immediately.
-    pub fn manage(&self) -> Result<(), PuavoError> {
+    pub fn manage(&self, device: Option<String>) -> Result<(), PuavoError> {
         // Process all activated configurators sequentially.
         // If no configurator is available, exit immediately.
         let configurators = match configurators() {
@@ -86,7 +88,7 @@ impl BootTrustManager {
 
         let display = choose_display(self.configuration.force_console);
 
-        Self::configure(&*display, configurators).inspect_err(|error| {
+        Self::configure(&*display, configurators, device).inspect_err(|error| {
             if matches!(error,
                         PuavoError::NoEFIBootDisk(_)
                           | PuavoError::NoBootVault
@@ -221,8 +223,9 @@ impl BootTrustManager {
     fn configure(
         display: &dyn UserDisplay,
         configurators: Vec<Box<dyn Configurator>>,
+        device: Option<String>,
     ) -> Result<(), PuavoError> {
-        let (efi_mount, primary_device_path) = Self::setup(None)?;
+        let (efi_mount, primary_device_path) = Self::setup(device)?;
         Self::install_locale(&efi_mount.mountpoint);
         diagnostics::enable(&efi_mount.mountpoint);
 
@@ -272,7 +275,10 @@ impl BootTrustManager {
         info!("Boot vault mounted");
 
         // Check unlock restrictions before unlocking the primary partition.
-        boot_vault.resources().check_unlock_restrictions()?;
+        // They describe the system the disk belongs to.
+        if usage::current() == Usage::Boot {
+            boot_vault.resources().check_unlock_restrictions()?;
+        }
 
         let mut primary_partition_manager =
             LuksTpmTokenManager::from_device_path(primary_device_path)?;

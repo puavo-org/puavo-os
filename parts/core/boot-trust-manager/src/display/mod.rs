@@ -6,6 +6,7 @@ use zeroize::Zeroizing;
 use crate::{
     display::{console::ConsoleDisplay, plymouth::PlymouthDisplay},
     error::PuavoError,
+    system::usage::{self, Usage},
 };
 
 pub mod console;
@@ -69,7 +70,8 @@ pub trait UserDisplay {
     fn clear(&self) -> Result<(), PuavoError>;
 }
 
-/// Pick a suitable display backend.
+/// Pick a suitable display backend. When the program is used as a tool, the
+/// console is always picked.
 ///
 /// Parameters:
 /// - `force_console`: Should console-based display be used.
@@ -84,7 +86,10 @@ pub fn choose_display(force_console: bool) -> Box<dyn UserDisplay> {
     let plymouth_available = PlymouthDisplay::ping().unwrap_or(false);
     debug!("Plymouth available: {}", plymouth_available);
 
-    if force_console || !plymouth_available {
+    // When the program is used as a tool, the answers come on standard input,
+    // which only the console display reads.
+    let is_tool = usage::current() == Usage::Tool;
+    if force_console || is_tool || !plymouth_available {
         return console_display;
     }
 
