@@ -117,41 +117,6 @@ index 9f2e41f52..7f38454d1 100644
  #define IOAPIC_RANGE_START	(0xfee00000)
  #define IOAPIC_RANGE_END	(0xfeefffff)
  #define IOVA_START_ADDR		(0x1000)
-@@ -211,12 +218,14 @@ int intel_iommu_enabled = 0;
- EXPORT_SYMBOL_GPL(intel_iommu_enabled);
- 
- static int dmar_map_ipts = 1;
-+static int dmar_map_ipu = 1;
- static int intel_iommu_superpage = 1;
- static int iommu_identity_mapping;
- static int iommu_skip_te_disable;
- static int disable_igfx_iommu;
- 
- #define IDENTMAP_AZALIA		4
-+#define IDENTMAP_IPU		8
- #define IDENTMAP_IPTS		16
- 
- const struct iommu_ops intel_iommu_ops;
-@@ -1413,6 +1422,9 @@ static int device_def_domain_type(struct device *dev)
- 		if ((iommu_identity_mapping & IDENTMAP_AZALIA) && IS_AZALIA(pdev))
- 			return IOMMU_DOMAIN_IDENTITY;
- 
-+		if ((iommu_identity_mapping & IDENTMAP_IPU) && IS_INTEL_IPU(pdev))
-+			return IOMMU_DOMAIN_IDENTITY;
-+
- 		if ((iommu_identity_mapping & IDENTMAP_IPTS) && IS_IPTS(pdev))
- 			return IOMMU_DOMAIN_IDENTITY;
- 	}
-@@ -1707,6 +1719,9 @@ static int __init init_dmars(void)
- 		iommu_set_root_entry(iommu);
- 	}
- 
-+	if (!dmar_map_ipu)
-+		iommu_identity_mapping |= IDENTMAP_IPU;
-+
- 	if (!dmar_map_ipts)
- 		iommu_identity_mapping |= IDENTMAP_IPTS;
- 
 @@ -3968,6 +3983,18 @@ static void quirk_iommu_igfx(struct pci_dev *dev)
  /* Q35 integrated gfx dmar support is totally busted. */
  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x29b2, quirk_iommu_igfx);
