@@ -60,7 +60,7 @@ output=$(boot_qemu "$state" "$disk")
 swtpm_stop
 rm -rf "$state"
 assert_contains "old slab refused" "$output" \
-  "this device could not start because its startup software is too old"
+  "this device failed to start because its startup software is too old"
 assert_absent "old slab not chainloaded" "$output" "chainloading next stage"
 
 exit "$FAILED"

@@ -153,7 +153,7 @@ pub fn image(
 
     // Some older firmware cannot hash a PE image.
     // Hash the raw bytes instead of stopping the boot.
-    verification!("the firmware cannot hash a PE image, hashing its bytes");
+    verification!("the firmware failed to hash a PE image, hashing its bytes");
     flat_image(tcg, &record, image)
 }
 
