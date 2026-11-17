@@ -363,9 +363,19 @@ impl LuksTpmTokenManager {
             Some(public_key_path)
                 if !policy.public_key_pcrs_expressions.is_empty() =>
             {
+                // A newer systemd refuses a bank after a signed PCR. The
+                // index alone works with every systemd.
+                let public_key_pcrs: Vec<String> = policy
+                    .public_key_pcrs_expressions
+                    .iter()
+                    .map(|expression| match pcr_index(expression) {
+                        Some(index) => index.to_string(),
+                        None => expression.clone(),
+                    })
+                    .collect();
                 arguments.push(format!(
                     "--tpm2-public-key-pcrs={}",
-                    policy.public_key_pcrs_expressions.join("+")
+                    public_key_pcrs.join("+")
                 ));
                 arguments.push(format!(
                     "--tpm2-public-key={}",
