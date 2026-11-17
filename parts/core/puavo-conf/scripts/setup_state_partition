@@ -118,7 +118,6 @@ case "$puavo_hosttype" in
     statedirlist='
       /etc/NetworkManager/system-connections
       /var/cache/ccreds
-      /var/cache/cups
       /var/lib/AccountsService
       /var/lib/bluetooth
       /var/lib/docker

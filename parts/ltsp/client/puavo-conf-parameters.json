@@ -295,6 +295,11 @@
     "description": "Enable/disable nvidia-persistenced service",
     "typehint": "bool"
   },
+  "puavo.service.openntpd.server.enabled": {
+    "default": "false",
+    "description": "Enable/disable the server feature of OpenNTPD",
+    "typehint": "bool"
+  },
   "puavo.service.puavo-darkdm.enabled": {
     "default": "false",
     "description": "Enable/disable puavo-darkdm service",

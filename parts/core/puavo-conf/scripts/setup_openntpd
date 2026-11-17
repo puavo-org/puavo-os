@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -eu
+
+puavo_topdomain=$(cat /etc/puavo/topdomain 2>/dev/null || true)
+
+if [ -z "${puavo_topdomain:-}" ]; then
+  echo 'could not determine puavo topdomain' >&2
+  exit 1
+fi
+
+ntp_server="ntp.${puavo_topdomain}"
+
+do_listen=false
+if "$(puavo-conf puavo.service.openntpd.server.enabled)" = 'true' ]; then
+  do_listen=true
+fi
+
+{
+  if $do_listen; then
+    echo 'listen on *'
+  fi
+  echo "server ${ntp_server}"
+} > /etc/openntpd/ntpd.conf.tmp
+
+mv /etc/openntpd/ntpd.conf.tmp /etc/openntpd/ntpd.conf

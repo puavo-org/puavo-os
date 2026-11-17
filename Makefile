@@ -225,6 +225,10 @@ $(image_dir):
 $(install_image_dir):
 	$(_sudo) mkdir -p '$(install_image_dir)'
 
+.PHONY: update-mime-database
+update-mime-database:
+	$(_sudo) /usr/lib/puavo-ltsp-client/update-mime-database --force
+
 .PHONY: rootfs-image
 rootfs-image:
 	./.aux/run-with-signing-pin $(MAKE) rootfs-image-locked

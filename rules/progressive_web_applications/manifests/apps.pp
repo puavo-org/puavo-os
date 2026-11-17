@@ -1,5 +1,12 @@
 class progressive_web_applications::apps {
+  include ::packages
   include ::progressive_web_applications
+
+  file {
+    '/usr/share/mime/packages/puavo-vernier-ga.xml':
+      require => Package['shared-mime-info'],
+      source  => 'puppet:///modules/progressive_web_applications/puavo-vernier-ga.xml';
+  }
 
   Progressive_web_applications::Install {
     'graphical_analysis':
@@ -16,4 +23,6 @@ class progressive_web_applications::apps {
       browser => 'chrome',
       url     => 'https://teams.microsoft.com/manifest.json';
   }
+
+  Package <| title == shared-mime-info |>
 }
