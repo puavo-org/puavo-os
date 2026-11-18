@@ -2,7 +2,6 @@ class bootserver_munin {
   include ::bootserver_helpers
   include ::bootserver_nginx
   include ::munin
-  include ::puavo_conf
 
   define plugin ($wildcard = false) {
     $plugin_name = $title
@@ -47,11 +46,6 @@ class bootserver_munin {
   }
 
   ::bootserver_nginx::enable { 'munin': ; }
-
-  ::puavo_conf::script {
-    'setup_munin':
-      source => 'puppet:///modules/bootserver_munin/setup_munin';
-  }
 
   Package <|
        title == 'munin-node'
