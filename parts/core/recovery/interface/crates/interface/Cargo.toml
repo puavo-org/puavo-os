@@ -1,0 +1,21 @@
+[package]
+name = "recovery-interface"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[features]
+debug = []
+development = ["recovery-services/development"]
+
+[dependencies]
+crossterm = { version = "0.28", default-features = false, features = ["events"] }
+evdev = "0.13.2"
+log = "0.4.35"
+recovery-flow.workspace = true
+recovery-services.workspace = true
+slint = { version = "=1.18.1", default-features = false, features = ["compat-1-2", "unsafe-single-threaded", "libm", "renderer-software", "software-renderer-path"] }
+
+[build-dependencies]
+slint-build = "=1.18.1"

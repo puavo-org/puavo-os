@@ -1,0 +1,523 @@
+// The recovery interface: draws the view the recovery flow gives it and
+// reports what the person chose.
+
+import { LineEdit, Palette } from "std-widgets.slint";
+import "Lato-Regular.ttf";
+import "Lato-Bold.ttf";
+
+export struct ChoiceItem {
+    title: string,
+    description: string,
+}
+
+export enum PhaseState { done, current, waiting }
+
+export struct PhaseItem {
+    title: string,
+    // 0 done, 1 current, 2 waiting
+    state: PhaseState,
+}
+
+export struct NetworkItem {
+    name: string,
+    signal: int,
+    security: string,
+}
+
+export enum ViewKind {
+    start, actions, phases, busy, networks, passphrase, code-entry, waiting,
+    notice
+}
+
+// The colours of the Puavo theme: petrol, white text and the green accent.
+global Theme {
+    out property <brush> background:
+        @linear-gradient(160deg, #0e2733 0%, #0d3b4f 100%);
+    out property <color> bar: #0b1f29;
+    out property <color> surface: #12303e;
+    out property <color> accent: #95c11f;
+    out property <color> accent-soft: #26452f;
+    out property <color> on-accent: #0b1f29;
+    out property <color> text: #f2f5f7;
+    out property <color> muted: #a7bac4;
+    out property <color> warning: #f2b84b;
+    out property <color> border: #2a4d5e;
+}
+
+component Card inherits Rectangle {
+    in property <bool> selected;
+    callback clicked();
+    area := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+    border-radius: 18px;
+    border-width: root.selected ? 3px : 1px;
+    border-color: root.selected ? Theme.accent : Theme.border;
+    background: root.selected ? Theme.accent-soft : Theme.surface;
+}
+
+component ActionButton inherits Rectangle {
+    in property <string> label;
+    in property <bool> selected;
+    in property <bool> primary;
+    callback clicked();
+    TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+    height: 64px;
+    min-width: 200px;
+    border-radius: 32px;
+    background: root.primary ? Theme.accent : Theme.surface;
+    border-width: root.selected ? 4px : 1px;
+    border-color: !root.selected ? Theme.border
+        : root.primary ? Theme.text
+        : Theme.accent;
+    // The button grows with its label, which is longer in some languages.
+    HorizontalLayout {
+        padding-left: 28px;
+        padding-right: 28px;
+        Text {
+            text: root.label;
+            font-size: 24px;
+            font-weight: 700;
+            color: root.primary ? Theme.on-accent : Theme.text;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+    }
+}
+
+export component RecoveryWindow inherits Window {
+    in property <ViewKind> view;
+    in property <string> app-title;
+    in property <string> heading;
+    in property <string> hint;
+    in property <[ChoiceItem]> choices;
+    in property <[PhaseItem]> phases;
+    in property <[NetworkItem]> networks;
+    in property <string> network-name;
+    in property <string> serial-label;
+    in property <string> serial-number;
+    // Why the typed code was refused, or empty.
+    in property <string> code-refusal;
+    in property <string> code-keys;
+    in property <string> status;
+    in property <string> note;
+    // The support sites, empty without them.
+    in property <string> support;
+    in property <string> continue-label;
+    in property <string> back-label;
+    in property <string> restart-label;
+    in property <string> power-off-label;
+    in property <string> firmware-label;
+    in property <string> change-network-label;
+    in property <length> pointer-x;
+    in property <length> pointer-y;
+    in-out property <int> selected;
+    in property <int> choice-count;
+    // Whether the passphrase field shows what was typed.
+    in-out property <bool> passphrase-shown;
+    // A row of the network list and the gap under it.
+    out property <length> network-row: 76px;
+    out property <length> network-spacing: 12px;
+    out property <length> network-pitch:
+        self.network-row + self.network-spacing;
+
+    callback activate(int);
+    callback back();
+    callback rescan();
+    callback submit-passphrase(string);
+    callback submit-code(string);
+
+    background: Theme.background;
+    default-font-family: "Lato";
+
+    // Embedded fonts carry only the characters the interface names, and
+    // passphrases and translations use more than English does.
+    Text {
+        visible: false;
+        text: "ÅÄÖÜÉÈÀÇÑØÆåäöüéèàçñøæß€";
+    }
+
+    scope := FocusScope {
+        key-pressed(event) => {
+            if (event.text == Key.UpArrow || event.text == Key.LeftArrow) {
+                root.selected = Math.max(0, root.selected - 1);
+                return accept;
+            }
+            if (event.text == Key.Tab && root.view == ViewKind.passphrase) {
+                root.passphrase-shown = !root.passphrase-shown;
+                return accept;
+            }
+            if (event.text == Key.DownArrow
+                    || event.text == Key.RightArrow
+                    || event.text == Key.Tab) {
+                root.selected =
+                    Math.min(root.choice-count - 1, root.selected + 1);
+                return accept;
+            }
+            if (event.text == Key.Return) {
+                root.activate(root.selected);
+                return accept;
+            }
+            if (event.text == Key.Escape) {
+                root.back();
+                return accept;
+            }
+            if (event.text == "r" && root.view == ViewKind.networks) {
+                root.rescan();
+                return accept;
+            }
+            reject
+        }
+
+        VerticalLayout {
+            Rectangle {
+                height: 84px;
+                background: Theme.bar;
+                HorizontalLayout {
+                    padding-left: 48px;
+                    alignment: start;
+                    Text {
+                        text: root.app-title;
+                        font-size: 30px;
+                        font-weight: 700;
+                        color: Theme.accent;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+
+            VerticalLayout {
+                padding: 48px;
+                spacing: 24px;
+
+                Text {
+                    text: root.heading;
+                    font-size: 40px;
+                    font-weight: 700;
+                    color: Theme.text;
+                    wrap: word-wrap;
+                }
+                Text {
+                    text: root.hint;
+                    font-size: 24px;
+                    color: Theme.muted;
+                    wrap: word-wrap;
+                }
+
+                if root.view == ViewKind.start || root.view == ViewKind.actions:
+                VerticalLayout {
+                    spacing: 20px;
+                    for choice[index] in root.choices: Card {
+                        height: 120px;
+                        selected: root.selected == index;
+                        clicked => {
+                            root.selected = index;
+                            root.activate(index);
+                        }
+                        VerticalLayout {
+                            padding: 24px;
+                            spacing: 8px;
+                            Text {
+                                text: choice.title;
+                                font-size: 30px;
+                                font-weight: 700;
+                                color: Theme.text;
+                            }
+                            Text {
+                                text: choice.description;
+                                font-size: 22px;
+                                color: Theme.muted;
+                            }
+                        }
+                    }
+                    if root.view == ViewKind.start: HorizontalLayout {
+                        spacing: 20px;
+                        alignment: start;
+                        ActionButton {
+                            label: root.restart-label;
+                            selected: root.selected == root.choices.length;
+                            clicked => {
+                                root.activate(root.choices.length);
+                            }
+                        }
+                        ActionButton {
+                            label: root.firmware-label;
+                            selected: root.selected == root.choices.length + 1;
+                            clicked => {
+                                root.activate(root.choices.length + 1);
+                            }
+                        }
+                        ActionButton {
+                            label: root.power-off-label;
+                            selected: root.selected == root.choices.length + 2;
+                            clicked => {
+                                root.activate(root.choices.length + 2);
+                            }
+                        }
+                    }
+                }
+
+                if root.view == ViewKind.phases: VerticalLayout {
+                    spacing: 16px;
+                    for phase in root.phases: HorizontalLayout {
+                        spacing: 20px;
+                        height: 56px;
+                        Rectangle {
+                            width: 48px;
+                            height: 48px;
+                            border-radius: 24px;
+                            background:
+                                phase.state == PhaseState.done ? Theme.accent
+                                : phase.state == PhaseState.current
+                                ? Theme.accent-soft : Theme.surface;
+                            border-width:
+                                phase.state == PhaseState.done ? 0px : 2px;
+                            border-color:
+                                phase.state == PhaseState.current
+                                ? Theme.accent : Theme.border;
+                            Text {
+                                text: phase.state == PhaseState.done ? "✓"
+                                    : phase.state == PhaseState.current ? "•"
+                                    : "";
+                                font-size: 28px;
+                                font-weight: 700;
+                                color: phase.state == PhaseState.done
+                                    ? Theme.on-accent : Theme.accent;
+                            }
+                        }
+                        Text {
+                            text: phase.title;
+                            font-size: 28px;
+                            font-weight:
+                                phase.state == PhaseState.current ? 700 : 400;
+                            color: phase.state == PhaseState.waiting
+                                ? Theme.muted : Theme.text;
+                            vertical-alignment: center;
+                        }
+                    }
+                    HorizontalLayout {
+                        spacing: 20px;
+                        alignment: start;
+                        ActionButton {
+                            label: root.continue-label;
+                            primary: true;
+                            selected: root.selected == 0;
+                            clicked => {
+                                root.activate(0);
+                            }
+                        }
+                        ActionButton {
+                            label: root.back-label;
+                            selected: root.selected == 1;
+                            clicked => {
+                                root.activate(1);
+                            }
+                        }
+                        // Once the network phase is done.
+                        if root.choice-count > 2: ActionButton {
+                            label: root.change-network-label;
+                            selected: root.selected == 2;
+                            clicked => {
+                                root.activate(2);
+                            }
+                        }
+                    }
+                }
+
+                // The list scrolls to keep the chosen network in view, since
+                // a busy place has more networks than the screen has rows.
+                if root.view == ViewKind.networks: Flickable {
+                    vertical-stretch: 1;
+                    min-height: root.network-pitch;
+                    content-height: root.networks.length * root.network-pitch;
+                    content-y: Math.max(
+                        Math.min(0px, (self.height - root.network-pitch) / 2
+                            - root.selected * root.network-pitch),
+                        Math.min(0px, self.height - self.content-height));
+                    VerticalLayout {
+                        spacing: root.network-spacing;
+                        for network[index] in root.networks: Card {
+                            height: root.network-row;
+                            selected: root.selected == index;
+                            clicked => {
+                                root.selected = index;
+                                root.activate(index);
+                            }
+                            HorizontalLayout {
+                                padding-left: 24px;
+                                padding-right: 24px;
+                                spacing: 24px;
+                                Text {
+                                    text: network.name;
+                                    font-size: 28px;
+                                    font-weight: 700;
+                                    color: Theme.text;
+                                    vertical-alignment: center;
+                                    horizontal-stretch: 1;
+                                }
+                                Text {
+                                    text: network.security;
+                                    font-size: 22px;
+                                    color: Theme.muted;
+                                    vertical-alignment: center;
+                                }
+                                Text {
+                                    text: network.signal + " %";
+                                    font-size: 22px;
+                                    color: Theme.muted;
+                                    vertical-alignment: center;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if root.view == ViewKind.passphrase: VerticalLayout {
+                    spacing: 20px;
+                    passphrase := LineEdit {
+                        input-type: root.passphrase-shown
+                            ? InputType.text : InputType.password;
+                        font-size: 28px;
+                        height: 72px;
+                        accepted(text) => {
+                            root.submit-passphrase(text);
+                        }
+                        init => {
+                            self.focus();
+                        }
+                    }
+                }
+
+                if root.view == ViewKind.code-entry: VerticalLayout {
+                    spacing: 16px;
+                    alignment: start;
+                    Text {
+                        text: root.serial-label;
+                        font-size: 22px;
+                        color: Theme.muted;
+                    }
+                    Text {
+                        text: root.serial-number;
+                        font-size: 56px;
+                        font-weight: 700;
+                        color: Theme.text;
+                    }
+                    if root.support != "": Text {
+                        text: root.support;
+                        font-size: 22px;
+                        color: Theme.muted;
+                        wrap: word-wrap;
+                    }
+                    HorizontalLayout {
+                        alignment: start;
+                        LineEdit {
+                            input-type: InputType.text;
+                            font-size: 40px;
+                            height: 80px;
+                            width: 420px;
+                            accepted(text) => {
+                                root.submit-code(text);
+                            }
+                            init => {
+                                self.focus();
+                            }
+                        }
+                    }
+                    if root.code-refusal != "": Text {
+                        text: root.code-refusal;
+                        font-size: 24px;
+                        color: Theme.warning;
+                        wrap: word-wrap;
+                    }
+                    Text {
+                        text: root.code-keys;
+                        font-size: 22px;
+                        color: Theme.muted;
+                    }
+                }
+
+                // The request waits also while the device is off.
+                if root.view == ViewKind.waiting: VerticalLayout {
+                    spacing: 20px;
+                    alignment: start;
+                    Text {
+                        text: root.status;
+                        font-size: 30px;
+                        color: Theme.text;
+                        wrap: word-wrap;
+                    }
+                    Text {
+                        text: root.note;
+                        font-size: 22px;
+                        color: Theme.muted;
+                        wrap: word-wrap;
+                    }
+                    HorizontalLayout {
+                        spacing: 20px;
+                        alignment: start;
+                        ActionButton {
+                            label: root.back-label;
+                            selected: root.selected == 0;
+                            clicked => {
+                                root.activate(0);
+                            }
+                        }
+                        ActionButton {
+                            label: root.power-off-label;
+                            selected: root.selected == 1;
+                            clicked => {
+                                root.activate(1);
+                            }
+                        }
+                    }
+                }
+
+                if root.view == ViewKind.notice: HorizontalLayout {
+                    alignment: start;
+                    ActionButton {
+                        label: root.continue-label;
+                        primary: true;
+                        selected: root.selected == 0;
+                        clicked => {
+                            root.activate(0);
+                        }
+                    }
+                }
+
+                Rectangle { vertical-stretch: 1; }
+            }
+        }
+    }
+
+    // The pointer arrow, drawn last so it is on top.
+    Path {
+        x: root.pointer-x;
+        y: root.pointer-y;
+        width: 12px;
+        height: 19px;
+        viewbox-width: 12;
+        viewbox-height: 19;
+        commands: "M 0.5 0.5 L 0.5 16 L 4 12.5 L 6.5 18.5 L 9 17.5 L 6.5 11.5 L 11.5 11.5 Z";
+        fill: black;
+        stroke: white;
+        stroke-width: 1px;
+    }
+
+    // The passphrase and code fields take the keys while they are shown.
+    changed view => {
+        if (root.view != ViewKind.passphrase
+                && root.view != ViewKind.code-entry) {
+            scope.focus();
+        }
+    }
+    init => {
+        Palette.color-scheme = ColorScheme.dark;
+        scope.focus();
+    }
+}

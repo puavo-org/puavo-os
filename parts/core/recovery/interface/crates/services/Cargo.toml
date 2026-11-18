@@ -1,0 +1,23 @@
+[package]
+name = "recovery-services"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+base64 = "0.23.1"
+futures-lite = "2.6.1"
+log = "0.4.35"
+rsa = { version = "0.9.10", default-features = false, features = ["std", "u64_digit", "getrandom"] }
+rustls = { version = "0.23.46", default-features = false, features = ["ring", "std", "tls12"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+sha2 = "0.10"
+ureq = { version = "3.5.2", default-features = false, features = ["rustls-no-provider", "json"] }
+zbus = { version = "6.3.0", default-features = false, features = ["default-rt", "proxy"] }
+zeroize = "1.9.1"
+zruntime = { version = "0.2.3", default-features = false, features = ["runtime", "helper"] }
+
+[features]
+development = []
