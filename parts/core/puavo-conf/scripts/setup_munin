@@ -12,7 +12,7 @@ if [ "$(puavo-conf puavo.hosttype)" = 'bootserver' ]; then
 else
   interfaces=
   for ifpath in /sys/class/net/*; do
-    if [ -e "${ifpath}/device" -a ! -e "${ifpath}/phy80211" ]; then
+    if [ -e "${ifpath}/device" ]; then
       interfaces="${interfaces} ${ifpath##*/}"
     fi
   done
