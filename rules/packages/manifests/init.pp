@@ -132,6 +132,7 @@ class packages {
     , 'inotify-tools'
     , 'iotop'
     , 'iperf'
+    , 'ipset'
     , 'jc'
     , 'jq'
     , 'libstdc++5'
