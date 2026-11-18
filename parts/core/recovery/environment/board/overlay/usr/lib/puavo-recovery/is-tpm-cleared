@@ -1,0 +1,23 @@
+#!/bin/sh
+# Succeeds when the TPM is cleared: neither its owner nor its lockout has
+# an authorization value.
+
+set -eu
+
+export TPM2TOOLS_TCTI=device:/dev/tpmrm0
+
+tpm_properties=$(tpm2_getcap properties-variable)
+
+# The value of a TPM property, or nothing when the TPM does not list it.
+read_tpm_property() {
+  printf '%s\n' "${tpm_properties}" | while read -r name value; do
+    if [ "${name}" = "${1}:" ]; then
+      printf '%s' "${value}"
+    fi
+  done
+}
+
+owner_authorization_set=$(read_tpm_property ownerAuthSet)
+lockout_authorization_set=$(read_tpm_property lockoutAuthSet)
+
+[ "${owner_authorization_set}" = 0 ] && [ "${lockout_authorization_set}" = 0 ]

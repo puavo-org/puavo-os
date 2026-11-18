@@ -1,0 +1,11 @@
+config BR2_PACKAGE_PUAVO_BOOT_TRUST_MANAGER
+	bool "puavo-boot-trust-manager"
+	depends on BR2_PACKAGE_SYSTEMD
+	select BR2_PACKAGE_CRYPTSETUP
+	select BR2_PACKAGE_EFITOOLS
+	select BR2_PACKAGE_TPM2_TOOLS
+	select BR2_PACKAGE_TPM2_TSS
+	help
+	  The boot trust manager of the images, with their enrollments
+	  and the scripts it runs to reset the device keys and the TPM,
+	  for the recovery of the disk encryption.

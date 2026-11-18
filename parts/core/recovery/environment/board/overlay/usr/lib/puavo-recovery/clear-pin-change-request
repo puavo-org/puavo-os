@@ -1,0 +1,18 @@
+#!/bin/sh
+# Clears a PIN change request that the device settings left.
+
+set -eu
+
+PIN_CHANGE_REQUEST_VARIABLE=/sys/firmware/efi/efivars/PuavoPinChangeRequest-7cb44677-9bb9-4504-bb8f-923def5fa3b1
+# The request as the boot trust manager clears it: its attributes and a
+# zero.
+CLEARED_REQUEST='\007\000\000\000\000'
+
+if [ ! -e "${PIN_CHANGE_REQUEST_VARIABLE}" ]; then
+  exit 0
+fi
+
+# The kernel protects EFI variables against writes until the immutable
+# attribute is removed.
+chattr -i "${PIN_CHANGE_REQUEST_VARIABLE}"
+printf "${CLEARED_REQUEST}" > "${PIN_CHANGE_REQUEST_VARIABLE}"

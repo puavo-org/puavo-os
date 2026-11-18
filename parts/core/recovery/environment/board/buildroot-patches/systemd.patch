@@ -1,0 +1,57 @@
+The systemd of Debian Trixie, so a system reads the tokens the recovery
+enrolls. Version 257 has no options for libmount and nspawn.
+
+--- a/package/systemd/systemd.hash
++++ b/package/systemd/systemd.hash
+@@ -1,5 +1,5 @@
+ # sha256 locally computed
+-sha256  6bd311c25f00d634ae3b4544d582e27df0d4166e6ba3d403b18b3129d7f44cae  systemd-258.7.tar.gz
++sha256  1eb7d5f9ff8a426ff880a3cded9ce819613ba8003ac5ddde9eca162f14ddabe7  systemd-257.13.tar.gz
+ sha256  ac4985facb553559981f507982444d779115e3e3a4c8b7847ae956198490c1b3  LICENSE.GPL2
+ sha256  6d9bb3b7fc818a8facc4cc296060a0883fef8710d6498f86165335846e82ee9d  LICENSE.LGPL2.1
+ sha256  c9e7bf5b7c243c719b8b43c36158effb9b54c5e80abc9d82e4b2d4b2a4aa64ad  LICENSES/alg-sha1-public-domain.txt
+--- a/package/systemd/systemd.mk
++++ b/package/systemd/systemd.mk
+@@ -19,7 +19,7 @@
+ # - Diff sysusers.d with the previous version
+ # - Diff factory/etc/nsswitch.conf with the previous version
+ #   (details are often sprinkled around in README and manpages)
+-SYSTEMD_VERSION = 258.7
++SYSTEMD_VERSION = 257.13
+ SYSTEMD_SITE = $(call github,systemd,systemd,v$(SYSTEMD_VERSION))
+ SYSTEMD_LICENSE = \
+ 	LGPL-2.1+, \
+@@ -107,8 +107,7 @@
+ 	-Dbpf-framework=disabled \
+ 	-Dvmlinux-h=disabled \
+ 	-Dumount-path=/usr/bin/umount \
+-	-Dxenctrl=disabled \
+-	-Dlibmount=enabled
++	-Dxenctrl=disabled
+ 
+ SYSTEMD_CFLAGS = $(TARGET_CFLAGS)
+ ifeq ($(BR2_OPTIMIZE_FAST),y)
+@@ -561,12 +560,6 @@
+ SYSTEMD_CONF_OPTS += -Dsysupdate=disabled
+ endif
+ 
+-ifeq ($(BR2_PACKAGE_SYSTEMD_NSPAWN),y)
+-SYSTEMD_CONF_OPTS += -Dnspawn=enabled
+-else
+-SYSTEMD_CONF_OPTS += -Dnspawn=disabled
+-endif
+-
+ ifeq ($(BR2_PACKAGE_SYSTEMD_NETWORKD),y)
+ SYSTEMD_CONF_OPTS += -Dnetworkd=true
+ SYSTEMD_NETWORKD_USER = systemd-network -1 systemd-network -1 * - - - systemd Network Management
+@@ -1004,9 +997,7 @@
+ 	-Dp11kit=disabled \
+ 	-Dlibfido2=disabled \
+ 	-Dpcre2=disabled \
+-	-Dsysupdated=disabled \
+-	-Dnspawn=disabled \
+-	-Dlibmount=enabled
++	-Dsysupdated=disabled
+ 
+ HOST_SYSTEMD_DEPENDENCIES = \
+ 	$(BR2_COREUTILS_HOST_DEPENDENCY) \

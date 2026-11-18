@@ -1,0 +1,12 @@
+#!/bin/sh
+# Succeeds when the firmware started this boot with Secure Boot on.
+
+set -eu
+
+SECURE_BOOT_VARIABLE=/sys/firmware/efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c
+
+# The bytes of the variable, the attributes first and the value last.
+variable_bytes=$(od --address-radix=n --format=u1 "${SECURE_BOOT_VARIABLE}")
+secure_boot=${variable_bytes##* }
+
+[ "${secure_boot}" -eq 1 ]

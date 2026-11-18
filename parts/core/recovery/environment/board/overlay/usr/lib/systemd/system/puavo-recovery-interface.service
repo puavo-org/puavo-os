@@ -1,0 +1,21 @@
+[Unit]
+Description=Recovery interface
+After=systemd-vconsole-setup.service
+# The disk links, which the interface reads at start, after udev made them.
+Wants=systemd-udev-settle.service
+After=systemd-udev-settle.service
+
+[Service]
+ExecStart=/usr/bin/recovery-interface
+Environment=TERM=linux
+StandardInput=tty
+StandardOutput=tty
+# The log goes to the journal, not over the drawing on the screen.
+StandardError=journal
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+config BR2_PACKAGE_EFITOOLS
+	bool "efitools"
+	depends on BR2_PACKAGE_GNU_EFI_ARCH_SUPPORTS
+	select BR2_PACKAGE_GNU_EFI
+	select BR2_PACKAGE_OPENSSL
+	select BR2_PACKAGE_LIBOPENSSL_ENGINES # signing goes through the engine interface
+	help
+	  The programs of efitools that make, sign and write UEFI
+	  signature lists.
+
+	  https://git.kernel.org/pub/scm/linux/kernel/git/jejb/efitools.git

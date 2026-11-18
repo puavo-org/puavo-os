@@ -1,0 +1,13 @@
+#!/bin/sh
+# Succeeds when the firmware is in Setup Mode, so the Secure Boot keys of
+# the device can be written.
+
+set -eu
+
+SETUP_MODE_VARIABLE=/sys/firmware/efi/efivars/SetupMode-8be4df61-93ca-11d2-aa0d-00e098032b8c
+
+# The bytes of the variable, the attributes first and the value last.
+variable_bytes=$(od --address-radix=n --format=u1 "${SETUP_MODE_VARIABLE}")
+setup_mode=${variable_bytes##* }
+
+[ "${setup_mode}" -eq 1 ]
