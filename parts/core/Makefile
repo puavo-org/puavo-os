@@ -43,6 +43,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/files/etc/pam.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/files/messages
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/scripts
+	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/openntpd.service.d
 	mkdir -p $(DESTDIR)/var/lib/puavo
 
 .PHONY : install
@@ -74,6 +75,9 @@ install : $(install-subdirs) installdirs
 		puavo-conf/files/messages/*
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-conf/scripts \
 		puavo-conf/scripts/*
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/systemd/system/openntpd.service.d \
+		etc/systemd/system/openntpd.service.d/puavo-core.conf
+
 
 .PHONY : $(clean-subdirs)
 $(clean-subdirs) :
