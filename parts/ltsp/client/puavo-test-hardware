@@ -371,7 +371,7 @@ test_audio() {
 
   ### Some device model/gen specific configurations
   case "$(product_name)" in
-    "HP EliteBook 8"[345]"0 G6"* | "HP EliteBook 8"[345]"0 G"[78]*)
+    "HP EliteBook 8"[345]"0 G6"* | "HP EliteBook 8"[345]"0"*"G"[78]*)
       alsacard='0'
       alsamicdev='plughw:CARD=sofhdadsp,DEV=7'
       alsaspkctl='Master'
