@@ -17,6 +17,7 @@ class image::bundle::basic {
   include ::locales
   include ::motd
   include ::munin
+  include ::nginx
   include ::nightly_updates
   include ::nss
   include ::packages
