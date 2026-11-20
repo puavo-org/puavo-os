@@ -13,10 +13,10 @@ INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
-DAEMON_BIN = target/release/puavo-kpsd
-CLIENT_BIN = target/release/puavo-kps
+RELEASE_DIRECTORY = target/release
+DAEMON_BIN = $(RELEASE_DIRECTORY)/puavo-kpsd
+CLIENT_BIN = $(RELEASE_DIRECTORY)/puavo-kps
 BINS = $(DAEMON_BIN) $(CLIENT_BIN)
-SOURCE_FILES = $(shell find crates -type f -name '*.rs')
 
 .PHONY: all
 all: build
@@ -28,14 +28,18 @@ install-directories:
 	mkdir -p $(DESTDIR)$(prefix)/lib/systemd/system/
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-kps/
 
+# Build releases from scratch every time.
 .PHONY: build
-build: $(BINS)
-
-$(BINS): Cargo.lock Cargo.toml $(SOURCE_FILES)
+build:
+	rm -rf $(RELEASE_DIRECTORY)
 	cargo build --release
 
+.PHONY: debug
+debug:
+	cargo build
+
 .PHONY: install
-install: build install-directories
+install: $(BINS) install-directories
 	$(INSTALL_PROGRAM) $(DAEMON_BIN) $(DESTDIR)$(sbindir)/
 	$(INSTALL_PROGRAM) $(CLIENT_BIN) $(DESTDIR)$(bindir)/
 	$(INSTALL_DATA) etc/puavo-kps/config.toml \
