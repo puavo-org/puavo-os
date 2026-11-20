@@ -1,6 +1,8 @@
 TARGET = x86_64-unknown-uefi
+# The build script and its dependencies build for the machine running the
+# build, under target/release.
+RELEASE_DIRECTORIES = target/$(TARGET)/release target/release
 BIN = target/$(TARGET)/release/slab.efi
-SOURCE_FILES = $(shell find src -type f -name '*.rs')
 VERIFIER_KEYS = $(abspath authorities)
 INSTALL_DIR = $(DESTDIR)/usr/lib/slab
 SBIN_DIR = $(DESTDIR)/usr/sbin
@@ -8,16 +10,16 @@ SBIN_DIR = $(DESTDIR)/usr/sbin
 .PHONY: all
 all: build
 
-.PHONY: build
-build: $(BIN)
-
 # We need to compile the core and alloc for the UEFI target with rust-src,
 # because Debian does not ship the target libraries and rustup conflicts
 # with the cargo package, which is required by other components.
 # UEFI requires lld-link as linker, which Debian ships in the lld package,
 # rather than bundled with rustc.
-$(BIN): Cargo.lock Cargo.toml build.rs config/floors config/paths/esp \
-  config/paths/network config/version $(SOURCE_FILES)
+#
+# Build releases from scratch every time.
+.PHONY: build
+build:
+	rm -rf $(RELEASE_DIRECTORIES)
 	RUSTC_BOOTSTRAP=1 RUSTFLAGS='-C linker=lld-link' \
 	  SLAB_VERIFIER_KEYS='$(VERIFIER_KEYS)' \
 	  cargo build --release --target $(TARGET) \
@@ -25,7 +27,7 @@ $(BIN): Cargo.lock Cargo.toml build.rs config/floors config/paths/esp \
 
 # Installs the unsigned slab and utilities.
 .PHONY: install
-install: build
+install: $(BIN)
 	mkdir -p $(INSTALL_DIR)
 	cp $(BIN) $(INSTALL_DIR)/slabx64.efi
 	sed -n 's/^version = "\(.*\)"$$/\1/p' Cargo.toml \

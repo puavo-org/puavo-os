@@ -5,8 +5,8 @@ bindir = $(exec_prefix)/bin
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 
-BIN = target/release/puavo-boot-trust-manager
-SOURCE_FILES = $(shell find src -type f -name '*.rs')
+RELEASE_DIRECTORY = target/release
+BIN = $(RELEASE_DIRECTORY)/puavo-boot-trust-manager
 
 .PHONY: all
 all: build
@@ -15,14 +15,18 @@ all: build
 install-directories:
 	mkdir -p $(DESTDIR)/usr/sbin/
 
+# Build releases from scratch every time.
 .PHONY: build
-build: $(BIN)
-
-$(BIN): Cargo.lock Cargo.toml $(SOURCE_FILES)
+build:
+	rm -rf $(RELEASE_DIRECTORY)
 	cargo build --release
 
+.PHONY: debug
+debug:
+	cargo build
+
 .PHONY: install
-install: build install-directories
+install: $(BIN) install-directories
 	cp $(BIN) $(DESTDIR)/usr/sbin/
 
 # Captures the boots the tests compare against. Needs QEMU and swtpm.
