@@ -223,21 +223,23 @@ class BootVaultBuilder
 
   VERSION = 1
 
-  def initialize(control_key:, recovery_key:, encryption_policy:, device:, size: DEFAULT_SIZE, image_name: DEFAULT_IMAGE_NAME, luks_name: DEFAULT_LUKS_NAME)
+  def initialize(control_key:, recovery_key:, encryption_policy:, efi_disks:,
+                 size: DEFAULT_SIZE, image_name: DEFAULT_IMAGE_NAME,
+                 luks_name: DEFAULT_LUKS_NAME)
     @control_key = control_key
     @recovery_key = recovery_key
     @encryption_policy = encryption_policy
     @size = size
     @image_name = image_name
     @luks_name = luks_name
-    @device = device
+    @efi_disks = efi_disks
   end
 
   def build(device_keys_temporary_directory)
     Dir.mktmpdir('puavo-boot-vault-build-') do |build_directory|
       image_path = create_image(build_directory)
       setup_luks_container(image_path, device_keys_temporary_directory)
-      move_to_efi(image_path)
+      copy_to_efi(image_path)
     end
   end
 
@@ -291,22 +293,26 @@ class BootVaultBuilder
     end
   end
 
-  def move_to_efi(image_path)
-    efi_partition = DiskHandler.wait_one_gpt_partition_by_parttype(
-      @device,
-      GPT_PARTTYPE_EFI,
-      try_count: 30
-    )
-    Dir.mktmpdir('puavo-efi-mount-') do |mountpoint|
-      begin
-        run('mount', "/dev/#{ efi_partition }", mountpoint)
-        FileUtils.mkdir_p File.join(mountpoint, "EFI", "puavo")
-        FileUtils.mv(
-          image_path,
-          File.join(mountpoint, "EFI", "puavo", @image_name))
-        run('sync')
-      ensure
-        run('umount', mountpoint)
+  def copy_to_efi(image_path)
+    @efi_disks.each do |device|
+      efi_partition = DiskHandler.wait_one_gpt_partition_by_parttype(
+        device,
+        GPT_PARTTYPE_EFI,
+        try_count: 30
+      )
+      Dir.mktmpdir('puavo-efi-mount-') do |mountpoint|
+        mounted = false
+        begin
+          run('mount', "/dev/#{ efi_partition }", mountpoint)
+          mounted = true
+          FileUtils.mkdir_p File.join(mountpoint, "EFI", "puavo")
+          FileUtils.cp(
+            image_path,
+            File.join(mountpoint, "EFI", "puavo", @image_name))
+          run('sync')
+        ensure
+          run('umount', mountpoint) if mounted
+        end
       end
     end
   end
@@ -556,7 +562,7 @@ module DiskHandler
   EncryptionDeviceName = "puavo-cryptroot"
 
   def self.setup_raid_if_possible
-    disks_for_mirroring = nil
+    disks_for_mirroring = []
 
     loop do
       disks_for_mirroring = QueryDiskInfo::list_disks_for_mirroring()
@@ -566,7 +572,7 @@ module DiskHandler
               + "setting up mirroring raid configuration.\n"
       msg = 'Install without raid mirroring? (type "yes" if this is okay)'
       answer = UI::ask_with_default(msg, 'no', UI::InstallWithoutRaidPrompt)
-      return false if answer == 'yes'
+      return [] if answer == 'yes'
     end
 
     loop do
@@ -582,7 +588,7 @@ module DiskHandler
           break
         when 'no'
           puts 'NOT setting up RAID now.'
-          return false
+          return []
         else
           puts 'Please answer "yes" or "no".'
       end
@@ -607,7 +613,7 @@ module DiskHandler
 
     puts ''
 
-    return true
+    return disks_for_mirroring
   end
 
   def self.check_tpm_enrollment_feasibility
@@ -820,7 +826,7 @@ module DiskHandler
       control_key: control_key,
       recovery_key: encryption['recovery_key'],
       encryption_policy: encryption['policy'],
-      device: fs_conf['device']
+      efi_disks: fs_conf.fetch('efi_disks'),
     )
 
     vault.build(device_keys_temporary_directory)
@@ -1728,14 +1734,16 @@ end
 vgname = (hosttype == 'diskinstaller') ? 'puavoinstaller' : \
          (hosttype == 'exam')          ? 'puavoexam'      : 'puavo'
 
-raid_setup_done = false
+raid_disks = []
 if hosttype == 'bootserver' then
-  raid_setup_done = DiskHandler::setup_raid_if_possible()
+  raid_disks = DiskHandler.setup_raid_if_possible()
 end
+raid_setup_done = !raid_disks.empty?
 
 case hosttype
   when 'bootserver', 'diskinstaller', 'exam', 'laptop'
     conf = QueryDiskInfo::ask_device_with_confirmation(hosttype, raid_setup_done)
+    conf['efi_disks'] = raid_setup_done ? raid_disks : [ conf['device'] ]
     DiskHandler::do_fs_setup(conf, vgname, raid_setup_done)
   else
     puts "Hosttype '#{ hosttype }' does not need to setup local filesystems."
