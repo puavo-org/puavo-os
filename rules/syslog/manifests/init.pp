@@ -14,6 +14,15 @@ class syslog {
       require => Package['logrotate'],
       source  => 'puppet:///modules/syslog/etc_logrotate.d_puavo';
 
+    # Run logrotate on battery too (Debian default skips it).
+    '/etc/systemd/system/logrotate.service.d':
+      ensure  => directory,
+      require => Package['systemd'];
+
+    '/etc/systemd/system/logrotate.service.d/override.conf':
+      require => [ Package['logrotate'], Package['systemd'] ],
+      source  => 'puppet:///modules/syslog/logrotate.service.d_override.conf';
+
     '/usr/local/lib/puavo-caching-syslog-sender':
       mode    => '0755',
       require => [ File['/var/log/puavo'], Package['tcl-thread'] ],
@@ -28,5 +37,6 @@ class syslog {
 
   Package <| title == logrotate
           or title == rsyslog
+          or title == systemd
           or title == tcl-thread |>
 }
