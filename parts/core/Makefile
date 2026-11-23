@@ -41,6 +41,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/files/messages
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/hooks
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/scripts
+	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/openntpd.service.d
 	mkdir -p $(DESTDIR)/var/lib/puavo
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)/usr/lib/systemd/system
@@ -67,6 +68,8 @@ install : $(install-subdirs) installdirs
 		lib/update-secure-boot-dbx
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) sbin/*
 	$(INSTALL_DATA) -t $(DESTDIR)/usr/lib/systemd/system systemd/*
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/systemd/system/openntpd.service.d \
+		etc/systemd/system/openntpd.service.d/puavo-core.conf
 	ln -fns ../scripts/setup_btrfs_quotas \
 		$(DESTDIR)$(sysconfdir)/puavo-conf/hooks/puavo.image.overlay
 

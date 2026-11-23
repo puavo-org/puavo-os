@@ -1,4 +1,5 @@
 class bootserver_nginx {
+  include ::nginx
   include ::packages
   include ::puavo_conf
 

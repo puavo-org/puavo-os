@@ -13,5 +13,14 @@ class chrome_webapps::ti_nspire_cx_cas {
     '/usr/local/share/applications/puavo-ti-nspire-webapp.desktop':
       require => File['/usr/local/bin/puavo-ti-nspire-webapp'],
       source  => 'puppet:///modules/chrome_webapps/puavo-ti-nspire-webapp.desktop';
+
+    '/usr/local/bin/puavo-ti-nspire-connect-webapp':
+      mode    => '0755',
+      require => File['/usr/local/bin/puavo-chrome-webapp'],
+      source  => 'puppet:///modules/chrome_webapps/puavo-ti-nspire-connect-webapp';
+
+    '/usr/local/share/applications/puavo-ti-nspire-connect-webapp.desktop':
+      require => File['/usr/local/bin/puavo-ti-nspire-connect-webapp'],
+      source  => 'puppet:///modules/chrome_webapps/puavo-ti-nspire-connect-webapp.desktop';
   }
 }

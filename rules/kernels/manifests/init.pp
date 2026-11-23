@@ -14,11 +14,16 @@ class kernels {
   #   Debian Bullseye: recent
   #   Debian Bookworm: crisp
   #   Debian Trixie:   modern
+  #
+  # The "flux" alias is special in that it always points to the
+  # backported kernel.
 
   $kernel_versions = {
     'default' => '6.12.116+deb13.1-amd64',
+    'flux'    => '7.2.12+deb13-amd64',
     'modern'  => '7.2.12+deb13-amd64',
   }
+
   $kernel_aliases = keys($kernel_versions)
 
   define kernel_link ($kernel_alias, $linkname, $linksuffix, $version) {

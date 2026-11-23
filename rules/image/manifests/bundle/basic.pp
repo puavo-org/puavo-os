@@ -14,6 +14,7 @@ class image::bundle::basic {
   include ::motd
   include ::munin
   include ::ncurses
+  include ::nginx
   include ::nightly_updates
   include ::nss
   include ::pam

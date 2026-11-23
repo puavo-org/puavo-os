@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -eu
+
+if [ "$(puavo-conf puavo.service.munin-node.enabled)" != 'true' ]; then
+  exit 0
+fi
+
+if [ "$(puavo-conf puavo.hosttype)" = 'bootserver' ]; then
+  interfaces=$(awk '$1 == "iface" && $2 != "lo" { print $2 }' \
+                   /etc/network/interfaces /etc/network/interfaces.d/*)
+else
+  interfaces=
+  for ifpath in /sys/class/net/*; do
+    if [ -e "${ifpath}/device" ]; then
+      interfaces="${interfaces} ${ifpath##*/}"
+    fi
+  done
+fi
+interfaces="$interfaces vpn0"
+
+# the links in the image are made by munin-node postinst in the build
+# environment and do not match the interfaces of this host
+find /etc/munin/plugins -type l \
+  \( -lname /usr/share/munin/plugins/if_ \
+     -o -lname /usr/share/munin/plugins/if_err_ \) -delete
+
+for iface in $interfaces; do
+  ln -fns /usr/share/munin/plugins/if_     "/etc/munin/plugins/if_${iface}"
+  ln -fns /usr/share/munin/plugins/if_err_ "/etc/munin/plugins/if_err_${iface}"
+done
