@@ -758,7 +758,8 @@ class packages {
     ]:
       tag => [ 'tag_puavopkg', 'tag_debian_desktop', ];
 
-    [ 'bindfs'
+    [ 'age'
+    , 'bindfs'
     , 'binfmt-support'
     , 'blueman'
     , 'desktop-file-utils'
