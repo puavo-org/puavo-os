@@ -29,9 +29,8 @@ class kernels {
   define kernel_link ($kernel_alias, $linkname, $linksuffix, $version) {
     file {
       "/boot/${linkname}${linksuffix}":
-        ensure  => link,
-        require => Packages::Kernels::Kernel_package[$kernel_alias],
-        target  => "${linkname}-${version}";
+        ensure => link,
+        target => "${linkname}-${version}";
     }
 
     Packages::Kernels::Kernel_package <| title == $kernel_alias |>
@@ -69,13 +68,18 @@ class kernels {
       }
     }
 
+    $package_dependencies = $kernel_alias ? {
+      'flux'   => [],
+       default => Packages::Kernels::Kernel_package[$kernel_alias],
+    }
+
     ::kernels::all_kernel_links {
       $kernel_alias:
         kernel_alias => $kernel_alias,
         # the Dracut-hook mechanism does not understand kernel links so
         # remove it before creating links
         require      => [ File['/etc/kernel/postinst.d/dracut']
-                        , Packages::Kernels::Kernel_package[$kernel_alias] ],
+                        , $package_dependencies ],
         version      => $::kernels::kernel_versions[$kernel_alias];
     }
 
