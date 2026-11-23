@@ -31,8 +31,10 @@ class kernels {
   $default_kernel = '6.1.0-55-amd64'
   $crisp_kernel   = '6.12.117+deb12.1-amd64'
 
+  # "flux" always points to the backported kernel
   ::kernels::all_kernel_links {
     'default': kernel => $default_kernel;
     'crisp':   kernel => $crisp_kernel;
+    'flux':    kernel => $crisp_kernel;
   }
 }
