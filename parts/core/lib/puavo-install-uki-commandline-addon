@@ -63,6 +63,17 @@ def replace_if_changed(destination: str, source: str):
   shutil.move(source, destination)
 
 
+def get_ukify_commandline_argument(cmdline_value: str):
+  # We need to use --section=.cmdline: in case we need an empty
+  # cmdline, because --cmdline refuses to create one.  Yet
+  # we need to use --cmdline in case the cmdline_value contains
+  # ":"-characters, because --section option uses ":" as syntax.
+  if cmdline_value.strip() == '':
+    return f'--section=.cmdline:{cmdline_value}'
+  else:
+    return f'--cmdline={cmdline_value}'
+
+
 def sign_with_disk_key(section_value: str, output: str):
   # Build UKI addon containing only a .cmdline section
   try:
@@ -70,7 +81,7 @@ def sign_with_disk_key(section_value: str, output: str):
       'ukify', 'build',
       f'--secureboot-private-key={DEVICE_SECURE_BOOT_PRIVATE_KEY}',
       f'--secureboot-certificate={DEVICE_SECURE_BOOT_CERTIFICATE}',
-      f'--cmdline={section_value}',
+      get_ukify_commandline_argument(section_value),
       f'--output={output}'
     )
   except subprocess.CalledProcessError as error:
@@ -100,7 +111,7 @@ def authorize_with_placeholder(section_value: str, bundle: str):
     addon = f"{directory}/addon.efi"
     try:
       run_command(
-        'ukify', 'build', f'--cmdline={section_value}',
+        'ukify', 'build', get_ukify_commandline_argument(section_value),
         f'--output={addon}'
       )
       counter = run_command(
