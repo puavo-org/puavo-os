@@ -33,7 +33,7 @@ The server needs the signing counter of the device once:
 
 The server builds an addon and authorizes it for the device:
 
-    ukify build --section=.cmdline:quiet --output=addon.efi
+    ukify build --cmdline=quiet --output=addon.efi
     puavo-command-line-manager-authorize addon.efi keys/secure-boot.pem \
         server.priv 43 bundle.json
 

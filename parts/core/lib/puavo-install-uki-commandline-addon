@@ -70,7 +70,7 @@ def sign_with_disk_key(section_value: str, output: str):
       'ukify', 'build',
       f'--secureboot-private-key={DEVICE_SECURE_BOOT_PRIVATE_KEY}',
       f'--secureboot-certificate={DEVICE_SECURE_BOOT_CERTIFICATE}',
-      f'--section=.cmdline:{section_value}',
+      f'--cmdline={section_value}',
       f'--output={output}'
     )
   except subprocess.CalledProcessError as error:
@@ -100,7 +100,7 @@ def authorize_with_placeholder(section_value: str, bundle: str):
     addon = f"{directory}/addon.efi"
     try:
       run_command(
-        'ukify', 'build', f'--section=.cmdline:{section_value}',
+        'ukify', 'build', f'--cmdline={section_value}',
         f'--output={addon}'
       )
       counter = run_command(

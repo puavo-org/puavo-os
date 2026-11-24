@@ -128,7 +128,7 @@ counter_limit=''
 
 authorize() {
   local commandline=$1 certificate=$2 server_key=$3 bundle=$4
-  ukify build --section=".cmdline:${commandline}" \
+  ukify build --cmdline="${commandline}" \
     --output="${work}/addon.efi" >/dev/null
   puavo-command-line-manager-authorize "${work}/addon.efi" "$certificate" \
     "$server_key" "${counter_limit:-$(puavo-command-line-manager-counter)}" \
