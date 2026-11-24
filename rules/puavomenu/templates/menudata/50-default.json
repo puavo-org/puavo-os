@@ -1195,6 +1195,20 @@
         "org.thonny.Thonny": {
             "tags": "default"
         },
+        "org.wireshark.Wireshark": {
+            "name": "Wireshark",
+            "description": {
+                "fi": "Verkkoliikenteen kaappaus ja analysointi.",
+                "en": "Capture and analyse network traffic.",
+                "sv": "Fånga och analysera nätverkstrafik.",
+                "de": "Netzwerkverkehr mitschneiden und analysieren."
+            },
+            "tags": "default",
+            "keywords": "network, netzwerk, verkko, nätverk, pcap, sniffer, tshark",
+            "puavopkg": {
+                "id": "wireshark"
+            }
+        },
         "otava-opiskelija": {
             "type": "web",
             "url": "https://opiskelija.otava.fi/",
@@ -1889,6 +1903,7 @@
                 "veracrypt",
                 "system-config-printer",
                 "nm-connection-editor",
+                "org.wireshark.Wireshark",
                 "gnome-system-monitor",
                 "org.gnome.baobab",
                 "pavucontrol",
