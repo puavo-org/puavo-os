@@ -134,6 +134,18 @@ entry {
     background: @theme_selected_bg_color;
 }
 
+/* "Enter opens this" highlight for the first search result. Mirrors the
+   :hover/:focus appearance so the result that Enter will launch looks
+   selected, without moving keyboard focus away from the search box. */
+.pm_button.pm_selected {
+    background: @theme_selected_bg_color;
+    color: @theme_selected_fg_color;
+}
+
+.button_program.pm_selected {
+    border-radius: 5px;
+}
+
 /* Extra stuff for frequently-used programs */
 .frequent_button { }
 
