@@ -1,4 +1,4 @@
-From 15727db66811903758b31acd736c0ae5e2f8c798 Mon Sep 17 00:00:00 2001
+From dc33763e616e4776f3db6bc7a147dcdb81571bec Mon Sep 17 00:00:00 2001
 From: Tsuchiya Yuto <kitakar@gmail.com>
 Date: Sun, 18 Oct 2020 16:42:44 +0900
 Subject: [PATCH] (surface3-oemb) add DMI matches for Surface 3 with broken DMI
@@ -58,10 +58,10 @@ index 6c8fb7a4d..22797a53f 100644
  	{ }
  };
 diff --git a/sound/soc/codecs/rt5645.c b/sound/soc/codecs/rt5645.c
-index e7e39671a..7970349e7 100644
+index 7313ea71c..862b8cefc 100644
 --- a/sound/soc/codecs/rt5645.c
 +++ b/sound/soc/codecs/rt5645.c
-@@ -3795,6 +3795,15 @@ static const struct dmi_system_id dmi_platform_data[] = {
+@@ -3799,6 +3799,15 @@ static const struct dmi_system_id dmi_platform_data[] = {
  		},
  		.driver_data = (void *)&intel_braswell_platform_data,
  	},
@@ -97,9 +97,9 @@ index e4c3492a0..0b930c91b 100644
  };
  
 -- 
-2.55.0
+2.56.1
 
-From 3fa2cee70746d14acebbdb2128407e7473a26399 Mon Sep 17 00:00:00 2001
+From f8180cc3d6b712afe77d14b1a7de68ccfa2a55b4 Mon Sep 17 00:00:00 2001
 From: kitakar5525 <34676735+kitakar5525@users.noreply.github.com>
 Date: Fri, 6 Dec 2019 23:10:30 +0900
 Subject: [PATCH] surface3-spi: workaround: disable DMA mode to avoid crash by
@@ -230,5 +230,5 @@ index 6074b7730..6aa3e1d6f 100644
  }
  
 -- 
-2.55.0
+2.56.1
 

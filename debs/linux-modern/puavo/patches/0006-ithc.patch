@@ -1,4 +1,4 @@
-From ef7522a81c9f2feab3d6979feb1a31d0e9c103ed Mon Sep 17 00:00:00 2001
+From 6349c8e35e1d61f0827839cbfb93ab0fa4732ec9 Mon Sep 17 00:00:00 2001
 From: Dorian Stoll <dorian.stoll@tmsp.io>
 Date: Sun, 11 Dec 2022 12:03:38 +0100
 Subject: [PATCH] iommu: intel: Disable source id verification for ITHC
@@ -37,9 +37,9 @@ index 25c26f706..772bb0d8e 100644
  	 * DMA alias provides us with a PCI device and alias.  The only case
  	 * where the it will return an alias on a different bus than the
 -- 
-2.55.0
+2.56.1
 
-From 3e8a436f37937a7ffb0da49c8f93c7877d88c642 Mon Sep 17 00:00:00 2001
+From ff15eac8e95d407dafc0ef37ee1429fb87b7828f Mon Sep 17 00:00:00 2001
 From: quo <tuple@list.ru>
 Date: Sun, 11 Dec 2022 12:10:54 +0100
 Subject: [PATCH] hid: Add support for Intel Touch Host Controller
@@ -86,10 +86,10 @@ Patchset: ithc
  create mode 100644 drivers/hid/ithc/ithc.h
 
 diff --git a/drivers/hid/Kconfig b/drivers/hid/Kconfig
-index 4a155d684..4a19dbed1 100644
+index cc73aad7c..e347d57e8 100644
 --- a/drivers/hid/Kconfig
 +++ b/drivers/hid/Kconfig
-@@ -1491,6 +1491,8 @@ source "drivers/hid/intel-thc-hid/Kconfig"
+@@ -1537,6 +1537,8 @@ source "drivers/hid/intel-thc-hid/Kconfig"
  
  source "drivers/hid/ipts/Kconfig"
  
@@ -99,10 +99,10 @@ index 4a155d684..4a19dbed1 100644
  
  # USB support may be used with HID disabled
 diff --git a/drivers/hid/Makefile b/drivers/hid/Makefile
-index d167f584c..02b0cca05 100644
+index 3d26c2289..30970c797 100644
 --- a/drivers/hid/Makefile
 +++ b/drivers/hid/Makefile
-@@ -184,3 +184,4 @@ obj-$(CONFIG_SURFACE_HID_CORE)  += surface-hid/
+@@ -186,3 +186,4 @@ obj-$(CONFIG_SURFACE_HID_CORE)  += surface-hid/
  obj-$(CONFIG_INTEL_THC_HID)     += intel-thc-hid/
  
  obj-$(CONFIG_HID_IPTS)          += ipts/
@@ -2776,5 +2776,5 @@ index 000000000..aec320d4e
 +int ithc_reset(struct ithc *ithc);
 +
 -- 
-2.55.0
+2.56.1
 
