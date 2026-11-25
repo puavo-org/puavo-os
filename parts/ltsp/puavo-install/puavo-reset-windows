@@ -521,7 +521,7 @@ choose_wim_image_to_use()
             --arg version "$win_version" '
         .images | map_values(select(.language == $language
                                       and .version == $version))
-                | to_entries | map(.key) | .[]
+                | to_entries | sort_by(.value.subversion) | map(.key) | .[]
       ' wim.json) || {
       logerr 'Failed to parse version and language information from wim.json'
       return 1
@@ -530,8 +530,9 @@ choose_wim_image_to_use()
     preferred_version_count="$(printf "%s\n" "$preferred_versions" | wc -l)"
 
     if [ "$preferred_version_count" -gt 1 ]; then
-        logerr "Multiple image options with ${win_version} and ${win_language}"
-        return 1
+        logwarning "Multiple image options with ${win_version} and ${win_language}, choosing the latest"
+        printf "%s\n" "$preferred_versions" | tail -n1
+        return $?
     elif [ "$preferred_version_count" -lt 1 ]; then
         logerr "No image available with ${win_version} and ${win_language}"
         return 1
