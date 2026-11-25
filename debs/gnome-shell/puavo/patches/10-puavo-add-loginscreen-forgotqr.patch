@@ -1,0 +1,225 @@
+From db1d6a340526e6aaff318357f958206eb5fc809c Mon Sep 17 00:00:00 2001
+From: Tuomas Nurmi <tuomas.nurmi@opinsys.fi>
+Date: Tue, 11 Jun 2024 12:03:16 +0300
+Subject: [PATCH] Add "Forgot password" QR code to personal device login
+
+---
+ .../gnome-shell-sass/widgets/_puavo.scss      | 16 +++
+ js/gdm/loginDialog.js                         | 99 ++++++++++++++++++-
+ po/de.po                                      |  9 ++
+ po/fi.po                                      |  8 ++
+ po/sv.po                                      |  8 ++
+ 5 files changed, 139 insertions(+), 1 deletion(-)
+
+diff --git a/data/theme/gnome-shell-sass/widgets/_puavo.scss b/data/theme/gnome-shell-sass/widgets/_puavo.scss
+index 680cbfb15..c5872a3b2 100644
+--- a/data/theme/gnome-shell-sass/widgets/_puavo.scss
++++ b/data/theme/gnome-shell-sass/widgets/_puavo.scss
+@@ -10,3 +10,19 @@
+ .destroy-user-session:hover {
+   color: #ffaa00;
+ }
++
++.login-dialog-forgot-address-label {
++  margin-top: 1em;
++  margin-bottom: 1em;
++  color: $osd_fg_color;
++  font-weight: bold;
++}
++
++.login-dialog-forgot-label {
++  padding-right: 2em;
++  .login-dialog-forgot-button:focus &,
++  .login-dialog-forgot-button:hover & {
++    text-decoration: underline;
++  }
++}
++
+diff --git a/js/gdm/loginDialog.js b/js/gdm/loginDialog.js
+index 9c38a59ff..7f599296a 100644
+--- a/js/gdm/loginDialog.js
++++ b/js/gdm/loginDialog.js
+@@ -487,11 +487,89 @@ var LoginDialog = GObject.registerClass({
+             label_actor: notListedLabel,
+         });
+ 
++        this._forgotCodePath = null;
++        this._forgotCodeUrl = null;
++
++        let forgotLabel = new St.Label({
++            text: _("Forgot password"),
++            style_class: 'login-dialog-not-listed-label login-dialog-forgot-label',
++        });
++
++        this._forgotButton = new St.Button({
++            style_class: 'login-dialog-forgot-button',
++            button_mask: St.ButtonMask.ONE | St.ButtonMask.THREE,
++            can_focus: true,
++            child: forgotLabel,
++            reactive: true,
++            x_align: Clutter.ActorAlign.START,
++            label_actor: forgotLabel,
++        });
++
++        this._imgQr = new St.Icon();
++        this._imgQr.set_icon_size(216);
++        this._forgotAddressLabel = new St.Label({
++            text: "",
++            style_class: 'login-dialog-forgot-address-label',
++        });
++
++        this._qrReturnButton = new St.Button({
++            style_class: 'modal-dialog-button login-dialog-guest-button',
++            button_mask: St.ButtonMask.ONE | St.ButtonMask.THREE,
++            reactive: true,
++            can_focus: true,
++            x_align: Clutter.ActorAlign.CENTER,
++            width: 216,
++            label: _("Return"),
++        });
++
++        this._forgotButton.connect('clicked', () => {
++            this.prepareForgotCode();
++            this._imgQr.set_gicon( Gio.icon_new_for_string(this._forgotCodePath) );
++            this._forgotCodeBox.show();
++            this._extraLoginFunctionsBox.hide();
++            this._userList.hide();
++        });
++        this._qrReturnButton.connect('clicked', () => {
++            this._forgotCodeBox.hide();
++            this._extraLoginFunctionsBox.show();
++            this._userList.show();
++        });
++
++        this._forgotCodeBox = new St.BoxLayout({
++            style_class: 'login-dialog-user-extra-box',
++            x_align: Clutter.ActorAlign.CENTER,
++            y_align: Clutter.ActorAlign.CENTER,
++            vertical: true,
++            visible: true,
++        });
++        this._forgotCodeBox.add_child(this._imgQr);
++        this._forgotCodeBox.add_child(this._forgotAddressLabel);
++        this._forgotCodeBox.add_child(this._qrReturnButton);
++        let domain=null
++        try {
++            domain = Shell.get_file_contents_utf8_sync('/etc/puavo/domain').trim().split(' ')[0];
++            this._forgotCodePath = "/tmp/forgot-qrcode-" + domain +".png";
++            this._forgotCodeUrl = 'https://' + domain + '/users/password/forgot'
++        } catch (e) { domain = null; }
++        if( domain == null ) {
++            console.log("missing puavo domain when preparing forgot password qr paths")
++        }
++
+         this._notListedButton.connect('clicked', this._hideUserListAskForUsernameAndBeginVerification.bind(this));
+ 
+         this._notListedButton.hide();
+ 
+-        this._userSelectionBox.add_child(this._notListedButton);
++        this._extraLoginFunctionsBox = new St.BoxLayout({
++            style_class: 'login-dialog-user-extra-box',
++            vertical: false,
++            visible: true,
++        });
++
++        this._extraLoginFunctionsBox.add_child(this._forgotButton);
++        this._extraLoginFunctionsBox.add_child(this._notListedButton);
++        this._userSelectionBox.add_child(this._extraLoginFunctionsBox);
++        this._userSelectionBox.add_child(this._forgotCodeBox);
++        this._forgotCodeBox.hide();
+ 
+         this._bannerView = new St.ScrollView({
+             style_class: 'login-dialog-banner-view',
+@@ -1197,6 +1275,10 @@ var LoginDialog = GObject.registerClass({
+         this._sessionMenuButton.hide();
+         this._setUserListExpanded(true);
+         this._notListedButton.show();
++        if(this._forgotCodePath == null)
++            this._forgotButton.hide();
++        else
++            this._forgotButton.show();
+         this._userList.grab_key_focus();
+     }
+ 
+@@ -1309,4 +1391,20 @@ var LoginDialog = GObject.registerClass({
+     finish(onComplete) {
+         this._authPrompt.finish(onComplete);
+     }
++
++    prepareForgotCode() {
++        if(this._forgotCodePath == null) {
++            return;
++        }
++        console.log("preparing new forgot password qr code")
++        this._forgotAddressLabel.set_text(this._forgotCodeUrl)
++        var file = Gio.file_new_for_path( this._forgotCodePath );
++        if( file.query_exists( null ) != true ) {
++            let cmd = '/usr/bin/qrencode -d 216 -o ' + this._forgotCodePath + ' "' + this._forgotCodeUrl + '"';
++            let [res, out, err, status] = GLib.spawn_command_line_sync(cmd);
++            if (!res || status != 0) {
++                console.log("problem generating new qr code")
++            }
++        }
++    }
+ });
+diff --git a/po/de.po b/po/de.po
+index 38f98da7b..5fc745657 100644
+--- a/po/de.po
++++ b/po/de.po
+@@ -3287,6 +3287,15 @@ msgstr "Als Gast anmelden"
+ msgid "End session"
+ msgstr "Sitzung beenden"
+ 
++#: js/gdm/authPrompt.js
++msgid "Forgot password"
++msgstr "Passwort vergessen"
++
++#: js/gdm/authPrompt.js
++msgid "Return"
++msgstr "Zurück"
++
++
+ #~ msgid "Frequently used applications will appear here"
+ #~ msgstr "Häufig genutzte Anwendungen erscheinen hier"
+ 
+diff --git a/po/fi.po b/po/fi.po
+index 3f656b441..cdad5c486 100644
+--- a/po/fi.po
++++ b/po/fi.po
+@@ -3200,6 +3200,14 @@ msgstr "Kirjaudu vieraana"
+ msgid "End session"
+ msgstr "Lopeta istunto"
+ 
++#: js/gdm/authPrompt.js
++msgid "Forgot password"
++msgstr "Unohdin salasanani"
++
++#: js/gdm/authPrompt.js
++msgid "Return"
++msgstr "Palaa"
++
+ #~ msgid "Frequently used applications will appear here"
+ #~ msgstr "Usein käytetyt sovellukset ilmestyvät tänne"
+ 
+diff --git a/po/sv.po b/po/sv.po
+index 42e91696a..f49227bc7 100644
+--- a/po/sv.po
++++ b/po/sv.po
+@@ -3223,6 +3223,14 @@ msgstr "Logga in som gäst"
+ msgid "End session"
+ msgstr "Avsluta sessionen"
+ 
++#: js/gdm/authPrompt.js
++msgid "Forgot password"
++msgstr "Glömt lösenord"
++
++#: js/gdm/authPrompt.js
++msgid "Return"
++msgstr "Tillbaka"
++
+ #~ msgid "Frequently used applications will appear here"
+ #~ msgstr "Ofta använda program kommer visas här"
+ 
+-- 
+2.39.2
+
