@@ -1,0 +1,11 @@
+[Unit]
+Description=Fetch recovery requests for Puavo KPS
+ConditionPathExists=/etc/puavo/kps/fetcher/config
+
+[Timer]
+OnActiveSec=10s
+OnUnitInactiveSec=10s
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target

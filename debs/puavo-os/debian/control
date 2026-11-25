@@ -196,6 +196,20 @@ Description: Puavo Key Provisioning Station
  some other similar reason).
  .
 
+Package: puavo-kps-fetcher
+Architecture: all
+Depends: ${misc:Depends},
+ adduser,
+ puavo-kps,
+ ruby,
+ ruby-jwt
+Description: Puavo KPS recovery request fetcher
+ Fetches the recovery requests approved in Puavo Web from puavo-rest
+ and checks their approval tokens. The Key Provisioning Station
+ unwraps each bundle, and the recovery key goes back encrypted to the
+ device.
+ .
+
 Package: puavo-laptop-setup
 Architecture: all
 Depends: ${misc:Depends},

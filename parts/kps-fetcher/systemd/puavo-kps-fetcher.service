@@ -1,0 +1,16 @@
+[Unit]
+Description=Puavo KPS recovery request fetcher
+ConditionPathExists=/etc/puavo/kps/fetcher/config
+After=puavo-kpsd.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/puavo-kps-fetcher
+User=puavo-kps-fetcher
+SupplementaryGroups=puavo-role-admin
+EnvironmentFile=/etc/puavo/kps/fetcher/config
+LoadCredential=client-secret:/etc/puavo/kps/fetcher/client-secret
+NoNewPrivileges=yes
+ProtectHome=yes
+ProtectSystem=full

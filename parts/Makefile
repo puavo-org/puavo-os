@@ -10,6 +10,7 @@ subdirs         := autopilot         \
                    ers               \
                    exammode          \
                    kps               \
+                   kps-fetcher       \
                    laptop-setup      \
                    ltsp              \
                    pam               \

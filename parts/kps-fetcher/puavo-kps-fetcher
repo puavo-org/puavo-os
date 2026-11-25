@@ -1,0 +1,386 @@
+#!/usr/bin/ruby
+# Fetches the approved recovery requests from puavo-rest and checks
+# their approval tokens. The key provisioning station unwraps each
+# bundle, and the recovery key goes back encrypted to the return key
+# of the device. Configuration comes from the environment variables
+# and the service credential below.
+
+require 'base64'
+require 'json'
+require 'jwt'
+require 'net/http'
+require 'open3'
+require 'openssl'
+require 'tmpdir'
+
+# Base address of puavo-rest
+URL_VARIABLE = 'PUAVO_KPS_FETCHER_URL'
+# OAuth 2 client id
+CLIENT_ID_VARIABLE = 'PUAVO_KPS_FETCHER_CLIENT_ID'
+# CA bundle for the server certificate
+CA_FILE_VARIABLE = 'PUAVO_KPS_FETCHER_CA_FILE'
+# Issuer of the approval tokens
+APPROVAL_ISSUER_VARIABLE = 'PUAVO_KPS_FETCHER_APPROVAL_ISSUER'
+# Public keys of the approval tokens, one PEM file per key id
+APPROVAL_KEY_DIRECTORY_VARIABLE = 'PUAVO_KPS_FETCHER_APPROVAL_KEY_DIRECTORY'
+# Where systemd puts the service credentials
+CREDENTIALS_DIRECTORY_VARIABLE = 'CREDENTIALS_DIRECTORY'
+
+CLIENT_SECRET_CREDENTIAL = 'client-secret'
+CONNECT_TIMEOUT_SECONDS = 10
+TRANSFER_TIMEOUT_SECONDS = 60
+TOKEN_SCOPE = 'puavo.recovery.kps'
+
+APPROVAL_ALGORITHM = 'ES256'
+APPROVAL_AUDIENCE = 'puavo-kps'
+APPROVAL_KEY_SUFFIX = '.pem'
+APPROVAL_REQUIRED_CLAIMS = %w(exp jti organisation_id serial_number digest
+                              approver)
+
+# Device fields of the bundle, key data and approval token
+DEVICE_FIELDS = %w(organisation_id serial_number)
+
+# Field of a queue entry that carries the approval token
+APPROVAL_TOKEN_FIELD = 'approval'
+
+# Return keys of the contract
+RETURN_KEY_BITS = 3072
+RETURN_KEY_EXPONENT = 65537
+RETURN_KEY_ENCRYPTION = { 'rsa_padding_mode' => 'oaep',
+                          'rsa_oaep_md'      => 'sha256',
+                          'rsa_mgf1_md'      => 'sha256' }
+
+# Refusal codes of the contract
+APPROVAL_INVALID = 'ApprovalInvalid'
+APPROVAL_EXPIRED = 'ApprovalExpired'
+DIGEST_MISMATCH = 'DigestMismatch'
+BUNDLE_MISMATCH = 'BundleMismatch'
+RETURN_KEY_INVALID = 'ReturnKeyInvalid'
+UNWRAP_FAILED = 'UnwrapFailed'
+
+# The id becomes part of an address
+REQUEST_ID_PATTERN = /\A[A-Za-z0-9_-]+\z/
+
+def log(message)
+  $stderr.puts(message)
+end
+
+# Refusal of a request, uploaded as its answer
+class Refusal < StandardError
+  attr_reader :code
+
+  def initialize(code, message)
+    super(message)
+    @code = code
+  end
+
+  def answer
+    { 'error' => { 'code' => @code, 'message' => message } }
+  end
+end
+
+# Checks the approval tokens puavo-rest signs when a person approves a
+# request
+class ApprovalTokenVerifier
+  def initialize(issuer, public_keys_by_id)
+    @issuer = issuer
+    @public_keys_by_id = public_keys_by_id
+  end
+
+  def self.read_key_directory(issuer, key_directory)
+    key_paths = Dir.glob(File.join(key_directory,
+                                   "*#{ APPROVAL_KEY_SUFFIX }"))
+    raise "no approval keys in #{ key_directory }" if key_paths.empty?
+
+    public_keys_by_id = key_paths.to_h do |path|
+      [File.basename(path, APPROVAL_KEY_SUFFIX),
+       OpenSSL::PKey.read(File.read(path))]
+    end
+
+    new(issuer, public_keys_by_id)
+  end
+
+  # Return the claims of an approval token that is valid now and
+  # approves this bundle and return key, or refuse the request.
+  def verify(approval_token, bundle, return_public_key)
+    claims = decode_approval_token(approval_token)
+
+    if claims['digest'] != self.class.request_digest(bundle,
+                                                     return_public_key)
+      raise Refusal.new(DIGEST_MISMATCH,
+                        'Digest of the bundle and return key differs from the approved one')
+    end
+
+    unless claims_match_bundle_fields?(claims, bundle)
+      raise Refusal.new(BUNDLE_MISMATCH,
+                        'Bundle is of another device than approved')
+    end
+
+    claims
+  end
+
+  # Return the digest that binds a bundle to a return key
+  def self.request_digest(bundle, return_public_key)
+    part_digests = OpenSSL::Digest::SHA256.digest(bundle) \
+                     + OpenSSL::Digest::SHA256.digest(return_public_key)
+    OpenSSL::Digest::SHA256.hexdigest(part_digests)
+  end
+
+  private
+
+  def decode_approval_token(approval_token)
+    decode_options = { algorithms:      [APPROVAL_ALGORITHM],
+                       aud:             APPROVAL_AUDIENCE,
+                       verify_aud:      true,
+                       iss:             @issuer,
+                       verify_iss:      true,
+                       required_claims: APPROVAL_REQUIRED_CLAIMS }
+
+    claims, _header = JWT.decode(approval_token, nil, true,
+                                 decode_options) do |header|
+      @public_keys_by_id[header['kid']]
+    end
+    claims
+  rescue JWT::InvalidIssuerError => error
+    # The signature checked with a configured key, so the issuer name
+    # of the station is wrong and the request waits for it to be fixed
+    raise "approval issuer differs from the configured one: #{ error.message }"
+  rescue JWT::ExpiredSignature
+    raise Refusal.new(APPROVAL_EXPIRED, 'Approval token has expired')
+  rescue JWT::DecodeError => error
+    raise Refusal.new(APPROVAL_INVALID,
+                      "Approval token is invalid: #{ error.message }")
+  end
+
+  def claims_match_bundle_fields?(claims, bundle)
+    parse_bundle(bundle).values_at(*DEVICE_FIELDS) \
+      == claims.values_at(*DEVICE_FIELDS)
+  end
+
+  def parse_bundle(bundle)
+    fields = JSON.parse(bundle)
+    return fields if fields.kind_of?(Hash)
+
+    raise Refusal.new(UNWRAP_FAILED, 'Bundle is not a JSON object')
+  rescue JSON::ParserError
+    raise Refusal.new(UNWRAP_FAILED, 'Bundle is not JSON')
+  end
+end
+
+# The KPS calls of puavo-rest
+class PuavoRest
+  def initialize(url, ca_file)
+    raise "puavo-rest address #{ url } is not HTTPS" \
+      unless URI.parse(url).scheme == 'https'
+
+    @url = url
+    @ca_file = ca_file
+  end
+
+  def request_access_token(client_id, client_secret)
+    request = Net::HTTP::Post.new(new_uri('/oidc/token'))
+    request.basic_auth(client_id, client_secret)
+    request.set_form_data('grant_type' => 'client_credentials',
+                          'scope'      => TOKEN_SCOPE)
+
+    send_request(request).fetch('access_token')
+  end
+
+  def fetch_queue(access_token)
+    request = Net::HTTP::Get.new(new_uri('/v3/recovery/queue'))
+    send_request(request, access_token).fetch('requests')
+  end
+
+  # Upload the answer to a request and return the state it leaves
+  def upload_answer(access_token, request_id, answer)
+    request = Net::HTTP::Put.new(
+                new_uri("/v3/recovery/requests/#{ request_id }/result"))
+    request.content_type = 'application/json'
+    request.body = answer.to_json
+
+    send_request(request, access_token).fetch('state')
+  end
+
+  private
+
+  def new_uri(path)
+    URI.parse("#{ @url }#{ path }")
+  end
+
+  def send_request(request, access_token = nil)
+    request['Authorization'] = "Bearer #{ access_token }" if access_token
+
+    connection_options = { use_ssl:       true,
+                           ca_file:       @ca_file,
+                           verify_mode:   OpenSSL::SSL::VERIFY_PEER,
+                           open_timeout:  CONNECT_TIMEOUT_SECONDS,
+                           read_timeout:  TRANSFER_TIMEOUT_SECONDS,
+                           write_timeout: TRANSFER_TIMEOUT_SECONDS }
+    response = Net::HTTP.start(request.uri.host, request.uri.port,
+                               connection_options) do |http|
+      http.request(request)
+    end
+
+    unless response.kind_of?(Net::HTTPSuccess)
+      raise "#{ request.method } #{ request.path } failed with" \
+              " #{ response.code }: #{ response.body }"
+    end
+
+    JSON.parse(response.body)
+  end
+end
+
+# TODO: Listing the organisations is a weird health check. It is only
+# the cheapest command of the station that needs a working HSM.
+def station_works?
+  _output, status = Open3.capture2('puavo-kps', '--quiet',
+                                   'organisation', 'list')
+  status.success?
+end
+
+# Return the recovery key data the station unwraps from a bundle
+def unwrap_bundle(bundle)
+  Dir.mktmpdir do |directory|
+    # The station reads a bundle by its extension
+    bundle_path = File.join(directory, 'bundle.json')
+    File.binwrite(bundle_path, bundle)
+
+    output, status = Open3.capture2('puavo-kps', '--quiet',
+                                    '--format', 'json', 'unwrap',
+                                    '--recovery-bundle', bundle_path)
+    unless status.success?
+      # The station worked at the start of the run, so the bundle is bad
+      raise Refusal.new(UNWRAP_FAILED, 'Station failed to unwrap the bundle')
+    end
+
+    JSON.parse(output).first
+  end
+end
+
+def parse_return_public_key(return_public_key)
+  public_key = OpenSSL::PKey.read(return_public_key)
+  is_expected_key = public_key.kind_of?(OpenSSL::PKey::RSA) \
+                      && public_key.n.num_bits == RETURN_KEY_BITS \
+                      && public_key.e == RETURN_KEY_EXPONENT
+  return public_key if is_expected_key
+
+  raise Refusal.new(RETURN_KEY_INVALID,
+                    'Return key is not of the expected kind')
+rescue OpenSSL::PKey::PKeyError
+  raise Refusal.new(RETURN_KEY_INVALID, 'Return key is not a public key')
+end
+
+# Refuse key data of another device than approved
+def check_key_data(key_data, claims)
+  # Plain fields of one device can hide the key data of another
+  return if key_data.values_at(*DEVICE_FIELDS) \
+              == claims.values_at(*DEVICE_FIELDS)
+
+  raise Refusal.new(BUNDLE_MISMATCH,
+                    'Key data is of another device than approved')
+end
+
+# Return the recovery key encrypted to the return key, in base64
+def encrypt_to_return_key(recovery_key, return_public_key)
+  encrypted_recovery_key = return_public_key.encrypt(recovery_key,
+                                                     RETURN_KEY_ENCRYPTION)
+  Base64.strict_encode64(encrypted_recovery_key)
+end
+
+# Return the answer to an approved request
+def answer_approved(claims, bundle, return_public_key)
+  public_key = parse_return_public_key(return_public_key)
+  key_data = unwrap_bundle(bundle)
+  check_key_data(key_data, claims)
+  recovery_key = key_data.fetch('recovery_key').pack('C*')
+  { 'result' => encrypt_to_return_key(recovery_key, public_key) }
+rescue Refusal => refusal
+  refusal.answer
+end
+
+def decode_field(queued_request, field, refusal_code)
+  value = queued_request[field]
+  begin
+    return Base64.strict_decode64(value) if value.kind_of?(String)
+  rescue ArgumentError
+    # Not base64, refused below
+  end
+
+  raise Refusal.new(refusal_code, malformed_field_message(field))
+end
+
+def malformed_field_message(field)
+  "Field #{ field } of the request is malformed"
+end
+
+def describe_answer(answer)
+  return 'answered' if answer.key?('result')
+
+  "refused, #{ answer.dig('error', 'code') }"
+end
+
+# Check a queued request and return its answer
+def answer_request(queued_request, approval_token_verifier)
+  request_id = queued_request['id']
+  bundle = decode_field(queued_request, 'bundle', UNWRAP_FAILED)
+  return_public_key = decode_field(queued_request, 'return_public_key',
+                                   RETURN_KEY_INVALID)
+  approval_token = queued_request[APPROVAL_TOKEN_FIELD]
+  unless approval_token.kind_of?(String)
+    raise Refusal.new(APPROVAL_INVALID,
+                      malformed_field_message(APPROVAL_TOKEN_FIELD))
+  end
+
+  claims = approval_token_verifier.verify(approval_token, bundle,
+                                          return_public_key)
+  answer = answer_approved(claims, bundle, return_public_key)
+
+  # The audit entry of an approved request, with the signed id
+  log("recovery request #{ claims['jti'] } for device" \
+        " #{ claims['serial_number'] } of organisation" \
+        " #{ claims['organisation_id'] }, approved by" \
+        " #{ claims['approver'] } until #{ claims['exp'] }:" \
+        " #{ describe_answer(answer) }")
+  answer
+rescue Refusal => refusal
+  log("refused request #{ request_id }: #{ refusal.message }")
+  refusal.answer
+end
+
+def main
+  puavo_rest = PuavoRest.new(ENV.fetch(URL_VARIABLE),
+                             ENV.fetch(CA_FILE_VARIABLE))
+  approval_token_verifier = ApprovalTokenVerifier.read_key_directory(
+                              ENV.fetch(APPROVAL_ISSUER_VARIABLE),
+                              ENV.fetch(APPROVAL_KEY_DIRECTORY_VARIABLE))
+
+  unless station_works?
+    log('station fails, requests stay queued')
+    return
+  end
+
+  client_secret_path = File.join(ENV.fetch(CREDENTIALS_DIRECTORY_VARIABLE),
+                                 CLIENT_SECRET_CREDENTIAL)
+  access_token = puavo_rest.request_access_token(
+                   ENV.fetch(CLIENT_ID_VARIABLE),
+                   File.read(client_secret_path).chomp)
+
+  puavo_rest.fetch_queue(access_token).each do |queued_request|
+    request_id = queued_request['id']
+    unless request_id.kind_of?(String) \
+             && REQUEST_ID_PATTERN.match?(request_id)
+      log('skipped a request with a malformed id')
+      next
+    end
+
+    begin
+      answer = answer_request(queued_request, approval_token_verifier)
+      state = puavo_rest.upload_answer(access_token, request_id, answer)
+      log("answered request #{ request_id }: #{ state }")
+    rescue StandardError => error
+      log("failed to answer request #{ request_id }: #{ error.message }")
+    end
+  end
+end
+
+main if $PROGRAM_NAME == __FILE__
