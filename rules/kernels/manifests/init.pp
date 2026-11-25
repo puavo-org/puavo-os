@@ -19,9 +19,9 @@ class kernels {
   # backported kernel.
 
   $kernel_versions = {
-    'default' => '6.12.116+deb13.1-amd64',
-    'flux'    => '7.2.12+deb13-amd64',
-    'modern'  => '7.2.12+deb13-amd64',
+    'default' => '6.12.118+deb13.1-amd64',
+    'flux'    => '7.3.4+deb13-amd64',
+    'modern'  => '7.3.4+deb13-amd64',
   }
 
   $kernel_aliases = keys($kernel_versions)
