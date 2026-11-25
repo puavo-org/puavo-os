@@ -857,6 +857,7 @@ class packages {
     , 'opensc'
     , 'pcscd'
     , 'pkg-config'
+    , 'puavo-kps-fetcher'
     , 'ssss' ]:
       ensure => present,
       tag    => [ 'tag_puavo_hsm' ];
