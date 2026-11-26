@@ -63,4 +63,11 @@ install() {
   # so create a symlink to a writable location.
   ln -sf /run/plymouth-image.png \
     "${initdir}/usr/share/plymouth/themes/image.png"
+
+  # Install the Dutch translation of Plymouth, which Plymouth treats as the
+  # marker for setting its locale. Only with a UTF-8 locale set it draws
+  # letters outside ASCII, such as ä and ö. Also install the data of C.UTF-8,
+  # the locale of the initrd, without which setting it fails.
+  inst_simple /usr/share/locale/nl/LC_MESSAGES/plymouth.mo
+  inst_multiple $(find /usr/lib/locale/C.utf8 -type f)
 }
