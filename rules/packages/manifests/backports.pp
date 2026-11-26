@@ -44,22 +44,6 @@ class packages::backports {
     , 'firmware-ti-connectivity'
     , 'firmware-zd1211'
 
-    # heif-gdk-pixbuf and its dependencies for better HEIC support
-    # (this can prevent Gnome Shell crashes when HEIC images are used as
-    # background images)
-    , 'heif-gdk-pixbuf'
-    , 'libheif1'
-    , 'libheif1:i386'
-    , 'libheif-examples'
-    , 'libheif-plugin-aomenc'
-    , 'libheif-plugin-aomenc:i386'
-    , 'libheif-plugin-dav1d'
-    , 'libheif-plugin-dav1d:i386'
-    , 'libheif-plugin-libde265'
-    , 'libheif-plugin-libde265:i386'
-    , 'libheif-plugin-x265'
-    , 'libheif-plugin-x265:i386'
-
     # Libreoffice from backports
     , 'fonts-opensymbol'
     , 'liblibreoffice-java'
