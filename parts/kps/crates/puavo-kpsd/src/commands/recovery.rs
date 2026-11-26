@@ -71,6 +71,16 @@ pub enum RecoveryKeyError {
         "Multiple QR codes found in recovery bundle '{path}', refusing to guess which one to use"
     )]
     QrAmbiguous { path: String },
+
+    #[error(
+        "Recovery bundle claims serial number '{claimed}' but its key data holds '{encrypted}'"
+    )]
+    SerialNumberMismatch { claimed: String, encrypted: String },
+
+    #[error(
+        "Recovery bundle claims organisation '{claimed}' but its key data holds '{encrypted}'"
+    )]
+    OrganisationMismatch { claimed: String, encrypted: String },
 }
 
 impl From<RecoveryKeyError> for DaemonResponse {
@@ -300,7 +310,8 @@ fn create_recovery_bundle(
 /// Decrypted recovery key data
 ///
 /// Errors:
-/// Returns error if decryption fails or data is malformed
+/// Returns error if decryption fails, data is malformed or its serial
+/// number or organisation differs from the one the bundle claims
 fn unwrap_recovery_key(
     hsm_session: &HsmSession,
     recovery_bundle: RecoveryBundle,
@@ -321,7 +332,32 @@ fn unwrap_recovery_key(
     // Deserialize the recovery key data
     let recovery_key_data: RecoveryKeyData =
         serde_json::from_slice(&serialized_recovery_key_data)?;
+
+    check_claims(&recovery_bundle, &recovery_key_data)?;
     Ok(recovery_key_data)
+}
+
+/// Fail unless the key data holds the serial number and organisation
+/// that the bundle claims.
+fn check_claims(
+    recovery_bundle: &RecoveryBundle,
+    recovery_key_data: &RecoveryKeyData,
+) -> Result<(), RecoveryKeyError> {
+    if recovery_key_data.serial_number != recovery_bundle.serial_number {
+        return Err(RecoveryKeyError::SerialNumberMismatch {
+            claimed: recovery_bundle.serial_number.clone(),
+            encrypted: recovery_key_data.serial_number.clone(),
+        });
+    }
+
+    if recovery_key_data.organisation_id != recovery_bundle.organisation_id {
+        return Err(RecoveryKeyError::OrganisationMismatch {
+            claimed: recovery_bundle.organisation_id.clone(),
+            encrypted: recovery_key_data.organisation_id.clone(),
+        });
+    }
+
+    Ok(())
 }
 
 /// Return true if the path's extension marks it as a QR image bundle.
@@ -667,6 +703,45 @@ mod tests {
         }
     }
 
+    const TEST_RECOVERY_KEY: &[u8] = b"test-recovery-key";
+
+    /// Build a bundle under the key of the claimed organisation whose
+    /// key data holds the encrypted serial number and organisation.
+    fn build_encrypted_recovery_bundle(
+        hsm_session: &HsmSession,
+        claimed_serial_number: &str,
+        claimed_organisation_id: &str,
+        encrypted_serial_number: &str,
+        encrypted_organisation_id: &str,
+    ) -> RecoveryBundle {
+        let key_manager = HsmKeyManager::new(hsm_session);
+        let organisation_key_label =
+            KeyLabel::organisation_label(claimed_organisation_id);
+        let (organisation_key, _) = key_manager
+            .get_latest_key(ObjectClass::PUBLIC_KEY, &organisation_key_label)
+            .unwrap()
+            .unwrap();
+        let public_key =
+            key_manager.extract_public_key(&organisation_key).unwrap();
+
+        let (encrypted_key_data, encryption_algorithm) =
+            encrypt_recovery_key_data(
+                &public_key,
+                encrypted_serial_number.to_string(),
+                encrypted_organisation_id.to_string(),
+                Zeroizing::new(TEST_RECOVERY_KEY.to_vec()),
+            )
+            .unwrap();
+
+        RecoveryBundle {
+            serial_number: claimed_serial_number.to_string(),
+            organisation_id: claimed_organisation_id.to_string(),
+            organisation_key_version: 1,
+            encrypted_key_data,
+            encryption_algorithm,
+        }
+    }
+
     #[tokio::test]
     async fn test_generate_recovery_bundle() {
         let test_session = TestHsmSession::new().unwrap();
@@ -956,54 +1031,61 @@ mod tests {
         let test_session = TestHsmSession::new().unwrap();
         let session = test_session.session();
 
-        let organisation_id = "test-organisation-encrypt-decrypt".to_string();
-        let serial_number = "test-serial-encrypt".to_string();
-        let recovery_key = b"test-recovery-key-encrypt".to_vec();
+        let organisation_id = "test-organisation-encrypt-decrypt";
+        let serial_number = "test-serial-encrypt";
 
         // Initialize organisation key
-        initialize_organisation_key_for_testing(session, &organisation_id)
+        initialize_organisation_key_for_testing(session, organisation_id)
             .expect("Failed to initialize organisation key");
 
-        // Get the organisation public key
-        let key_manager = HsmKeyManager::new(session);
-        let organisation_key_label =
-            KeyLabel::organisation_label(organisation_id.as_str());
-        let (organisation_key, _) = key_manager
-            .get_latest_key(ObjectClass::PUBLIC_KEY, &organisation_key_label)
-            .unwrap()
-            .unwrap();
-        let public_key =
-            key_manager.extract_public_key(&organisation_key).unwrap();
+        let recovery_bundle = build_encrypted_recovery_bundle(
+            session,
+            serial_number,
+            organisation_id,
+            serial_number,
+            organisation_id,
+        );
 
-        // Encrypt the recovery key data
-        let (encrypted_data, encryption_algorithm) = encrypt_recovery_key_data(
-            &public_key,
-            serial_number.clone(),
-            organisation_id.clone(),
-            Zeroizing::new(recovery_key.clone()),
-        )
-        .unwrap();
-
-        assert!(!encrypted_data.is_empty());
+        assert!(!recovery_bundle.encrypted_key_data.is_empty());
         // For details, see NOTE(recovery-bundle-rsa-oaep).
-        assert_eq!(encryption_algorithm, EncryptionAlgorithm::RsaOaepSha1);
-
-        // Create a recovery bundle and decrypt it
-        let recovery_bundle = RecoveryBundle {
-            serial_number: serial_number.clone(),
-            organisation_id: organisation_id.clone(),
-            organisation_key_version: 1,
-            encrypted_key_data: encrypted_data,
-            encryption_algorithm,
-        };
+        assert_eq!(
+            recovery_bundle.encryption_algorithm,
+            EncryptionAlgorithm::RsaOaepSha1
+        );
 
         let decrypted_data =
             unwrap_recovery_key(session, recovery_bundle).unwrap();
 
         assert_eq!(decrypted_data.serial_number, serial_number);
         assert_eq!(decrypted_data.organisation_id, organisation_id);
-        assert_eq!(*decrypted_data.recovery_key.0, recovery_key);
+        assert_eq!(*decrypted_data.recovery_key.0, TEST_RECOVERY_KEY);
         assert_eq!(decrypted_data.version, RECOVERY_KEY_DATA_VERSION);
+
+        // A bundle that claims other values than its key data holds is
+        // refused
+        let changed_serial_bundle = build_encrypted_recovery_bundle(
+            session,
+            "changed-serial",
+            organisation_id,
+            serial_number,
+            organisation_id,
+        );
+        assert!(matches!(
+            unwrap_recovery_key(session, changed_serial_bundle),
+            Err(RecoveryKeyError::SerialNumberMismatch { .. })
+        ));
+
+        let other_organisation_bundle = build_encrypted_recovery_bundle(
+            session,
+            serial_number,
+            organisation_id,
+            serial_number,
+            "other-organisation",
+        );
+        assert!(matches!(
+            unwrap_recovery_key(session, other_organisation_bundle),
+            Err(RecoveryKeyError::OrganisationMismatch { .. })
+        ));
     }
 
     #[test]
