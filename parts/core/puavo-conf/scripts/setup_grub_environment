@@ -16,32 +16,10 @@ done
 grubenv_path="${images_dir}/boot/grub/grubenv"
 
 PUAVO_INSTALL_LIBDIR='/usr/lib/puavo-ltsp-install'
-UKI_ROOT='/boot/efi/EFI/puavo'
 
 if [ -z "${UKI_MODE:-}" ]; then
   export UKI_MODE=$("$PUAVO_INSTALL_LIBDIR"/is-uki-install "$images_dir")
 fi
-
-# TODO: Duplicated code
-find_efi_device_path() {
-  local diskdev="$1"
-
-  lsblk -n -l -o PATH,PARTTYPE "$diskdev" \
-    | awk '$2 == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" { print $1; exit(0) }'
-}
-
-mount_disk_efi_partition() {
-  local diskdev="$1"
-
-  efi_devpath=$(find_efi_device_path "$diskdev")
-  if [ -z "$efi_devpath" ]; then
-    echo "failed to find EFI partition in ${diskdev}" >&2
-    return 1
-  fi
-
-  fsck.fat -a "$efi_devpath" >/dev/null 2>&1 || true
-  mount "$efi_devpath" /boot/efi >/dev/null
-}
 
 grubedit() {
   if ! grub-editenv "$grubenv_path" "$@"; then
@@ -248,35 +226,14 @@ selected_puavo_conf_arguments_as_kernel_args() {
 }
 
 update_boot_device_environments() {
-  local boot_disks status
-
   if [ "$UKI_MODE" != '1' ]; then
     return 0
   fi
 
-  boot_disks=$(/usr/lib/puavo-core/puavo-get-boot-disks "$images_dir")
-  status=0
-
-  for diskdev in $boot_disks; do
-    echo "installing GRUB environment to boot device ${diskdev}"
-    if ! mount_disk_efi_partition "$diskdev"; then
-      echo "failed to mount ${diskdev}" >&2
-      status=1
-      continue
-    fi
-    if ! cmp "$grubenv_path" "${UKI_ROOT}/grub/grubenv" >/dev/null 2>&1; then
-      if ! cp -p "$grubenv_path" "${UKI_ROOT}/grub/grubenv.tmp"; then
-        echo "failed to copy Grub environment to ${diskdev} (temporary file)" >&2
-        status=1
-      elif ! mv "${UKI_ROOT}/grub/grubenv.tmp" "${UKI_ROOT}/grub/grubenv"; then
-        echo "failed to move the Grub environment file in ${diskdev}" >&2
-        status=1
-      fi
-    fi
-    umount /boot/efi || true
-  done
-
-  return $status
+  # Use the UKI installation scripts to update the configuration files on
+  # the EFI partitions, such as the selected kernel version.
+  CONFIGURATION_ONLY=1 \
+    puavo-install-and-update-uki-images --images-dir "$images_dir"
 }
 
 status=0
