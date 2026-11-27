@@ -6,6 +6,8 @@
 
     "usr/lib/slab/*.efi.signed",
 
+    "usr/libexec/fwupd/efi/*.efi.signed",
+
     "boot/kernel-*.uki.efi",
     "boot/kernel-*.uki.efi.bsdiff",
     "boot/addons/*.efi",
@@ -22,6 +24,8 @@
     "usr/lib/grub/puavo-netboot/grubx64.efi.signed",
 
     "usr/lib/slab/slabx64.efi.signed",
+
+    "usr/libexec/fwupd/efi/fwupdx64.efi.signed",
 
     "boot/kernel-6.12.118+deb13.1-amd64.uki.efi",
     "boot/kernel-6.12.118+deb13.1-amd64.uki.efi.bsdiff",
@@ -55,6 +59,12 @@
         "boot/addons/exam.addon.efi",
         "boot/addons/laptop.addon.efi",
         "boot/addons/preinstalled.addon.efi"
+      ]
+    },
+    {
+      "certificate": "slab/verifier/kernel/keys/secure-boot.pem",
+      "components": [
+        "usr/libexec/fwupd/efi/fwupdx64.efi.signed"
       ]
     },
     {

@@ -117,6 +117,7 @@ class packages {
     , 'f2fs-tools'
     , 'fping'
     , 'fwupd'
+    , 'fwupd-unsigned'
     , 'gawk'
     , 'git'
     , 'htop'

@@ -10,6 +10,7 @@ class image::hsm {
     or title == 'efibootmgr'
     or title == 'expect'
     or title == 'fwupd'
+    or title == 'fwupd-unsigned'
     or title == 'jq'
     or title == 'libusb-1.0-0-dev'
     or title == 'openssl'

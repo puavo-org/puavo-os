@@ -1,6 +1,8 @@
 #!/bin/sh
 set -eu
 
+SLAB_SCRIPTS="$(dirname "$0")/../parts/core/slab/scripts"
+
 panic() {
   echo "error: $1" >&2
   exit 1
@@ -9,7 +11,7 @@ panic() {
 usage() {
   echo "Usage: $0 <rootfs-directory> <key-directory>"
   echo ""
-  echo "Signs GRUB and slab bootloaders with Secure Boot keys."
+  echo "Sign bootloaders with Secure Boot keys."
   exit 1
 }
 
@@ -24,6 +26,7 @@ boot_key_directory=$2
 [ -d "$boot_key_directory" ] || panic "key directory '$boot_key_directory' does not exist"
 
 uki_key_directory="${boot_key_directory}/slab/verifier/uki/keys"
+kernel_key_directory="${boot_key_directory}/slab/verifier/kernel/keys"
 slab_key_directory="${boot_key_directory}/slab"
 
 [ -d "$uki_key_directory" ] || panic "key directory '$uki_key_directory' does not exist"
@@ -89,6 +92,20 @@ place_netboot_bootloaders() {
     "${tftp_directory}/efi64/grubx64.efi"
 }
 
+# Signs the fwupd EFI updater for slab, which starts only a next stage that
+# declares a version.
+sign_fwupd_updater() {
+  fwupd_directory="${rootfs_directory}/usr/libexec/fwupd/efi"
+  fwupd_build="${shared_build_directory}/fwupdx64.efi"
+
+  cp "${fwupd_directory}/fwupdx64.efi" "$fwupd_build"
+  "${SLAB_SCRIPTS}/add-bootloader-version-section" "$fwupd_build" fwupd
+
+  echo "signing fwupd EFI updater..."
+  .aux/sign-efi-file "$fwupd_build" "$kernel_key_directory" \
+    "${fwupd_directory}/fwupdx64.efi.signed"
+}
+
 for architecture in i386-efi x86_64-efi; do
   create_grub_architecture_bootloader "$architecture"
 done
@@ -104,3 +121,4 @@ echo "signing slab bootloader..."
 .aux/sign-efi-directory "$slab_directory" "$slab_key_directory" "$slab_directory"
 
 place_netboot_bootloaders
+sign_fwupd_updater

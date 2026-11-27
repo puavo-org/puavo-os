@@ -21,6 +21,10 @@ class packages::purged {
     [ 'grub-efi-amd64-signed', 'grub-efi-ia32-signed' ]: ;
   }
 
+  # Prevent overwriting the Puavo-signed fwupd EFI updater, as we sign it
+  # ourselves. fwupd recommends this package.
+  package { 'fwupd-amd64-signed': }
+
   @package {
     [ 'asymptote-doc'           # asymptote not included in menus or anywhere, docs bigger than the main package
     , 'bzip2-doc'               # API docs, algorithm description, not needed in image
