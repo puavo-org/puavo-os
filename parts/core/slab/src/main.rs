@@ -62,7 +62,7 @@ fn main() -> Status {
         }
     };
 
-    if !chainload::is_allowed(&next_stage) {
+    if !chainload::is_allowed(&next_stage.image) {
         shutdown();
     }
 

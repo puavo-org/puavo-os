@@ -2,7 +2,8 @@
 # Boots slab under QEMU with Secure Boot on and custom keys. Slab and the next
 # stage are signed with different db certificates, as the design requires. The
 # firmware must load the signed chain, block an unsigned next stage when slab
-# loads it, and reject an unsigned slab outright.
+# loads it, and reject an unsigned slab outright. A next stage that the load
+# options of the boot entry specify is loaded and blocked the same way.
 set -u
 
 . "$(dirname "$0")/helpers.sh"
@@ -16,6 +17,11 @@ cleanup() {
 }
 trap cleanup EXIT
 GUID="d4a2e1c0-1111-2222-3333-444455556666"
+# make_boot_disk starts the boot partition at sector 2048.
+BOOT_PARTITION_OFFSET=$((2048 * 512))
+# A boot entry for slab whose load options specify a next stage in the same
+# directory.
+LOAD_OPTIONS_BOOT_ENTRY='\EFI\BOOT\BOOTX64.EFI \other.efi'
 
 # PK, KEK, and two db certificates, one for slab and one for the next stage.
 generate_key() {
@@ -45,12 +51,23 @@ sbsign --key "$WORK/db_grub.key" --cert "$WORK/db_grub.crt" \
 # Boots one case under Secure Boot and prints the serial output.
 #   $1  slab binary
 #   $2  next stage binary
+#   $3  next stage that the load options specify, optional
 boot_case() {
+  slab_binary=$1
+  next_stage_binary=$2
+  load_options_next_stage_binary=${3:-}
+
   state=$(mktemp -d)
   work="$state/disk"
   mkdir -p "$work"
   cp "$WORK/vars.template.fd" "$state/vars.fd"
-  disk=$(make_boot_disk "$1" "$2" "$work")
+  disk=$(make_boot_disk "$slab_binary" "$next_stage_binary" "$work")
+  if [ -n "$load_options_next_stage_binary" ]; then
+    mcopy -i "$disk@@$BOOT_PARTITION_OFFSET" \
+      "$load_options_next_stage_binary" ::/EFI/BOOT/other.efi
+    virt-fw-vars -i "$state/vars.fd" -o "$state/vars.fd" \
+      --append-boot-filepath "$LOAD_OPTIONS_BOOT_ENTRY" >/dev/null 2>&1
+  fi
   swtpm_start "$state"
   boot_qemu "$state" "$disk" "$OVMF_CODE_SECURE_BOOT"
   swtpm_stop
@@ -63,6 +80,23 @@ positive=$(boot_case "$WORK/slab.signed.efi" "$WORK/grub.signed.efi")
 assert_contains "signed chain reached chainload" "$positive" \
   "chainloading next stage"
 assert_absent "signed chain was not blocked" "$positive" "chainload failed"
+
+load_options=$(boot_case "$WORK/slab.signed.efi" "$WORK/grubx64.efi" \
+  "$WORK/grub.signed.efi")
+assert_contains "slab read the next stage from the load options" \
+  "$load_options" \
+  'read next stage \EFI\BOOT\other.efi specified by the load options'
+assert_contains "the signed next stage from the load options ran" \
+  "$load_options" "$NEXT_STAGE_MARKER"
+
+# The default next stage is signed, so it would run if slab fell back to it.
+load_options_unsigned=$(boot_case "$WORK/slab.signed.efi" \
+  "$WORK/grub.signed.efi" "$WORK/grubx64.efi")
+assert_contains \
+  "firmware blocked the unsigned next stage from the load options" \
+  "$load_options_unsigned" "chainload failed: ACCESS_DENIED"
+assert_absent "slab did not fall back to the default next stage" \
+  "$load_options_unsigned" "$NEXT_STAGE_MARKER"
 
 # The firmware halts on the boot selection screen when nothing boots, so the
 # rejection cases below need only a short timeout.

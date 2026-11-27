@@ -4,8 +4,9 @@
 
 use crate::pe;
 use crate::revocations::{self, VERSION_SECTION_NAME};
+use alloc::format;
+use alloc::string::ToString;
 use alloc::vec::Vec;
-use core::mem::MaybeUninit;
 use core::ptr;
 use uefi::boot::{
     self, LoadImageSource, OpenProtocolAttributes, OpenProtocolParams,
@@ -13,10 +14,11 @@ use uefi::boot::{
 use uefi::fs::{FileSystem, Path};
 use uefi::proto::device_path::build::DevicePathBuilder;
 use uefi::proto::device_path::build::media::FilePath;
+use uefi::proto::device_path::media::FilePath as FilePathNode;
 use uefi::proto::loaded_image::LoadedImage;
 use uefi::proto::network::IpAddress;
 use uefi::proto::network::pxe::{self, DhcpV4Packet};
-use uefi::{CStr8, CStr16, Handle, Status, cstr8, cstr16};
+use uefi::{CStr8, CStr16, CString16, Handle, Status, cstr8, cstr16};
 use uefi_raw::Boolean;
 use uefi_raw::protocol::loaded_image::LoadedImageProtocol;
 use uefi_raw::protocol::network::pxe::{
@@ -26,32 +28,68 @@ use uefi_raw::protocol::network::pxe::{
 // The paths of the next stage on the partition and on the server.
 include!(concat!(env!("OUT_DIR"), "/paths.rs"));
 
-/// Bytes reserved for building the next stage device path.
-const DEVICE_PATH_BUFFER_SIZE: usize = 128;
 /// Largest next stage accepted, since the server decides the size.
 const NEXT_STAGE_SIZE_LIMIT: usize = 64 * 1024 * 1024;
 /// Block size asked for when reading from a server. Many servers report the
 /// size of a file only when the client also asks for a block size.
 const NEXT_STAGE_BLOCK_SIZE: usize = 1468;
 
+/// A bootable image and the path it was read from.
+pub struct BootableImage {
+    pub image: Vec<u8>,
+    path: CString16,
+}
+
 /// Reads the next stage from partition or network.
 /// Returns `None` when it is absent or unreadable.
-pub fn read() -> Option<Vec<u8>> {
+pub fn read() -> Option<BootableImage> {
     match device() {
         Some(device) if is_network(device) => read_from_server(device),
         _ => read_from_partition(),
     }
 }
 
-/// Reads the next stage from the partition.
-fn read_from_partition() -> Option<Vec<u8>> {
+/// Reads the next stage from the partition. A next stage that the load
+/// options specify is read when it is there, and the default one otherwise.
+fn read_from_partition() -> Option<BootableImage> {
     let file_system = boot::get_image_file_system(boot::image_handle()).ok()?;
     let mut file_system = FileSystem::new(file_system);
-    file_system.read(Path::new(NEXT_STAGE_PATH)).ok()
+
+    if let Some(path) = path_from_load_options() {
+        if let Ok(image) = file_system.read(Path::new(&path)) {
+            debug!("read next stage {path} specified by the load options");
+            return Some(BootableImage { image, path });
+        }
+    }
+
+    let image = file_system.read(Path::new(NEXT_STAGE_PATH)).ok()?;
+    Some(BootableImage { image, path: NEXT_STAGE_PATH.into() })
+}
+
+/// Returns the path of the file that the load options of this image specify.
+/// The path is read relative to the directory this image was loaded from.
+/// Other directories are not supported.
+fn path_from_load_options() -> Option<CString16> {
+    let loaded_image =
+        boot::open_protocol_exclusive::<LoadedImage>(boot::image_handle())
+            .ok()?;
+
+    // The load options may give the name with a leading separator.
+    let options = loaded_image.load_options_as_cstr16().ok()?.to_string();
+    let name = options.strip_prefix('\\').unwrap_or(&options);
+
+    // The directory this image was loaded from.
+    let file_path_node: &FilePathNode =
+        loaded_image.file_path()?.node_iter().last()?.try_into().ok()?;
+    let image_path =
+        CString16::try_from(&file_path_node.path_name()).ok()?.to_string();
+    let (directory, _) = image_path.rsplit_once('\\')?;
+
+    CString16::try_from(format!("{directory}\\{name}").as_str()).ok()
 }
 
 /// Reads the next stage from the server.
-fn read_from_server(device: Handle) -> Option<Vec<u8>> {
+fn read_from_server(device: Handle) -> Option<BootableImage> {
     let mut base = open_network_protocol(device)?;
     let server = server_address(&base)?;
 
@@ -86,7 +124,9 @@ fn read_from_server(device: Handle) -> Option<Vec<u8>> {
     image.truncate(usize::try_from(read).ok()?);
 
     debug!("read {read} bytes of next stage from the server");
-    Some(image)
+    let path = CString16::try_from(NEXT_STAGE_SERVER_PATH.to_string().as_str())
+        .ok()?;
+    Some(BootableImage { image, path })
 }
 
 /// Asks the server how large the next stage is.
@@ -200,12 +240,10 @@ pub fn is_allowed(image: &[u8]) -> bool {
 
 /// Loads and starts the checked buffer. Using the same buffer means the bytes
 /// cannot change between the check and the load.
-pub fn start(image: &[u8]) -> Result<(), Status> {
-    // TODO: Track where the next stage was read from and hand that over, so
-    // that the machine records where it came from instead of this one path.
-    let mut path_buffer = [MaybeUninit::uninit(); DEVICE_PATH_BUFFER_SIZE];
-    let file_path = DevicePathBuilder::with_buf(&mut path_buffer)
-        .push(&FilePath { path_name: NEXT_STAGE_PATH })
+pub fn start(next_stage: &BootableImage) -> Result<(), Status> {
+    let mut path_buffer = Vec::new();
+    let file_path = DevicePathBuilder::with_vec(&mut path_buffer)
+        .push(&FilePath { path_name: &next_stage.path })
         .ok()
         .and_then(|builder| builder.finalize().ok());
 
@@ -213,7 +251,7 @@ pub fn start(image: &[u8]) -> Result<(), Status> {
     // tells it the directory it was loaded from.
     let handle = boot::load_image(
         boot::image_handle(),
-        LoadImageSource::FromBuffer { buffer: image, file_path },
+        LoadImageSource::FromBuffer { buffer: &next_stage.image, file_path },
     )
     .map_err(|error| error.status())?;
 
