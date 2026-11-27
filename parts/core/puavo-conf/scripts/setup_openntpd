@@ -12,7 +12,7 @@ fi
 ntp_server="ntp.${puavo_topdomain}"
 
 do_listen=false
-if "$(puavo-conf puavo.service.openntpd.server.enabled)" = 'true' ]; then
+if [ "$(puavo-conf puavo.service.openntpd.server.enabled)" = 'true' ]; then
   do_listen=true
 fi
 
