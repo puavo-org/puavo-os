@@ -1319,7 +1319,7 @@ $config = {
 
 begin
   parser = OptionParser.new do |opts|
-    opts.on('--download-path',
+    opts.on('--download-path PATH',
             'The target directory for images/rdiffs') do |path|
       $config[:download_path] = path
     end
@@ -1330,13 +1330,13 @@ begin
     opts.on('--force-verify', 'Force verification of each image/rdiff') do
       $config[:force_verify] = true
     end
-    opts.on('--space-reserved',
+    opts.on('--space-reserved BYTES',
             'The amount of space reserved in bytes') do |value|
       unless value.kind_of?(String) && value.match(/\A\d+\z/) then
         usage
         exit 1
       end
-      $config[:space_reserved] = Integer(value)
+      $config[:space_reserved] = Integer(value, 10)
     end
     opts.on_tail('--help', 'Show help') do
       usage
