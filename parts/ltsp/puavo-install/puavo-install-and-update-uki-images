@@ -26,6 +26,8 @@ fi
 
 [ "$UKI_MODE" = "1" ] || exit 0
 
+# One image that fails must not keep the others from being updated.
+status=0
 for image_path in "$images_dir"/*.img; do
   [ -f "$image_path" ] || continue
   # skip "ltsp.img" and "ltsp-backup.img" images as they are hardlinks
@@ -33,5 +35,8 @@ for image_path in "$images_dir"/*.img; do
   case "$(basename "$image_path")" in
     ltsp.img|ltsp-backup.img) continue ;;
   esac
-  puavo-install-and-update-uki-image "$image_path" "$hosttype" "$images_dir"
+  puavo-install-and-update-uki-image "$image_path" "$hosttype" "$images_dir" \
+    || status=1
 done
+
+exit $status

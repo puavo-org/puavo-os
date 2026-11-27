@@ -607,49 +607,36 @@ function add_boot_entry {
   }
 }
 
-function generate_boot_entry {
-  set image_path="$1"
+# Adds the menu entry of the UKI that the image directory's environment
+# specifies. Directories without one, such as the GRUB directory, add none.
+function generate_boot_entry_for_image_directory {
+  set image_directory="$1"
+  set image_environment_file="${image_directory}/grubenv"
 
-  # Extract the dir and the basename of the image
-  regexp -s 1:dir  '^(.*/)[^/]+$' "$image_path"
-  regexp -s 1:name '/([^/]+)$'    "$image_path"
-
-  # Look for image specific metadata directory next to the image file
-  set metadata_dir="${dir}${name}.extra.d"
-
-  # If such directory exists, load the image specific config
-  set image_environment_file="${metadata_dir}/grubenv"
-
-  set enabled="true"
+  set active_uki=""
   set image_name=""
   set release=""
 
   if test -f "$image_environment_file"; then
-    load_env --file "$image_environment_file" --skip-sig enabled image_name release
+    load_env --file "$image_environment_file" --skip-sig \
+      active_uki image_name release
   fi
 
-  set label="${text_other_system_normal_startup} (${name})"
-  set icon="puavo-os"
-
-  # If the release is set, generate the label based on it
-  if test -n "$release"; then
-    if test "$image_name" = "${puavo_grub_puavo_os_default_image}"; then
-      set label="${text_normal_startup} (${release})"
-      set icon="puavo-os"
-    elif test "$image_name" = "${puavo_grub_puavo_os_backup_image}"; then
-      set label="${text_backup_normal_startup} (${release})"
-      set icon="puavo-os-backup"
-    else
-      set label="${text_other_system_normal_startup} (${release})"
-      set icon="puavo-os"
-    fi
-  fi
-
-  if test "$enabled" = "false"; then
+  if ! test -f "${image_directory}/${active_uki}"; then
     return
   fi
 
-  add_boot_entry "$image_path" "$label" "$icon"
+  set label="${text_other_system_normal_startup} (${release})"
+  set icon="puavo-os"
+
+  if test "$image_name" = "${puavo_grub_puavo_os_default_image}"; then
+    set label="${text_normal_startup} (${release})"
+  elif test "$image_name" = "${puavo_grub_puavo_os_backup_image}"; then
+    set label="${text_backup_normal_startup} (${release})"
+    set icon="puavo-os-backup"
+  fi
+
+  add_boot_entry "${image_directory}/${active_uki}" "$label" "$icon"
 }
 
 function add_boot_options {
@@ -659,30 +646,26 @@ function add_boot_options {
   if test -n "$puavo_grub_puavo_os_default_image"; then
     regexp -s default_image_no_suffix '^(.*)\.img$' \
               "$puavo_grub_puavo_os_default_image"
-    for image_uki_path in /EFI/puavo/${default_image_no_suffix}/*.uki.efi; do
-      if ! test -f "$image_uki_path"; then continue; fi
-      generate_boot_entry "$image_uki_path"
-    done
+    generate_boot_entry_for_image_directory \
+      "/EFI/puavo/${default_image_no_suffix}"
   fi
 
   set backup_image_no_suffix=''
   if test -n "$puavo_grub_puavo_os_backup_image"; then
     regexp -s backup_image_no_suffix '^(.*)\.img$' \
               "$puavo_grub_puavo_os_backup_image"
-    for image_uki_path in /EFI/puavo/${backup_image_no_suffix}/*.uki.efi; do
-      if ! test -f "$image_uki_path"; then continue; fi
-      generate_boot_entry "$image_uki_path"
-    done
+    generate_boot_entry_for_image_directory \
+      "/EFI/puavo/${backup_image_no_suffix}"
   fi
 
-  for image_uki_path in /EFI/puavo/*/*.uki.efi; do
-    if ! test -f "$image_uki_path"; then continue; fi
-    regexp -s 1:image_uki_dir '^(.*)/[^/]+$' "$image_uki_path"
-    if test "$image_uki_dir" = "/EFI/puavo/${default_image_no_suffix}" \
-         -o "$image_uki_dir" = "/EFI/puavo/${backup_image_no_suffix}"; then
+  for image_environment_path in /EFI/puavo/*/grubenv; do
+    regexp -s 1:other_directory '^(.*)/grubenv$' \
+              "$image_environment_path"
+    if test "$other_directory" = "/EFI/puavo/${default_image_no_suffix}" \
+         -o "$other_directory" = "/EFI/puavo/${backup_image_no_suffix}"; then
       continue  # already handled
     fi
-    generate_boot_entry "$image_uki_path"
+    generate_boot_entry_for_image_directory "$other_directory"
   done
 
   if search --label --no-floppy --set=puavoexam puavo-exam; then

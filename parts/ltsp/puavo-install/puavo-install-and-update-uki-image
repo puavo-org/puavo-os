@@ -149,11 +149,27 @@ install_uki_to_efi() {
   }
 }
 
+# Copies the main GRUB environment to the mounted EFI partition when it
+# differs.
+copy_grub_environment() {
+  local grubenv_path="${images_dir}/boot/grub/grubenv"
+
+  cmp -s "$grubenv_path" "${UKI_ROOT}/grub/grubenv" && return 0
+
+  cp "$grubenv_path" "${UKI_ROOT}/grub/grubenv.tmp" \
+    && mv "${UKI_ROOT}/grub/grubenv.tmp" "${UKI_ROOT}/grub/grubenv"
+}
+
 mount_efi_and_install_uki() {
   local diskdev="$1"
   local status=0
   mount_disk_efi_partition "$diskdev" || return 1
   install_uki_to_efi "$diskdev" || status=1
+
+  if ! copy_grub_environment; then
+    logmsg -p user.err "failed to copy the GRUB environment to ${diskdev}"
+    status=1
+  fi
 
   if ! cleanup_temporary_files; then
     logmsg -p user.warning 'failed to remove temporary files'
@@ -170,6 +186,9 @@ boot_disks=$(/usr/lib/puavo-core/puavo-get-boot-disks "$images_dir")
 
 # Before installing, verify the boot partitions have enough space
 for diskdev in $boot_disks; do
+  # A configuration only run installs no UKIs, so it needs no space.
+  [ "${CONFIGURATION_ONLY:-}" != 1 ] || break
+
   mount_disk_efi_partition "$diskdev" || panic "failed to mount EFI partition on ${diskdev}"
   if ! cleanup_temporary_files; then
     logmsg -p user.warning 'failed to remove temporary files'

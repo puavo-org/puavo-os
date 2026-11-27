@@ -47,29 +47,52 @@ tmpdir=$(mktemp -d /tmp/puavo-install-uki.XXXXXX) \
 boot_directory="${image_mountpoint}/boot"
 [ -d "$boot_directory" ] || panic "boot directory '$boot_directory' does not exist"
 
-determine_selected_kernel_version() {
-  local kernel_image_symbolic_link="${boot_directory}/vmlinuz"
-  local kernel_image
-  kernel_image=$(readlink -f "${kernel_image_symbolic_link}")
+# Prints the UKI file name of the kernel that puavo.kernel.version selects
+# by alias or by version, with or without the flavour suffix, or of the
+# image's default kernel when it selects none. Example: "modern" and
+# "x.y.z" both give "kernel-x.y.z.uki.efi".
+find_active_uki() {
+  local kernel_image kernel_image_version kernel_version
 
-  printf %s "${kernel_image#"${kernel_image_symbolic_link}-"}"
+  kernel_version=$(puavo-conf puavo.kernel.version)
+
+  for kernel_image in "${boot_directory}/vmlinuz-${kernel_version}" \
+                      "${boot_directory}/vmlinuz-${kernel_version}"-* \
+                      "${boot_directory}/vmlinuz"; do
+    [ -e "$kernel_image" ] || continue
+
+    kernel_image_version=$(basename "$(readlink -f "$kernel_image")")
+    kernel_image_version="${kernel_image_version#vmlinuz-}"
+    if [ -e "${boot_directory}/kernel-${kernel_image_version}.uki.efi.bsdiff" ]; then
+      printf %s "kernel-${kernel_image_version}.uki.efi"
+      return 0
+    fi
+  done
+
+  return 1
 }
 
-install_boot_entry_config() {
-  local extra_directory="$1"
-  local class="$2"
-  local image_name="$3"
-  local release="$4"
-  local enabled="$5"
-  local environment_file="${extra_directory}/grubenv"
+# Writes the image's GRUB environment, which holds the UKI to boot and the
+# image for the menu label.
+install_image_environment() {
+  local directory="$1"
+  local image_name="$2"
+  local release="$3"
+  local active_uki="$4"
+  local environment_file="${directory}/grubenv"
   local temporary_environment_file="${environment_file}.tmp"
 
   rm -f "$temporary_environment_file"
   grub-editenv "$temporary_environment_file" create
-  grub-editenv "$temporary_environment_file" set "class=${class}"
+  grub-editenv "$temporary_environment_file" set "active_uki=${active_uki}"
   grub-editenv "$temporary_environment_file" set "image_name=${image_name}"
-  grub-editenv "$temporary_environment_file" set "enabled=${enabled}"
   grub-editenv "$temporary_environment_file" set "release=${release}"
+
+  if cmp -s "$temporary_environment_file" "$environment_file"; then
+    rm -f "$temporary_environment_file"
+    return 0
+  fi
+
   sync || true # Ensure the data is fully transferred before the rename.
   mv "$temporary_environment_file" "$environment_file"
 }
@@ -127,18 +150,13 @@ patch_uki() {
 
 install_ukis() {
   local destination="$1"
-  local enabled_uki_patch="$2"
+  local active_uki="$2"
 
-  local class_file="${image_mountpoint}/etc/puavo-image/class"
   local image_name_file="${image_mountpoint}/etc/puavo-image/name"
   local release_file="${image_mountpoint}/etc/puavo-image/release"
 
-  local class image_name release
+  local image_name release
 
-  if ! class=$(cat "$class_file") || [ -z "$class" ]; then
-    logmsg -p user.err 'image class missing in image mountpoint'
-    return 1
-  fi
   if ! image_name=$(cat "$image_name_file") || [ -z "$image_name" ]; then
     logmsg -p user.err 'image name missing in image mountpoint'
     return 1
@@ -167,17 +185,14 @@ install_ukis() {
 
   local uki_patch
   for uki_patch in "$boot_directory"/*.uki.efi.bsdiff; do
-    local enabled="false"
-
-    if [ "$(realpath "$uki_patch")" = "$(realpath "$enabled_uki_patch")" ]; then
-      enabled="true"
-    fi
-
     local uki="${uki_patch%.bsdiff}"
     local uki_checksum_file="${uki}.sha256"
     local uki_destination="${uki_installation_directory}/$(basename "$uki")"
 
-    if ! (cd "$uki_installation_directory" \
+    # A configuration only run leaves the UKIs as they are.
+    if [ "${CONFIGURATION_ONLY:-}" = 1 ]; then
+      :
+    elif ! (cd "$uki_installation_directory" \
             && sha256sum -c --status "$uki_checksum_file" 2>/dev/null); then
       # If the UKI already exists, it must differ from the new one
       # (e.g. possibly broken).  Remove the existing file before copying
@@ -203,17 +218,16 @@ install_ukis() {
       status=1
       continue
     }
-
-    install_boot_entry_config "$extra_directory" "$class" \
-      "$image_name" "$release" "$enabled" || {
-      logmsg -p user.err "failed to install boot entry config for UKI '$uki'"
-      status=1
-      continue
-    }
   done
 
   if [ "$status" -ne 0 ]; then
     return "$status"
+  fi
+
+  if ! install_image_environment "$uki_installation_directory" \
+         "$image_name" "$release" "$active_uki"; then
+    logmsg -p user.err 'failed to install the image GRUB environment'
+    return 1
   fi
 
   # If we were installing for the first time and everything succeeded,
@@ -228,13 +242,9 @@ install_ukis() {
   fi
 }
 
-kernel_version=$(determine_selected_kernel_version)
-[ -n "$kernel_version" ] || panic "failed to determine selected kernel version"
+active_uki=$(find_active_uki) || panic 'failed to find the UKI to boot'
 
-enabled_uki_patch=$(find "$boot_directory" -type f -name "*${kernel_version}.uki.efi.bsdiff" | head -n 1)
-[ -n "$enabled_uki_patch" ] || panic "failed to find UKI with kernel version ${kernel_version}"
-
-install_ukis "$UKI_ROOT" "$enabled_uki_patch" || {
+install_ukis "$UKI_ROOT" "$active_uki" || {
   logmsg -p user.err 'failed to install UKI files to EFI partition'
   exit 1
 }
