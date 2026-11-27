@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -eu
+
+# fwupd places its updater next to slab, in the directory of Puavo.
+cat <<'PATCH' | patch -p1
+--- a/debian/rules
++++ b/debian/rules
+@@ -38,7 +38,7 @@
+ 	CONFARGS += -Defi_os_dir=ubuntu -Dpassim=disabled
+ 
+ else ifeq (yes,$(shell dpkg-vendor --derives-from Debian && echo yes))
+-	CONFARGS += -Defi_os_dir=debian
++	CONFARGS += -Defi_os_dir=puavo
+ endif
+ 
+ %:
+PATCH
