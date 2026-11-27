@@ -1500,6 +1500,34 @@ EOF
   fi
 }
 
+# Gives images installed before images had a GRUB environment one, from
+# the UKI marked enabled, since the menu reads only that environment.
+# TODO(uki-flags-migration): Remove once no device installed with the
+# old flags remains.
+migrate_image_environments() {
+  local directory environment uki
+
+  for directory in "$boot_dir"/*/; do
+    [ ! -e "${directory}grubenv" ] || continue
+
+    for uki in "$directory"*.uki.efi; do
+      environment="${uki}.extra.d/grubenv"
+      if ! grub-editenv "$environment" list 2>/dev/null \
+             | grep --quiet --line-regexp 'enabled=true'; then
+        continue
+      fi
+
+      log notice "migrating the GRUB environment of ${directory}"
+      grub-editenv "${directory}grubenv.tmp" create
+      grub-editenv "${directory}grubenv.tmp" set \
+        "active_uki=$(basename "$uki")" \
+        "$(grub-editenv "$environment" list | grep '^image_name=')" \
+        "$(grub-editenv "$environment" list | grep '^release=')"
+      mv "${directory}grubenv.tmp" "${directory}grubenv"
+    done
+  done
+}
+
 install_grub_configuration() {
   if cmp "$grub_cfg_path" "$tmp_grub_cfg_path" >/dev/null 2>&1; then
     log info 'no changes to Grub configuration'
@@ -1538,6 +1566,7 @@ if [ "${UKI_MODE:-}" = "1" ]; then
     efi_partition_uuid=$(get_efi_uuid "$grubdev")
     generate_grub_configuration "$efi_partition_uuid"
     install_grub_configuration
+    migrate_image_environments
 
     umount /boot/efi || true
   done
